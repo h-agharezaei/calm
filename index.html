@@ -15,7 +15,7 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <p class="loading-text">در حال بارگذاری...</p>
+            <p class="loading-text" data-i18n="loading">در حال بارگذاری...</p>
         </div>
     </div>
     
@@ -24,9 +24,9 @@
     <!-- Overlay شروع -->
     <div class="start-overlay" id="startOverlay">
         <div class="start-content">
-            <h1>آرامش</h1>
-            <p>برای شروع پخش خودکار صدا، دکمه زیر را فشار دهید</p>
-            <button id="startBtn" class="start-button">شروع</button>
+            <h1 data-i18n="startTitle">آرامش</h1>
+            <p data-i18n="startSubtitle">برای شروع پخش خودکار صدا، دکمه زیر را فشار دهید</p>
+            <button id="startBtn" class="start-button" data-i18n="startButton">شروع</button>
         </div>
     </div>
     
@@ -52,46 +52,56 @@
             
             <!-- تب‌ها -->
             <div class="tabs">
-                <button class="tab-btn active" data-tab="settings">⚙️ تنظیمات</button>
-                <button class="tab-btn" data-tab="donation">💝 حمایت مالی</button>
-                <button class="tab-btn" data-tab="about">ℹ️ درباره</button>
+                <button class="tab-btn active" data-tab="settings" data-i18n="tabSettings">⚙️ تنظیمات</button>
+                <button class="tab-btn" data-tab="donation" data-i18n="tabDonation">💝 حمایت مالی</button>
+                <button class="tab-btn" data-tab="about" data-i18n="tabAbout">ℹ️ درباره</button>
             </div>
             
             <!-- محتوای تب تنظیمات -->
             <div class="tab-content active" id="settings-tab">
             <div class="control-row">
-                <label for="interval">بازه زمانی پخش صدا (ثانیه):</label>
+                <label for="interval" data-i18n="soundInterval">بازه زمانی پخش صدا (ثانیه):</label>
                 <input type="number" id="interval" min="1" max="300" value="30">
-                <button id="updateBtn">تغییر بازه</button>
+                <button id="updateBtn" data-i18n="updateInterval">تغییر بازه</button>
                 <div class="sound-toggle">
                     <label class="switch">
                         <input type="checkbox" id="soundToggle" checked>
                         <span class="slider"></span>
                     </label>
-                    <span class="toggle-label">پخش صدا</span>
+                    <span class="toggle-label" data-i18n="soundPlayback">پخش صدا</span>
                 </div>
             </div>
             
             <div class="control-row">
-                <label for="soundSelect">انتخاب صدا:</label>
+                <label for="soundSelect" data-i18n="selectSound">انتخاب صدا:</label>
                 <select id="soundSelect">
-                    <option value="singing-bowl-gong.mp3">کاسه آواز - گونگ</option>
-                    <option value="chimes-bronze-singing-bowl-ding.mp3">کاسه برنزی - زنگ</option>
+                    <option value="singing-bowl-gong.mp3" data-i18n="soundGong">کاسه آواز - گونگ</option>
+                    <option value="chimes-bronze-singing-bowl-ding.mp3" data-i18n="soundChimes">کاسه برنزی - زنگ</option>
                 </select>
             </div>
             
             <div class="separator"></div>
             
             <div class="control-row">
-                <label for="bgMode">حالت پس‌زمینه:</label>
+                <label for="languageSelect" data-i18n="language">Language / زبان:</label>
+                <select id="languageSelect">
+                    <option value="en">English</option>
+                    <option value="fa">فارسی</option>
+                </select>
+            </div>
+            
+            <div class="separator"></div>
+            
+            <div class="control-row">
+                <label for="bgMode" data-i18n="bgMode">حالت پس‌زمینه:</label>
                 <select id="bgMode">
-                    <option value="single">تصویر ثابت</option>
-                    <option value="rotation">چرخشی</option>
+                    <option value="single" data-i18n="bgModeSingle">تصویر ثابت</option>
+                    <option value="rotation" data-i18n="bgModeRotation">چرخشی</option>
                 </select>
             </div>
             
             <div class="control-row" id="imageSelectRow">
-                <label>انتخاب تصویر:</label>
+                <label data-i18n="selectImage">انتخاب تصویر:</label>
                 <div class="thumbnails-container">
                     <div class="thumbnail" data-index="0">
                         <img data-src="assets/images/00.jpg" alt="تصویر 1" class="lazy-thumbnail">
@@ -112,9 +122,9 @@
             </div>
             
             <div class="control-row" id="bgIntervalRow" style="display: none;">
-                <label for="bgInterval">زمان تغییر تصویر (ثانیه):</label>
+                <label for="bgInterval" data-i18n="imageChangeInterval">زمان تغییر تصویر (ثانیه):</label>
                 <input type="number" id="bgInterval" min="5" max="600" value="60">
-                <button id="updateBgBtn">اعمال</button>
+                <button id="updateBgBtn" data-i18n="updateBgInterval">تغییر زمان</button>
             </div>
             
             <div class="status">
@@ -125,32 +135,32 @@
             <!-- محتوای تب حمایت مالی -->
             <div class="tab-content" id="donation-tab">
             <div class="donation-section">
-                <h3 class="donation-title">☕ حمایت از توسعه</h3>
-                <p class="donation-text">اگر از این برنامه لذت می‌برید، می‌توانید با کمک‌های خود ما را در توسعه آن حمایت کنید</p>
+                <h3 class="donation-title" data-i18n="donationTitle">☕ حمایت از توسعه</h3>
+                <p class="donation-text" data-i18n="donationDescription">اگر از این برنامه لذت می‌برید، می‌توانید با کمک‌های خود ما را در توسعه آن حمایت کنید</p>
                 
                 <div class="crypto-options">
                     <button class="crypto-btn" data-crypto="doge">
-                        <span class="crypto-name">Dogecoin</span>
+                        <span class="crypto-name" data-i18n="donationDogecoin">Dogecoin</span>
                         <span class="crypto-symbol">DOGE</span>
                     </button>
                     <button class="crypto-btn" data-crypto="trx">
-                        <span class="crypto-name">Tron</span>
+                        <span class="crypto-name" data-i18n="donationTron">Tron</span>
                         <span class="crypto-symbol">TRX</span>
                     </button>
                     <button class="crypto-btn" data-crypto="ton">
-                        <span class="crypto-name">Toncoin</span>
+                        <span class="crypto-name" data-i18n="donationToncoin">Toncoin</span>
                         <span class="crypto-symbol">TON</span>
                     </button>
                 </div>
                 
                 <div class="crypto-details" id="cryptoDetails" style="display: none;">
-                    <button class="close-crypto" id="closeCrypto">&times;</button>
+                    <button class="close-crypto" id="closeCrypto" data-i18n="donationClose">&times;</button>
                     <img class="crypto-qr" id="cryptoQR" src="" alt="QR Code">
                     <div class="crypto-address">
                         <input type="text" id="cryptoAddress" readonly>
-                        <button class="copy-btn" id="copyBtn">کپی</button>
+                        <button class="copy-btn" id="copyBtn" data-i18n="donationCopy">کپی</button>
                     </div>
-                    <div class="copy-feedback" id="copyFeedback">کپی شد! ✓</div>
+                    <div class="copy-feedback" id="copyFeedback" data-i18n="donationCopied">کپی شد! ✓</div>
                 </div>
             </div>
             </div>
@@ -158,28 +168,28 @@
             <!-- محتوای تب درباره -->
             <div class="tab-content" id="about-tab">
                 <div class="about-section">
-                    <h2 class="about-title">🌸 درباره Calm</h2>
+                    <h2 class="about-title" data-i18n="aboutTitle">🌸 درباره Calm</h2>
                     
                     <div class="about-content">
-                        <p>
+                        <p data-i18n="aboutDescription">
                             <strong>Calm</strong> یک محیط وب آرامش‌بخش است که برای کمک به تمرکز، مدیتیشن و آرامش طراحی شده است.
                         </p>
                         
-                        <h3>✨ ویژگی‌ها</h3>
+                        <h3 data-i18n="aboutFeatures">✨ ویژگی‌ها</h3>
                         <ul class="features-list">
-                            <li>🖼️ <strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش با قابلیت چرخش خودکار</li>
-                            <li>🎵 <strong>صداهای طبیعی:</strong> صداهای آرامش‌دهنده کاسه‌های آواز</li>
-                            <li>⚙️ <strong>تنظیمات شخصی:</strong> کنترل کامل بر روی زمان‌بندی و محتوا</li>
-                            <li>📱 <strong>طراحی واکنش‌گرا:</strong> تجربه یکسان در تمام دستگاه‌ها</li>
-                            <li>🎨 <strong>رابط ساده:</strong> بدون حواس‌پرتی، تمرکز کامل</li>
+                            <li data-i18n="aboutFeature1">🖼️ <strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش با قابلیت چرخش خودکار</li>
+                            <li data-i18n="aboutFeature2">🎵 <strong>صداهای طبیعی:</strong> صداهای آرامش‌دهنده کاسه‌های آواز</li>
+                            <li data-i18n="aboutFeature3">⚙️ <strong>تنظیمات شخصی:</strong> کنترل کامل بر روی زمان‌بندی و محتوا</li>
+                            <li data-i18n="aboutFeature4">📱 <strong>طراحی واکنش‌گرا:</strong> تجربه یکسان در تمام دستگاه‌ها</li>
+                            <li data-i18n="aboutFeature5">🎨 <strong>رابط ساده:</strong> بدون حواس‌پرتی، تمرکز کامل</li>
                         </ul>
                         
-                        <h3>💡 نحوه استفاده</h3>
+                        <h3 data-i18n="aboutUsage">💡 نحوه استفاده</h3>
                         <ol class="usage-list">
-                            <li>روی دکمه "شروع" کلیک کنید</li>
-                            <li>از تصاویر زیبا و صداهای آرامش‌بخش لذت ببرید</li>
-                            <li>تنظیمات را بر اساس سلیقه خود تغییر دهید</li>
-                            <li>به حالت تمرکز یا مدیتیشن بروید</li>
+                            <li data-i18n="aboutUsage1">روی دکمه "شروع" کلیک کنید</li>
+                            <li data-i18n="aboutUsage2">از تصاویر زیبا و صداهای آرامش‌بخش لذت ببرید</li>
+                            <li data-i18n="aboutUsage3">تنظیمات را بر اساس سلیقه خود تغییر دهید</li>
+                            <li data-i18n="aboutUsage4">به حالت تمرکز یا مدیتیشن بروید</li>
                         </ol>
                         
                         <div class="version-info">
