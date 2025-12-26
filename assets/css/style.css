@@ -1,0 +1,505 @@
+/*
+ * ============================================
+ * Calm - فضای آرامش و تمرکز
+ * ============================================
+ * 
+ * توضیحات: فایل استایل اصلی برنامه Calm
+ * این برنامه یک محیط آرام‌بخش برای مدیتیشن و تمرکز فراهم می‌کند
+ * 
+ * ویژگی‌ها:
+ * - تصاویر پس‌زمینه تمام صفحه با قابلیت انتخاب و چرخش خودکار
+ * - پخش خودکار صداهای آرامش‌بخش با بازه زمانی قابل تنظیم
+ * - پنل تنظیمات مدرن با overlay و انیمیشن‌های زیبا
+ * - طراحی واکنش‌گرا (Responsive) برای موبایل و تبلت
+ * - افکت‌های blur و gradient برای زیبایی بیشتر
+ * 
+ * نویسنده: Calm Development Team
+ * آخرین بروزرسانی: 2025
+ * ============================================
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+.background-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+    transition: background-image 1s ease-in-out;
+}
+
+.controls {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 100;
+}
+
+.settings-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    color: #667eea;
+}
+
+.settings-icon:hover {
+    transform: rotate(90deg) scale(1.1);
+    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
+}
+
+.settings-icon:active {
+    transform: rotate(90deg) scale(0.95);
+}
+
+.settings-icon svg {
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.control-panel {
+    background: rgba(255, 255, 255, 0.98);
+    padding: 30px 40px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 500px;
+    max-width: 90vw;
+    position: relative;
+    max-height: 80vh;
+    overflow-y: auto;
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.settings-overlay.show .control-panel {
+    transform: scale(1);
+}
+
+.close-panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.close-panel:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    transform: rotate(90deg);
+}
+
+.close-panel:active {
+    transform: rotate(90deg) scale(0.9);
+}
+
+.settings-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.settings-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.control-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#imageSelectRow {
+    flex-direction: column;
+    width: 100%;
+}
+
+#imageSelectRow label {
+    margin-bottom: 5px;
+}
+
+.separator {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #ddd, transparent);
+    margin: 5px 0;
+}
+
+.sound-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toggle-label {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 26px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+#interval, #bgInterval {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    width: 100px;
+    text-align: center;
+    transition: border-color 0.3s;
+}
+
+#interval:focus, #bgInterval:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+#bgMode, #imageSelect {
+    padding: 10px 15px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.3s;
+    min-width: 150px;
+}
+
+#bgMode:focus, #imageSelect:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.thumbnails-container {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 10px;
+}
+
+.thumbnail {
+    width: 80px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.thumbnail:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.thumbnail.active {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+#updateBtn, #updateBgBtn {
+    padding: 10px 25px;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+#updateBtn:hover, #updateBgBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+#updateBtn:active, #updateBgBtn:active {
+    transform: translateY(0);
+}
+
+.status {
+    width: 100%;
+    text-align: center;
+    margin-top: 10px;
+}
+
+#status {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .controls {
+        bottom: 20px;
+        left: 20px;
+    }
+    
+    .settings-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .settings-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .control-panel {
+        padding: 25px 20px 20px 20px;
+        margin: 20px;
+        min-width: auto;
+        width: calc(100% - 40px);
+        max-width: none;
+    }
+    
+    .control-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .sound-toggle {
+        margin-top: 5px;
+    }
+    
+    label {
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+    }
+    
+    #interval, #bgInterval, #updateBtn, #updateBgBtn, #bgMode {
+        font-size: 14px;
+        width: 100%;
+    }
+    
+    .thumbnail {
+        width: 70px;
+        height: 52px;
+    }
+}
+
+/* Overlay شروع */
+.start-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+
+.start-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.start-content {
+    text-align: center;
+    color: white;
+    animation: fadeInUp 0.8s ease;
+}
+
+.start-content h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.start-content p {
+    font-size: 18px;
+    margin-bottom: 30px;
+    opacity: 0.9;
+}
+
+.start-button {
+    padding: 15px 50px;
+    font-size: 20px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
+.start-button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+}
+
+.start-button:active {
+    transform: translateY(-1px) scale(1.02);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .controls {
+        bottom: 20px;
+    }
+    
+    .settings-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .settings-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .control-panel {
+        padding: 20px 20px 15px 20px;
+        margin: 0 20px;
+        min-width: auto;
+        width: calc(100% - 40px);
+        max-width: 400px;
+    }
