@@ -11,7 +11,15 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <div class="background-image"></div>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">در حال بارگذاری...</p>
+        </div>
+    </div>
+    
+    <div class="background-image" id="backgroundImage"></div>
     
     <!-- Overlay شروع -->
     <div class="start-overlay" id="startOverlay">
@@ -86,19 +94,19 @@
                 <label>انتخاب تصویر:</label>
                 <div class="thumbnails-container">
                     <div class="thumbnail" data-index="0">
-                        <img src="assets/images/00.jpg" alt="تصویر 1">
+                        <img data-src="assets/images/00.jpg" alt="تصویر 1" class="lazy-thumbnail">
                     </div>
                     <div class="thumbnail" data-index="1">
-                        <img src="assets/images/01.jpg" alt="تصویر 2">
+                        <img data-src="assets/images/01.jpg" alt="تصویر 2" class="lazy-thumbnail">
                     </div>
                     <div class="thumbnail" data-index="2">
-                        <img src="assets/images/02.jpg" alt="تصویر 3">
+                        <img data-src="assets/images/02.jpg" alt="تصویر 3" class="lazy-thumbnail">
                     </div>
                     <div class="thumbnail" data-index="3">
-                        <img src="assets/images/03.jpg" alt="تصویر 4">
+                        <img data-src="assets/images/03.jpg" alt="تصویر 4" class="lazy-thumbnail">
                     </div>
                     <div class="thumbnail" data-index="4">
-                        <img src="assets/images/04.jpg" alt="تصویر 5">
+                        <img data-src="assets/images/04.jpg" alt="تصویر 5" class="lazy-thumbnail">
                     </div>
                 </div>
             </div>

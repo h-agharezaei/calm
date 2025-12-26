@@ -48,6 +48,7 @@ const settingsIcon = document.getElementById('settingsIcon');
 const settingsOverlay = document.getElementById('settingsOverlay');
 const controlPanel = document.getElementById('controlPanel');
 const closePanel = document.getElementById('closePanel');
+const loadingOverlay = document.getElementById('loadingOverlay');
 const soundSelect = document.getElementById('soundSelect');
 
 // ============================================
@@ -72,22 +73,58 @@ let currentImageIndex = Math.floor(Math.random() * images.length); // شروع �
 let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
 let bgMode = 'single'; // 'single' یا 'rotation'
+let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
 
 // ============================================
 // توابع مدیریت تصاویر پس‌زمینه
 // ============================================
 
+// تابع preload تصویر
+function preloadImage(imageName) {
+    return new Promise((resolve, reject) => {
+        if (imagesLoaded.has(imageName)) {
+            resolve(imageName);
+            return;
+        }
+        
+        const img = new Image();
+        img.onload = () => {
+            imagesLoaded.add(imageName);
+            resolve(imageName);
+        };
+        img.onerror = reject;
+        img.src = `assets/images/${imageName}`;
+    });
+}
+
 // تابع تنظیم پس‌زمینه
 function setBackground(index) {
     currentImageIndex = index;
-    backgroundImage.style.backgroundImage = `url('assets/images/${images[currentImageIndex]}')`;
+    const imageName = images[currentImageIndex];
     
-    // به‌روزرسانی thumbnail فعال
-    thumbnails.forEach(thumb => thumb.classList.remove('active'));
-    const activeThumbnail = document.querySelector(`.thumbnail[data-index="${index}"]`);
-    if (activeThumbnail) {
-        activeThumbnail.classList.add('active');
-    }
+    // preload تصویر قبل از نمایش
+    preloadImage(imageName).then(() => {
+        backgroundImage.style.backgroundImage = `url('assets/images/${imageName}')`;
+        
+        // به‌روزرسانی thumbnail فعال
+        thumbnails.forEach(thumb => thumb.classList.remove('active'));
+        const activeThumbnail = document.querySelector(`.thumbnail[data-index="${index}"]`);
+        if (activeThumbnail) {
+            activeThumbnail.classList.add('active');
+        }
+    });
+}
+
+// تابع preload همه تصاویر در پس‌زمینه
+function preloadAllImages() {
+    images.forEach((imageName, index) => {
+        // اولویت به تصویر فعلی و تصاویر بعدی
+        if (index !== currentImageIndex) {
+            setTimeout(() => {
+                preloadImage(imageName);
+            }, index * 500); // فاصله 500ms بین هر preload
+        }
+    });
 }
 
 // تابع تغییر به عکس بعدی
@@ -297,13 +334,69 @@ startBtn.addEventListener('click', () => {
     startTimer();
 });
 
-// تنظیم پس‌زمینه اولیه با عکس تصادفی
-setBackground(currentImageIndex);
+// ============================================
+// مدیریت بارگذاری تصاویر
+// ============================================
 
-// رویداد کلیک آیکون تنظیمات
+// تابع lazy loading برای thumbnails
+function lazyLoadThumbnails() {
+    const lazyThumbnails = document.querySelectorAll('.lazy-thumbnail');
+    
+    lazyThumbnails.forEach((img, index) => {
+        const src = img.dataset.src;
+        if (src && !img.src) {
+            // بارگذاری با تاخیر برای بهینه‌سازی
+            setTimeout(() => {
+                img.src = src;
+                img.removeAttribute('data-src');
+                img.classList.remove('lazy-thumbnail');
+            }, index * 100); // 100ms فاصله بین هر تصویر
+        }
+    });
+}
+
+// رویداد باز شدن پنل تنظیمات - بارگذاری thumbnails
 settingsIcon.addEventListener('click', () => {
     settingsOverlay.classList.add('show');
+    // بارگذاری thumbnails زمانی که پنل باز می‌شود
+    lazyLoadThumbnails();
 });
+
+// تابع مخفی کردن loading overlay
+function hideLoadingOverlay() {
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+    }
+}
+
+// بارگذاری اولیه: فقط تصویر فعلی
+async function initializeApp() {
+    try {
+        // بارگذاری تصویر اولیه
+        await preloadImage(images[currentImageIndex]);
+        
+        // تنظیم پس‌زمینه
+        backgroundImage.style.backgroundImage = `url('assets/images/${images[currentImageIndex]}')`;
+        
+        // به‌روزرسانی thumbnail فعال
+        const activeThumbnail = document.querySelector(`.thumbnail[data-index="${currentImageIndex}"]`);
+        if (activeThumbnail) {
+            activeThumbnail.classList.add('active');
+        }
+        
+        // مخفی کردن loading overlay
+        hideLoadingOverlay();
+        
+        // preload بقیه تصاویر در پس‌زمینه
+        preloadAllImages();
+    } catch (error) {
+        console.error('خطا در بارگذاری تصویر:', error);
+        hideLoadingOverlay();
+    }
+}
+
+// اجرای تابع مقداردهی اولیه
+initializeApp();
 
 // رویداد بستن پنل تنظیمات
 closePanel.addEventListener('click', () => {
