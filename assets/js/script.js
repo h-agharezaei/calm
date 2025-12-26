@@ -373,7 +373,7 @@ function stopBackgroundRotation() {
 // تابع پخش صدا
 function playSound() {
     if (!soundEnabled) {
-        startCountdown();
+        // اگر صدا غیرفعال است، نباید شمارنده شروع شود
         return;
     }
     
@@ -413,7 +413,10 @@ function startCountdown() {
     countdownId = setInterval(() => {
         countdown--;
         if (countdown > 0) {
-            updateStatus(`پخش بعدی در ${countdown} ثانیه...`);
+            // فقط اگر soundEnabled فعال باشد، شمارش معکوس نمایش داده شود
+            if (soundEnabled) {
+                updateStatus(`پخش بعدی در ${countdown} ثانیه...`);
+            }
         } else {
             clearInterval(countdownId);
         }
@@ -521,6 +524,12 @@ soundToggle.addEventListener('change', (e) => {
         // متوقف کردن صدای در حال پخش
         audio.pause();
         audio.currentTime = 0;
+        
+        // متوقف کردن تایمر اصلی
+        if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
         
         // متوقف کردن شمارش معکوس
         if (countdownId) {
