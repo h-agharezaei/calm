@@ -133,7 +133,12 @@ const translations = {
         
         // Alerts
         alertInvalidNumber: 'Please enter a valid number',
-        alertMinimum5Seconds: 'Please enter a valid number (minimum 5 seconds)'
+        alertMinimum5Seconds: 'Please enter a valid number (minimum 5 seconds)',
+        
+        // Meta tags
+        metaTitle: 'Calm - Space for Relaxation and Focus',
+        metaDescription: 'Calm is a peaceful web environment with automatic playback of calming sounds and beautiful images for meditation and focus',
+        metaKeywords: 'calm, meditation, focus, relaxation, calming sounds, nature images'
     },
     fa: {
         // عناوین تب‌ها
@@ -207,7 +212,12 @@ const translations = {
         
         // هشدارها
         alertInvalidNumber: 'لطفا یک عدد معتبر وارد کنید',
-        alertMinimum5Seconds: 'لطفا یک عدد معتبر وارد کنید (حداقل 5 ثانیه)'
+        alertMinimum5Seconds: 'لطفا یک عدد معتبر وارد کنید (حداقل 5 ثانیه)',
+        
+        // تگ‌های متا
+        metaTitle: 'آرامش - فضای آرامش و تمرکز',
+        metaDescription: 'وبسایت آرامش - محیطی آرام‌بخش با پخش خودکار صداهای آرامش‌دهنده و تصاویر زیبا برای مدیتیشن و تمرکز',
+        metaKeywords: 'آرامش, مدیتیشن, تمرکز, صدای آرامش‌بخش, تصاویر طبیعت'
     }
 };
 
@@ -246,6 +256,9 @@ function changeLanguage(lang) {
     
     // به‌روزرسانی تمام متن‌ها
     updateAllTexts();
+    
+    // به‌روزرسانی meta tags
+    updateMetaTags();
 }
 
 // تابع به‌روزرسانی تمام متن‌ها
@@ -278,6 +291,48 @@ function updateAllTexts() {
     if (bgModeSelect) {
         bgModeSelect.options[0].text = t.bgModeSingle;
         bgModeSelect.options[1].text = t.bgModeRotation;
+    }
+}
+
+// تابع به‌روزرسانی meta tags
+function updateMetaTags() {
+    const t = translations[currentLang];
+    
+    // به‌روزرسانی title
+    document.title = t.metaTitle;
+    
+    // به‌روزرسانی meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+        metaDescription.setAttribute('content', t.metaDescription);
+    }
+    
+    // به‌روزرسانی meta keywords
+    const metaKeywords = document.querySelector('meta[name="keywords"]');
+    if (metaKeywords) {
+        metaKeywords.setAttribute('content', t.metaKeywords);
+    }
+    
+    // به‌روزرسانی Open Graph tags
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) {
+        ogTitle.setAttribute('content', t.metaTitle);
+    }
+    
+    const ogDescription = document.querySelector('meta[property="og:description"]');
+    if (ogDescription) {
+        ogDescription.setAttribute('content', t.metaDescription);
+    }
+    
+    // به‌روزرسانی Twitter Card tags
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+    if (twitterTitle) {
+        twitterTitle.setAttribute('content', t.metaTitle);
+    }
+    
+    const twitterDescription = document.querySelector('meta[name="twitter:description"]');
+    if (twitterDescription) {
+        twitterDescription.setAttribute('content', t.metaDescription);
     }
 }
 
