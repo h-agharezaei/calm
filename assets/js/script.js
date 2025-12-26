@@ -317,9 +317,102 @@ settingsOverlay.addEventListener('click', (e) => {
     }
 });
 
+// ============================================
+// مدیریت تب‌ها
+// ============================================
+
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const targetTab = button.dataset.tab;
+        
+        // حذف active از همه تب‌ها
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        // فعال کردن تب انتخاب شده
+        button.classList.add('active');
+        document.getElementById(`${targetTab}-tab`).classList.add('active');
+    });
+});
+
 // جلوگیری از توقف تایمر هنگام تغییر تب
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden && !intervalId) {
         startTimer();
+    }
+});
+
+// ============================================
+// مدیریت بخش کمک مالی
+// ============================================
+
+const cryptoData = {
+    doge: {
+        name: 'Dogecoin',
+        address: 'DRJ5C5DLDpJL4J1goXs2bqD5LBmeNiqGah',
+        qr: 'assets/crypto-qr/doge-qr.jpeg'
+    },
+    trx: {
+        name: 'Tron',
+        address: 'TXaadj5wJPY7tWiBfugxHXQUfRNVoGaKVq',
+        qr: 'assets/crypto-qr/trx-qr.jpeg'
+    },
+    ton: {
+        name: 'Toncoin',
+        address: 'UQCgLRDNp1zO9khx86Y-sdoI_x0JZ3kk9QdAs8tdtmNrXPVP',
+        qr: 'assets/crypto-qr/ton-qr.jpeg'
+    }
+};
+
+const cryptoButtons = document.querySelectorAll('.crypto-btn');
+const cryptoDetails = document.getElementById('cryptoDetails');
+const cryptoQR = document.getElementById('cryptoQR');
+const cryptoAddress = document.getElementById('cryptoAddress');
+const copyBtn = document.getElementById('copyBtn');
+const closeCrypto = document.getElementById('closeCrypto');
+const copyFeedback = document.getElementById('copyFeedback');
+
+// نمایش جزئیات رمزارز
+cryptoButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const crypto = btn.dataset.crypto;
+        const data = cryptoData[crypto];
+        
+        cryptoQR.src = data.qr;
+        cryptoQR.alt = `${data.name} QR Code`;
+        cryptoAddress.value = data.address;
+        cryptoDetails.style.display = 'block';
+        
+        // اسکرول به جزئیات
+        cryptoDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+});
+
+// بستن جزئیات
+closeCrypto.addEventListener('click', () => {
+    cryptoDetails.style.display = 'none';
+});
+
+// کپی آدرس
+copyBtn.addEventListener('click', async () => {
+    try {
+        await navigator.clipboard.writeText(cryptoAddress.value);
+        copyFeedback.classList.add('show');
+        
+        setTimeout(() => {
+            copyFeedback.classList.remove('show');
+        }, 2000);
+    } catch (err) {
+        // Fallback برای مرورگرهای قدیمی
+        cryptoAddress.select();
+        document.execCommand('copy');
+        copyFeedback.classList.add('show');
+        
+        setTimeout(() => {
+            copyFeedback.classList.remove('show');
+        }, 2000);
     }
 });
