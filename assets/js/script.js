@@ -48,12 +48,18 @@ const settingsIcon = document.getElementById('settingsIcon');
 const settingsOverlay = document.getElementById('settingsOverlay');
 const controlPanel = document.getElementById('controlPanel');
 const closePanel = document.getElementById('closePanel');
+const soundSelect = document.getElementById('soundSelect');
 
 // ============================================
 // متغیرهای برنامه
 // ============================================
 
 // متغیرهای مربوط به پخش صدا
+const sounds = {
+    'singing-bowl-gong.mp3': 'assets/sounds/singing-bowl-gong.mp3',
+    'chimes-bronze-singing-bowl-ding.mp3': 'assets/sounds/chimes-bronze-singing-bowl-ding.mp3'
+};
+let currentSound = 'singing-bowl-gong.mp3';
 let intervalTime = 30000; // پیش‌فرض 30 ثانیه (به میلی‌ثانیه)
 let intervalId = null;
 let countdown = intervalTime / 1000;
@@ -122,6 +128,8 @@ function playSound() {
         return;
     }
     
+    // تنظیم فایل صوتی انتخاب شده
+    audio.src = sounds[currentSound];
     audio.currentTime = 0;
     audio.play()
         .then(() => {
@@ -267,6 +275,12 @@ soundToggle.addEventListener('change', (e) => {
         
         updateStatus('پخش صدا غیرفعال شد');
     }
+});
+
+// رویداد تغییر انتخاب صدا
+soundSelect.addEventListener('change', (e) => {
+    currentSound = e.target.value;
+    updateStatus(`صدا به "${e.target.options[e.target.selectedIndex].text}" تغییر یافت`);
 });
 
 // رویداد پایان پخش صدا

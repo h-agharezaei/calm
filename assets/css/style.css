@@ -266,7 +266,7 @@ label {
     border-color: #667eea;
 }
 
-#bgMode, #imageSelect {
+#bgMode, #imageSelect, #soundSelect {
     padding: 10px 15px;
     font-size: 16px;
     border: 2px solid #ddd;
@@ -277,7 +277,7 @@ label {
     min-width: 150px;
 }
 
-#bgMode:focus, #imageSelect:focus {
+#bgMode:focus, #imageSelect:focus, #soundSelect:focus {
     outline: none;
     border-color: #667eea;
 }
@@ -392,7 +392,7 @@ label {
         text-align: center;
     }
     
-    #interval, #bgInterval, #updateBtn, #updateBgBtn, #bgMode {
+    #interval, #bgInterval, #updateBtn, #updateBgBtn, #bgMode, #soundSelect {
         font-size: 14px;
         width: 100%;
     }
