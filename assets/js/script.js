@@ -90,6 +90,7 @@ const translations = {
         statusSoundDisabled: 'Sound playback disabled',
         statusSoundChanged: 'Sound changed to "{0}"',
         statusBgIntervalChanged: 'Background interval changed to {0} seconds',
+        statusNextPlayIn: 'Next playback in {0} seconds...',
         
         // Start overlay
         startTitle: 'Welcome to Calm',
@@ -163,6 +164,7 @@ const translations = {
         statusSoundDisabled: 'پخش صدا غیرفعال شد',
         statusSoundChanged: 'صدا به "{0}" تغییر یافت',
         statusBgIntervalChanged: 'بازه تصویر پس‌زمینه به {0} ثانیه تغییر یافت',
+        statusNextPlayIn: 'پخش بعدی در {0} ثانیه...',
         
         // Overlay شروع
         startTitle: 'به Calm خوش آمدید',
@@ -409,13 +411,14 @@ function startCountdown() {
     }
     
     countdown = intervalTime / 1000;
+    const t = translations[currentLang];
     
     countdownId = setInterval(() => {
         countdown--;
         if (countdown > 0) {
             // فقط اگر soundEnabled فعال باشد، شمارش معکوس نمایش داده شود
             if (soundEnabled) {
-                updateStatus(`پخش بعدی در ${countdown} ثانیه...`);
+                updateStatus(t.statusNextPlayIn.replace('{0}', countdown));
             }
         } else {
             clearInterval(countdownId);
