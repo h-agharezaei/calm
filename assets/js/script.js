@@ -50,10 +50,164 @@ const controlPanel = document.getElementById('controlPanel');
 const closePanel = document.getElementById('closePanel');
 const loadingOverlay = document.getElementById('loadingOverlay');
 const soundSelect = document.getElementById('soundSelect');
+const languageSelect = document.getElementById('languageSelect');
 
 // ============================================
 // متغیرهای برنامه
 // ============================================
+
+// متغیر زبان
+let currentLang = 'en'; // پیش‌فرض انگلیسی
+
+// ترجمه‌های برنامه
+const translations = {
+    en: {
+        // Tab titles
+        tabSettings: '⚙️ Settings',
+        tabDonation: '💝 Support',
+        tabAbout: 'ℹ️ About',
+        
+        // Settings tab
+        soundInterval: 'Sound Playback Interval (seconds):',
+        updateInterval: 'Update Interval',
+        soundPlayback: 'Sound Playback',
+        selectSound: 'Select Sound:',
+        soundGong: 'Singing Bowl - Gong',
+        soundChimes: 'Bronze Bowl - Chimes',
+        language: 'Language / زبان:',
+        bgMode: 'Background Mode:',
+        bgModeSingle: 'Static Image',
+        bgModeRotation: 'Rotation',
+        selectImage: 'Select Image:',
+        imageChangeInterval: 'Image Change Interval (seconds):',
+        updateBgInterval: 'Update',
+        
+        // Status messages
+        statusPlaying: 'Playing...',
+        statusError: 'Playback error',
+        statusIntervalChanged: 'Interval changed to {0} seconds',
+        statusSoundEnabled: 'Sound playback enabled',
+        statusSoundDisabled: 'Sound playback disabled',
+        statusSoundChanged: 'Sound changed to "{0}"',
+        statusBgIntervalChanged: 'Background interval changed to {0} seconds',
+        
+        // Start overlay
+        startTitle: 'Welcome to Calm',
+        startSubtitle: 'A Space for Relaxation and Focus',
+        startButton: 'Start',
+        
+        // Loading
+        loading: 'Loading...',
+        
+        // Donation tab
+        donationTitle: 'Support the Project',
+        donationSubtitle: 'Help us continue developing and improving Calm',
+        donationDescription: 'If you enjoy using Calm and would like to support its development, you can donate using cryptocurrency:',
+        donationDogecoin: 'Dogecoin',
+        donationTron: 'Tron',
+        donationToncoin: 'Toncoin',
+        donationQrScan: 'Scan the QR code or copy the address below:',
+        donationCopy: 'Copy Address',
+        donationCopied: 'Address copied!',
+        donationClose: 'Close',
+        donationThanks: 'Thank you for your support! ❤️',
+        
+        // About tab
+        aboutTitle: 'About Calm',
+        aboutDescription: 'Calm is a simple web application designed to help you relax, meditate, and focus. With calming background images and soothing sounds, you can create your perfect environment for peace and concentration.',
+        aboutFeatures: 'Features:',
+        aboutFeature1: 'Automatic sound playback at customizable intervals',
+        aboutFeature2: 'Choice of multiple calming sounds',
+        aboutFeature3: 'Beautiful background images (static or rotating)',
+        aboutFeature4: 'Simple and distraction-free interface',
+        aboutFeature5: 'Fully customizable settings',
+        aboutFeature6: 'Works offline after initial load',
+        aboutUsage: 'How to Use:',
+        aboutUsage1: 'Click "Start" to begin',
+        aboutUsage2: 'Adjust sound interval and volume to your preference',
+        aboutUsage3: 'Choose your preferred background image or enable rotation',
+        aboutUsage4: 'Relax and enjoy your peaceful environment',
+        aboutVersion: 'Version',
+        aboutDeveloper: 'Developed with ❤️ by Calm Team',
+        
+        // Alerts
+        alertInvalidNumber: 'Please enter a valid number',
+        alertMinimum5Seconds: 'Please enter a valid number (minimum 5 seconds)'
+    },
+    fa: {
+        // عناوین تب‌ها
+        tabSettings: '⚙️ تنظیمات',
+        tabDonation: '💝 حمایت مالی',
+        tabAbout: 'ℹ️ درباره',
+        
+        // تب تنظیمات
+        soundInterval: 'بازه زمانی پخش صدا (ثانیه):',
+        updateInterval: 'تغییر بازه',
+        soundPlayback: 'پخش صدا',
+        selectSound: 'انتخاب صدا:',
+        soundGong: 'کاسه آواز - گونگ',
+        soundChimes: 'کاسه برنزی - زنگ',
+        language: 'Language / زبان:',
+        bgMode: 'حالت پس‌زمینه:',
+        bgModeSingle: 'تصویر ثابت',
+        bgModeRotation: 'چرخشی',
+        selectImage: 'انتخاب تصویر:',
+        imageChangeInterval: 'زمان تغییر تصویر (ثانیه):',
+        updateBgInterval: 'تغییر زمان',
+        
+        // پیام‌های وضعیت
+        statusPlaying: 'در حال پخش...',
+        statusError: 'خطا در پخش صدا',
+        statusIntervalChanged: 'بازه زمانی به {0} ثانیه تغییر یافت',
+        statusSoundEnabled: 'پخش صدا فعال شد',
+        statusSoundDisabled: 'پخش صدا غیرفعال شد',
+        statusSoundChanged: 'صدا به "{0}" تغییر یافت',
+        statusBgIntervalChanged: 'بازه تصویر پس‌زمینه به {0} ثانیه تغییر یافت',
+        
+        // Overlay شروع
+        startTitle: 'به Calm خوش آمدید',
+        startSubtitle: 'فضای آرامش و تمرکز',
+        startButton: 'شروع',
+        
+        // بارگذاری
+        loading: 'در حال بارگذاری...',
+        
+        // تب حمایت مالی
+        donationTitle: 'حمایت از پروژه',
+        donationSubtitle: 'به ما کمک کنید تا Calm را توسعه و بهبود دهیم',
+        donationDescription: 'اگر از استفاده از Calm لذت می‌برید و مایل به حمایت از توسعه آن هستید، می‌توانید از طریق رمزارزها کمک مالی کنید:',
+        donationDogecoin: 'Dogecoin',
+        donationTron: 'Tron',
+        donationToncoin: 'Toncoin',
+        donationQrScan: 'کد QR را اسکن کنید یا آدرس زیر را کپی کنید:',
+        donationCopy: 'کپی آدرس',
+        donationCopied: 'آدرس کپی شد!',
+        donationClose: 'بستن',
+        donationThanks: 'از حمایت شما متشکریم! ❤️',
+        
+        // تب درباره
+        aboutTitle: 'درباره Calm',
+        aboutDescription: 'Calm یک برنامه وب ساده است که برای کمک به شما در آرامش، مدیتیشن و تمرکز طراحی شده است. با تصاویر پس‌زمینه آرامش‌بخش و صداهای دلنشین، می‌توانید محیط ایده‌آل خود را برای آرامش و تمرکز ایجاد کنید.',
+        aboutFeatures: 'ویژگی‌ها:',
+        aboutFeature1: 'پخش خودکار صدا در بازه‌های زمانی قابل تنظیم',
+        aboutFeature2: 'امکان انتخاب از میان صداهای مختلف آرامش‌بخش',
+        aboutFeature3: 'تصاویر پس‌زمینه زیبا (ثابت یا چرخشی)',
+        aboutFeature4: 'رابط کاربری ساده و بدون حواس‌پرتی',
+        aboutFeature5: 'تنظیمات کاملا قابل شخصی‌سازی',
+        aboutFeature6: 'قابلیت کار آفلاین پس از بارگذاری اولیه',
+        aboutUsage: 'نحوه استفاده:',
+        aboutUsage1: 'روی "شروع" کلیک کنید',
+        aboutUsage2: 'بازه زمانی و صدا را به دلخواه تنظیم کنید',
+        aboutUsage3: 'تصویر پس‌زمینه دلخواه را انتخاب کنید یا حالت چرخشی را فعال کنید',
+        aboutUsage4: 'آرام بگیرید و از محیط آرامش‌بخش خود لذت ببرید',
+        aboutVersion: 'نسخه',
+        aboutDeveloper: 'ساخته شده با ❤️ توسط تیم Calm',
+        
+        // هشدارها
+        alertInvalidNumber: 'لطفا یک عدد معتبر وارد کنید',
+        alertMinimum5Seconds: 'لطفا یک عدد معتبر وارد کنید (حداقل 5 ثانیه)'
+    }
+};
 
 // متغیرهای مربوط به پخش صدا
 const sounds = {
@@ -74,6 +228,64 @@ let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
 let bgMode = 'single'; // 'single' یا 'rotation'
 let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
+
+// ============================================
+// توابع مدیریت زبان
+// ============================================
+
+// تابع تغییر زبان
+function changeLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('calm-language', lang);
+    
+    // تغییر جهت متن
+    document.documentElement.setAttribute('dir', lang === 'fa' ? 'rtl' : 'ltr');
+    document.documentElement.setAttribute('lang', lang);
+    
+    // به‌روزرسانی تمام متن‌ها
+    updateAllTexts();
+}
+
+// تابع به‌روزرسانی تمام متن‌ها
+function updateAllTexts() {
+    const t = translations[currentLang];
+    
+    // به‌روزرسانی عناصر با data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (t[key]) {
+            element.textContent = t[key];
+        }
+    });
+    
+    // به‌روزرسانی عناصر با data-i18n-placeholder
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+        const key = element.getAttribute('data-i18n-placeholder');
+        if (t[key]) {
+            element.placeholder = t[key];
+        }
+    });
+    
+    // به‌روزرسانی options در selectها
+    if (soundSelect) {
+        soundSelect.options[0].text = t.soundGong;
+        soundSelect.options[1].text = t.soundChimes;
+    }
+    
+    const bgModeSelect = document.getElementById('bgMode');
+    if (bgModeSelect) {
+        bgModeSelect.options[0].text = t.bgModeSingle;
+        bgModeSelect.options[1].text = t.bgModeRotation;
+    }
+}
+
+// بارگذاری زبان ذخیره شده
+function loadSavedLanguage() {
+    const savedLang = localStorage.getItem('calm-language') || 'en';
+    languageSelect.value = savedLang;
+    changeLanguage(savedLang);
+}
+
 
 // ============================================
 // توابع مدیریت تصاویر پس‌زمینه
@@ -165,20 +377,22 @@ function playSound() {
         return;
     }
     
+    const t = translations[currentLang];
+    
     // تنظیم فایل صوتی انتخاب شده
     audio.src = sounds[currentSound];
     audio.currentTime = 0;
     audio.play()
         .then(() => {
             console.log('صدا با موفقیت پخش شد');
-            updateStatus('در حال پخش...');
+            updateStatus(t.statusPlaying);
             setTimeout(() => {
                 startCountdown();
             }, 1000);
         })
         .catch(error => {
             console.error('خطا در پخش صدا:', error);
-            updateStatus('خطا در پخش صدا');
+            updateStatus(t.statusError);
         });
 }
 
@@ -228,13 +442,14 @@ function startTimer() {
 // رویداد کلیک دکمه تغییر بازه
 updateBtn.addEventListener('click', () => {
     const newInterval = parseInt(intervalInput.value);
+    const t = translations[currentLang];
     
     if (newInterval && newInterval > 0) {
         intervalTime = newInterval * 1000; // تبدیل به میلی‌ثانیه
-        updateStatus(`بازه زمانی به ${newInterval} ثانیه تغییر یافت`);
+        updateStatus(t.statusIntervalChanged.replace('{0}', newInterval));
         startTimer();
     } else {
-        alert('لطفا یک عدد معتبر وارد کنید');
+        alert(t.alertInvalidNumber);
     }
 });
 
@@ -271,14 +486,16 @@ thumbnails.forEach(thumbnail => {
 // رویداد تغییر زمان چرخش پس‌زمینه
 updateBgBtn.addEventListener('click', () => {
     const newInterval = parseInt(bgIntervalInput.value);
+    const t = translations[currentLang];
     
     if (newInterval && newInterval >= 5) {
         bgIntervalTime = newInterval * 1000;
         if (bgMode === 'rotation') {
             startBackgroundRotation();
         }
+        updateStatus(t.statusBgIntervalChanged.replace('{0}', newInterval));
     } else {
-        alert('لطفا یک عدد معتبر وارد کنید (حداقل 5 ثانیه)');
+        alert(t.alertMinimum5Seconds);
     }
 });
 
@@ -292,9 +509,10 @@ bgIntervalInput.addEventListener('keypress', (e) => {
 // رویداد تغییر وضعیت پخش صدا
 soundToggle.addEventListener('change', (e) => {
     soundEnabled = e.target.checked;
+    const t = translations[currentLang];
     
     if (soundEnabled) {
-        updateStatus('پخش صدا فعال شد');
+        updateStatus(t.statusSoundEnabled);
         // اگر تایمر در حال اجرا نیست، شروع کن
         if (!intervalId) {
             startTimer();
@@ -310,14 +528,20 @@ soundToggle.addEventListener('change', (e) => {
             countdownId = null;
         }
         
-        updateStatus('پخش صدا غیرفعال شد');
+        updateStatus(t.statusSoundDisabled);
     }
 });
 
 // رویداد تغییر انتخاب صدا
 soundSelect.addEventListener('change', (e) => {
     currentSound = e.target.value;
-    updateStatus(`صدا به "${e.target.options[e.target.selectedIndex].text}" تغییر یافت`);
+    const t = translations[currentLang];
+    updateStatus(t.statusSoundChanged.replace('{0}', e.target.options[e.target.selectedIndex].text));
+});
+
+// رویداد تغییر زبان
+languageSelect.addEventListener('change', (e) => {
+    changeLanguage(e.target.value);
 });
 
 // رویداد پایان پخش صدا
@@ -372,6 +596,9 @@ function hideLoadingOverlay() {
 // بارگذاری اولیه: فقط تصویر فعلی
 async function initializeApp() {
     try {
+        // بارگذاری زبان ذخیره شده
+        loadSavedLanguage();
+        
         // بارگذاری تصویر اولیه
         await preloadImage(images[currentImageIndex]);
         
