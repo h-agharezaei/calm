@@ -59,7 +59,7 @@
     
     <div class="controls">
         <!-- دکمه آیکون صداهای پس‌زمینه -->
-        <button class="bg-sounds-icon" id="bgSoundsIcon" aria-label="صداهای پس‌زمینه">
+        <button class="bg-sounds-icon" id="bgSoundsIcon" aria-label="Background Sounds">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 18V5l12-2v13"></path>
                 <circle cx="6" cy="18" r="3"></circle>
@@ -97,7 +97,7 @@
             <div class="tab-content active" id="settings-tab">
             <div class="control-row">
                 <label for="interval" data-i18n="soundInterval">بازه زمانی پخش صدا (ثانیه):</label>
-                <input type="number" id="interval" min="1" max="300" value="30">
+                <input type="number" id="interval" min="1" max="300000" value="68">
                 <button id="updateBtn" data-i18n="updateInterval">تغییر بازه</button>
                 <div class="sound-toggle">
                     <label class="switch">
@@ -244,8 +244,8 @@
                 </svg>
             </button>
             
-            <h2 class="bg-sounds-title" data-i18n="bgSoundsTitle">🎵 صداهای پس‌زمینه</h2>
-            <p class="bg-sounds-subtitle" data-i18n="bgSoundsSubtitle">صداهای طبیعت را برای آرامش انتخاب کنید</p>
+            <h2 class="bg-sounds-title" data-i18n="bgSoundsTitle">🎵 Background Sounds</h2>
+            <p class="bg-sounds-subtitle" data-i18n="bgSoundsSubtitle">Choose nature sounds for relaxation</p>
             
             <div class="bg-sounds-grid">
                 <!-- Fire Sound -->

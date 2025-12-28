@@ -227,7 +227,7 @@ const sounds = {
     'chimes-bronze-singing-bowl-ding.mp3': 'assets/sounds/chimes-bronze-singing-bowl-ding.mp3'
 };
 let currentSound = 'singing-bowl-gong.mp3';
-let intervalTime = 680000; // پیش‌فرض 30 ثانیه (به میلی‌ثانیه)
+let intervalTime = 68000; // پیش‌فرض 68 ثانیه (به میلی‌ثانیه)
 let intervalId = null;
 let countdown = intervalTime / 1000;
 let countdownId = null;
