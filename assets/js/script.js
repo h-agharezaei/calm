@@ -227,7 +227,7 @@ const sounds = {
     'chimes-bronze-singing-bowl-ding.mp3': 'assets/sounds/chimes-bronze-singing-bowl-ding.mp3'
 };
 let currentSound = 'singing-bowl-gong.mp3';
-let intervalTime = 30000; // پیش‌فرض 30 ثانیه (به میلی‌ثانیه)
+let intervalTime = 680000; // پیش‌فرض 30 ثانیه (به میلی‌ثانیه)
 let intervalId = null;
 let countdown = intervalTime / 1000;
 let countdownId = null;
@@ -803,3 +803,110 @@ copyBtn.addEventListener('click', async () => {
         }, 2000);
     }
 });
+
+// ============================================
+// مدیریت پخش‌کننده صداهای پس‌زمینه
+// ============================================
+
+// عناصر DOM
+const bgSoundsIcon = document.getElementById('bgSoundsIcon');
+const bgSoundsOverlay = document.getElementById('bgSoundsOverlay');
+const bgSoundsPanel = document.getElementById('bgSoundsPanel');
+const closeBgSoundsPanel = document.getElementById('closeBgSoundsPanel');
+
+// آبجکت برای نگهداری اطلاعات صداها
+const bgSounds = {
+    Fire: { audio: null, playing: false },
+    Jungle: { audio: null, playing: false },
+    River: { audio: null, playing: false },
+    Sea: { audio: null, playing: false }
+};
+
+// ترجمه‌های نام صداها
+translations.en.bgSoundsTitle = '🎵 Background Sounds';
+translations.en.bgSoundsSubtitle = 'Choose nature sounds for relaxation';
+translations.en.soundFire = 'Fire';
+translations.en.soundJungle = 'Jungle';
+translations.en.soundRiver = 'River';
+translations.en.soundSea = 'Sea';
+
+translations.fa.bgSoundsTitle = '🎵 صداهای پس‌زمینه';
+translations.fa.bgSoundsSubtitle = 'صداهای طبیعت را برای آرامش انتخاب کنید';
+translations.fa.soundFire = 'آتش';
+translations.fa.soundJungle = 'جنگل';
+translations.fa.soundRiver = 'رودخانه';
+translations.fa.soundSea = 'دریا';
+
+// مقداردهی اولیه صداها
+function initializeBgSounds() {
+    Object.keys(bgSounds).forEach(soundName => {
+        const audio = new Audio(`assets/bg-sounds/${soundName}.mp3`);
+        audio.loop = true; // حلقه‌ای شدن صدا
+        audio.volume = 0.5; // حجم پیش‌فرض 50%
+        bgSounds[soundName].audio = audio;
+    });
+}
+
+// باز کردن overlay
+bgSoundsIcon.addEventListener('click', () => {
+    bgSoundsOverlay.classList.add('show');
+});
+
+// بستن overlay با دکمه بستن
+closeBgSoundsPanel.addEventListener('click', () => {
+    bgSoundsOverlay.classList.remove('show');
+});
+
+// بستن overlay با کلیک روی پس‌زمینه
+bgSoundsOverlay.addEventListener('click', (e) => {
+    if (e.target === bgSoundsOverlay) {
+        bgSoundsOverlay.classList.remove('show');
+    }
+});
+
+// مدیریت دکمه‌های پخش/پاز
+document.querySelectorAll('.sound-card').forEach(card => {
+    card.addEventListener('click', function(e) {
+        // اگر کلیک روی volume slider بود، از پخش/توقف جلوگیری کن
+        if (e.target.classList.contains('volume-slider')) {
+            return;
+        }
+        
+        const soundName = this.dataset.sound;
+        const soundData = bgSounds[soundName];
+        
+        if (!soundData.audio) {
+            console.error(`Audio for ${soundName} not initialized`);
+            return;
+        }
+        
+        if (soundData.playing) {
+            // توقف صدا
+            soundData.audio.pause();
+            soundData.playing = false;
+            this.classList.remove('playing');
+        } else {
+            // پخش صدا
+            soundData.audio.play().catch(err => {
+                console.error(`Error playing ${soundName}:`, err);
+            });
+            soundData.playing = true;
+            this.classList.add('playing');
+        }
+    });
+});
+
+// مدیریت اسلایدر حجم صدا
+document.querySelectorAll('.volume-slider').forEach(slider => {
+    slider.addEventListener('input', function() {
+        const soundName = this.dataset.sound;
+        const soundData = bgSounds[soundName];
+        
+        if (soundData.audio) {
+            soundData.audio.volume = this.value / 100;
+        }
+    });
+});
+
+// مقداردهی اولیه صداها هنگام بارگذاری صفحه
+initializeBgSounds();
