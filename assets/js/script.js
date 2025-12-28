@@ -57,7 +57,7 @@ const languageSelect = document.getElementById('languageSelect');
 // ============================================
 
 // متغیر زبان
-let currentLang = 'en'; // پیش‌فرض انگلیسی
+let currentLang = 'fa'; // پیش‌فرض فارسی
 
 // ترجمه‌های برنامه
 const translations = {
@@ -338,7 +338,7 @@ function updateMetaTags() {
 
 // بارگذاری زبان ذخیره شده
 function loadSavedLanguage() {
-    const savedLang = localStorage.getItem('calm-language') || 'en';
+    const savedLang = localStorage.getItem('calm-language') || 'fa'; // پیش‌فرض فارسی
     languageSelect.value = savedLang;
     changeLanguage(savedLang);
 }

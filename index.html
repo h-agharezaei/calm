@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -190,7 +190,12 @@
                 </div>
                 
                 <div class="crypto-details" id="cryptoDetails" style="display: none;">
-                    <button class="close-crypto" id="closeCrypto" data-i18n="donationClose">&times;</button>
+                    <button class="close-crypto" id="closeCrypto" aria-label="Close">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                     <img class="crypto-qr" id="cryptoQR" src="" alt="QR Code">
                     <div class="crypto-address">
                         <input type="text" id="cryptoAddress" readonly>
@@ -244,8 +249,8 @@
                 </svg>
             </button>
             
-            <h2 class="bg-sounds-title" data-i18n="bgSoundsTitle">🎵 Background Sounds</h2>
-            <p class="bg-sounds-subtitle" data-i18n="bgSoundsSubtitle">Choose nature sounds for relaxation</p>
+            <h2 class="bg-sounds-title" data-i18n="bgSoundsTitle">🎵 صداهای پس‌زمینه</h2>
+            <p class="bg-sounds-subtitle" data-i18n="bgSoundsSubtitle">صداهای طبیعت را برای آرامش انتخاب کنید</p>
             
             <div class="bg-sounds-grid">
                 <!-- Fire Sound -->
