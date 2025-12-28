@@ -923,9 +923,19 @@ label {
     max-width: 90vw;
     max-height: 80vh;
     overflow-y: auto;
+    overflow-x: hidden;
     position: relative;
     transform: scale(0.9);
     transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.bg-sounds-panel::-webkit-scrollbar {
+    display: none;
+}
+
+.bg-sounds-panel {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 .bg-sounds-overlay.show .bg-sounds-panel {
