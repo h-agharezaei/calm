@@ -58,6 +58,15 @@
     </div>
     
     <div class="controls">
+        <!-- دکمه آیکون صداهای پس‌زمینه -->
+        <button class="bg-sounds-icon" id="bgSoundsIcon" aria-label="صداهای پس‌زمینه">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+        </button>
+        
         <!-- دکمه آیکون تنظیمات -->
         <button class="settings-icon" id="settingsIcon" aria-label="تنظیمات">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -219,6 +228,110 @@
                             <li data-i18n="aboutUsage4">به حالت تمرکز یا مدیتیشن بروید</li>
                         </ol>
                         
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay صداهای پس‌زمینه -->
+    <div class="bg-sounds-overlay" id="bgSoundsOverlay">
+        <div class="bg-sounds-panel" id="bgSoundsPanel">
+            <button class="close-panel" id="closeBgSoundsPanel" aria-label="بستن">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            
+            <h2 class="bg-sounds-title" data-i18n="bgSoundsTitle">🎵 صداهای پس‌زمینه</h2>
+            <p class="bg-sounds-subtitle" data-i18n="bgSoundsSubtitle">صداهای طبیعت را برای آرامش انتخاب کنید</p>
+            
+            <div class="bg-sounds-grid">
+                <!-- Fire Sound -->
+                <div class="sound-card" data-sound="Fire">
+                    <div class="sound-icon-wrapper">
+                        <div class="sound-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                            </svg>
+                            <svg class="pause-overlay" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 4h4v16H6zM14 4h4v16h-4z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="volume-control">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="Fire">
+                    </div>
+                </div>
+                
+                <!-- Jungle Sound -->
+                <div class="sound-card" data-sound="Jungle">
+                    <div class="sound-icon-wrapper">
+                        <div class="sound-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5l7-7z"></path>
+                            </svg>
+                            <svg class="pause-overlay" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 4h4v16H6zM14 4h4v16h-4z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="volume-control">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="Jungle">
+                    </div>
+                </div>
+                
+                <!-- River Sound -->
+                <div class="sound-card" data-sound="River">
+                    <div class="sound-icon-wrapper">
+                        <div class="sound-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"></path>
+                                <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"></path>
+                            </svg>
+                            <svg class="pause-overlay" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 4h4v16H6zM14 4h4v16h-4z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="volume-control">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="River">
+                    </div>
+                </div>
+                
+                <!-- Sea Sound -->
+                <div class="sound-card" data-sound="Sea">
+                    <div class="sound-icon-wrapper">
+                        <div class="sound-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 20a2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1c.8 0 1.5-.4 2-1"></path>
+                                <path d="M2 16a2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1c.8 0 1.5-.4 2-1"></path>
+                                <path d="M2 12a2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1 2.4 2.4 0 0 0 2-1 2.4 2.4 0 0 1 2-1 2.4 2.4 0 0 1 2 1 2.4 2.4 0 0 0 2 1c.8 0 1.5-.4 2-1"></path>
+                            </svg>
+                            <svg class="pause-overlay" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 4h4v16H6zM14 4h4v16h-4z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="volume-control">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="Sea">
                     </div>
                 </div>
             </div>
