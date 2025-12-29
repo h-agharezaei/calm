@@ -837,14 +837,16 @@ translations.fa.soundJungle = 'جنگل';
 translations.fa.soundRiver = 'رودخانه';
 translations.fa.soundSea = 'دریا';
 
-// مقداردهی اولیه صداها
-function initializeBgSounds() {
-    Object.keys(bgSounds).forEach(soundName => {
+// تابع بارگذاری تنبل صداها - فقط زمانی که نیاز است
+function loadBgSound(soundName) {
+    if (!bgSounds[soundName].audio) {
         const audio = new Audio(`assets/bg-sounds/${soundName}.mp3`);
         audio.loop = true; // حلقه‌ای شدن صدا
         audio.volume = 0.5; // حجم پیش‌فرض 50%
         bgSounds[soundName].audio = audio;
-    });
+        console.log(`صدای ${soundName} بارگذاری شد`);
+    }
+    return bgSounds[soundName].audio;
 }
 
 // باز کردن overlay
@@ -875,19 +877,17 @@ document.querySelectorAll('.sound-card').forEach(card => {
         const soundName = this.dataset.sound;
         const soundData = bgSounds[soundName];
         
-        if (!soundData.audio) {
-            console.error(`Audio for ${soundName} not initialized`);
-            return;
-        }
+        // بارگذاری تنبل صدا در صورت نیاز
+        const audio = loadBgSound(soundName);
         
         if (soundData.playing) {
             // توقف صدا
-            soundData.audio.pause();
+            audio.pause();
             soundData.playing = false;
             this.classList.remove('playing');
         } else {
             // پخش صدا
-            soundData.audio.play().catch(err => {
+            audio.play().catch(err => {
                 console.error(`Error playing ${soundName}:`, err);
             });
             soundData.playing = true;
@@ -902,11 +902,11 @@ document.querySelectorAll('.volume-slider').forEach(slider => {
         const soundName = this.dataset.sound;
         const soundData = bgSounds[soundName];
         
+        // تنظیم حجم صدا - اگر صدا بارگذاری شده باشد
         if (soundData.audio) {
             soundData.audio.volume = this.value / 100;
         }
     });
 });
 
-// مقداردهی اولیه صداها هنگام بارگذاری صفحه
-initializeBgSounds();
+// حذف مقداردهی اولیه - صداها به صورت lazy load بارگذاری می‌شوند
