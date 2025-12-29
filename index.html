@@ -235,6 +235,17 @@
                             <li data-i18n="aboutUsage4">به حالت تمرکز یا مدیتیشن بروید</li>
                         </ol>
                         
+                        <h3 data-i18n="feedbackTitle">💌 پیشنهادات و بازخورد</h3>
+                        <p data-i18n="feedbackDescription">نظرات و پیشنهادات شما برای ما ارزشمند است</p>
+                        
+                        <form class="feedback-form" action="https://formspree.io/f/mvzolpqo" method="POST">
+                            <input type="text" name="name" placeholder="نام (اختیاری)" data-i18n-placeholder="feedbackName">
+                            <input type="email" name="email" placeholder="ایمیل (اختیاری)" data-i18n-placeholder="feedbackEmail">
+                            <textarea name="message" rows="4" placeholder="پیشنهاد یا نظر خود را بنویسید..." data-i18n-placeholder="feedbackMessage" required></textarea>
+                            <button type="submit" data-i18n="feedbackSubmit">ارسال پیشنهاد</button>
+                            <p class="feedback-note" data-i18n="feedbackNote">پیشنهادات شما به صورت خصوصی برای ما ارسال می‌شود</p>
+                        </form>
+                        
                     </div>
                 </div>
             </div>

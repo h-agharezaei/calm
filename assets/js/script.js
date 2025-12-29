@@ -131,6 +131,17 @@ const translations = {
         aboutVersion: 'Version',
         aboutDeveloper: 'Developed with ❤️ by Calm Team',
         
+        // Feedback form
+        feedbackTitle: '💌 Feedback & Suggestions',
+        feedbackDescription: 'Your feedback and suggestions are valuable to us',
+        feedbackName: 'Name (optional)',
+        feedbackEmail: 'Email (optional)',
+        feedbackMessage: 'Share your suggestions or feedback...',
+        feedbackSubmit: 'Send Feedback',
+        feedbackNote: 'Your feedback will be sent to us privately',
+        feedbackSuccess: 'Thank you! Your feedback has been sent successfully.',
+        feedbackError: 'Sorry, there was an error sending your feedback. Please try again.',
+        
         // Alerts
         alertInvalidNumber: 'Please enter a valid number',
         alertMinimum5Seconds: 'Please enter a valid number (minimum 5 seconds)',
@@ -209,6 +220,17 @@ const translations = {
         aboutUsage4: 'آرام بگیرید و از محیط آرامش‌بخش خود لذت ببرید',
         aboutVersion: 'نسخه',
         aboutDeveloper: 'ساخته شده با ❤️ توسط تیم Calm',
+        
+        // فرم بازخورد
+        feedbackTitle: '💌 پیشنهادات و بازخورد',
+        feedbackDescription: 'نظرات و پیشنهادات شما برای ما ارزشمند است',
+        feedbackName: 'نام (اختیاری)',
+        feedbackEmail: 'ایمیل (اختیاری)',
+        feedbackMessage: 'پیشنهاد یا نظر خود را بنویسید...',
+        feedbackSubmit: 'ارسال پیشنهاد',
+        feedbackNote: 'پیشنهادات شما به صورت خصوصی برای ما ارسال می‌شود',
+        feedbackSuccess: 'متشکریم! پیشنهاد شما با موفقیت ارسال شد.',
+        feedbackError: 'متاسفانه خطایی در ارسال پیشنهاد رخ داد. لطفا دوباره تلاش کنید.',
         
         // هشدارها
         alertInvalidNumber: 'لطفا یک عدد معتبر وارد کنید',
