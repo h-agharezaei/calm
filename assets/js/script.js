@@ -31,9 +31,6 @@
 // عناصر DOM
 // ============================================
 const audio = document.getElementById('audio');
-const intervalInput = document.getElementById('interval');
-const updateBtn = document.getElementById('updateBtn');
-const statusSpan = document.getElementById('status');
 const startOverlay = document.getElementById('startOverlay');
 const startBtn = document.getElementById('startBtn');
 const bgModeSelect = document.getElementById('bgMode');
@@ -43,14 +40,25 @@ const bgIntervalRow = document.getElementById('bgIntervalRow');
 const imageSelectRow = document.getElementById('imageSelectRow');
 const thumbnails = document.querySelectorAll('.thumbnail');
 const backgroundImage = document.querySelector('.background-image');
-const soundToggle = document.getElementById('soundToggle');
 const settingsIcon = document.getElementById('settingsIcon');
 const settingsOverlay = document.getElementById('settingsOverlay');
 const controlPanel = document.getElementById('controlPanel');
 const closePanel = document.getElementById('closePanel');
 const loadingOverlay = document.getElementById('loadingOverlay');
-const soundSelect = document.getElementById('soundSelect');
 const languageSelect = document.getElementById('languageSelect');
+
+// عناصر پنل بازه زمانی
+const intervalIcon = document.getElementById('intervalIcon');
+const intervalOverlay = document.getElementById('intervalOverlay');
+const intervalPanel = document.getElementById('intervalPanel');
+const closeIntervalPanel = document.getElementById('closeIntervalPanel');
+const intervalInput2 = document.getElementById('interval2');
+const updateBtn2 = document.getElementById('updateBtn2');
+const soundToggle2 = document.getElementById('soundToggle2');
+const soundSelect2 = document.getElementById('soundSelect2');
+const statusSpan2 = document.getElementById('status2');
+const customIntervalRow2 = document.getElementById('customIntervalRow2');
+const presetButtons = document.querySelectorAll('.preset-btn');
 
 // ============================================
 // متغیرهای برنامه
@@ -68,6 +76,14 @@ const translations = {
         tabAbout: 'ℹ️ About',
         
         // Settings tab
+        intervalPanelTitle: '⏱️ Sound Interval Settings',
+        soundIntervalPresets: 'Sound Playback Templates:',
+        presetSilent: 'Silent',
+        presetStandard: 'Standard (5 min)',
+        presetShort: 'Short (3 min)',
+        presetLong: 'Long (10 min)',
+        presetExtended: 'Extended (15 min)',
+        presetCustom: 'Custom',
         soundInterval: 'Sound Playback Interval (seconds):',
         updateInterval: 'Update Interval',
         soundPlayback: 'Sound Playback',
@@ -158,6 +174,14 @@ const translations = {
         tabAbout: 'ℹ️ درباره',
         
         // تب تنظیمات
+        intervalPanelTitle: '⏱️ تنظیمات بازه پخش صدا',
+        soundIntervalPresets: 'الگوهای پخش صدا:',
+        presetSilent: 'بدون صدا',
+        presetStandard: 'استاندارد (۵ دقیقه)',
+        presetShort: 'کوتاه (۳ دقیقه)',
+        presetLong: 'بلند (۱۰ دقیقه)',
+        presetExtended: 'طولانی (۱۵ دقیقه)',
+        presetCustom: 'سفارشی',
         soundInterval: 'بازه زمانی پخش صدا (ثانیه):',
         updateInterval: 'تغییر بازه',
         soundPlayback: 'پخش صدا',
@@ -248,12 +272,24 @@ const sounds = {
     'singing-bowl-gong.mp3': 'assets/sounds/singing-bowl-gong.mp3',
     'chimes-bronze-singing-bowl-ding.mp3': 'assets/sounds/chimes-bronze-singing-bowl-ding.mp3'
 };
+
+// پیش‌فرض‌های بازه زمانی (به ثانیه)
+const intervalPresets = {
+    'silent': 0,          // بدون صدا
+    'short': 180,         // 3 دقیقه
+    'standard': 300,      // 5 دقیقه
+    'long': 600,          // 10 دقیقه
+    'extended': 900,      // 15 دقیقه
+    'custom': null        // سفارشی
+};
+
 let currentSound = 'singing-bowl-gong.mp3';
 let intervalTime = 300000; // پیش‌فرض 300 ثانیه (به میلی‌ثانیه)
 let intervalId = null;
 let countdown = intervalTime / 1000;
 let countdownId = null;
 let soundEnabled = true;
+let currentPreset = 'standard'; // پیش‌فرض استاندارد
 
 // متغیرهای مربوط به تصاویر پس‌زمینه
 const images = ['00.jpg', '01.jpg', '02.jpg', '03.jpg', '04.jpg'];
@@ -304,9 +340,9 @@ function updateAllTexts() {
     });
     
     // به‌روزرسانی options در selectها
-    if (soundSelect) {
-        soundSelect.options[0].text = t.soundGong;
-        soundSelect.options[1].text = t.soundChimes;
+    if (soundSelect2) {
+        soundSelect2.options[0].text = t.soundGong;
+        soundSelect2.options[1].text = t.soundChimes;
     }
     
     const bgModeSelect = document.getElementById('bgMode');
@@ -363,6 +399,46 @@ function loadSavedLanguage() {
     const savedLang = localStorage.getItem('calm-language') || 'fa'; // پیش‌فرض فارسی
     languageSelect.value = savedLang;
     changeLanguage(savedLang);
+}
+
+// بارگذاری پیش‌فرض ذخیره شده
+function loadSavedPreset() {
+    const savedPreset = localStorage.getItem('calm-preset') || 'standard'; // پیش‌فرض استاندارد
+    
+    // اعمال پیش‌فرض بدون فعال‌سازی رویداد change
+    currentPreset = savedPreset;
+    
+    // به‌روزرسانی کلاس active برای دکمه‌ها
+    presetButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.preset === savedPreset) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // اعمال تنظیمات بر اساس پیش‌فرض
+    if (savedPreset === 'silent') {
+        if (soundToggle2) soundToggle2.checked = false;
+        soundEnabled = false;
+        if (customIntervalRow2) customIntervalRow2.style.display = 'none';
+    } else if (savedPreset === 'custom') {
+        // نمایش فیلد سفارشی
+        if (customIntervalRow2) customIntervalRow2.style.display = 'flex';
+        // بارگذاری مقدار سفارشی از localStorage اگر وجود دارد
+        const savedCustomInterval = localStorage.getItem('calm-custom-interval');
+        if (savedCustomInterval) {
+            if (intervalInput2) intervalInput2.value = savedCustomInterval;
+            intervalTime = parseInt(savedCustomInterval) * 1000;
+        }
+    } else {
+        // پیش‌فرض‌های استاندارد
+        if (customIntervalRow2) customIntervalRow2.style.display = 'none';
+        const intervalSeconds = intervalPresets[savedPreset];
+        if (intervalInput2) intervalInput2.value = intervalSeconds;
+        intervalTime = intervalSeconds * 1000;
+    }
+    
+    countdown = intervalTime / 1000;
 }
 
 
@@ -464,20 +540,22 @@ function playSound() {
     audio.play()
         .then(() => {
             console.log('صدا با موفقیت پخش شد');
-            updateStatus(t.statusPlaying);
+            updateStatus2(t.statusPlaying);
             setTimeout(() => {
                 startCountdown();
             }, 1000);
         })
         .catch(error => {
             console.error('خطا در پخش صدا:', error);
-            updateStatus(t.statusError);
+            updateStatus2(t.statusError);
         });
 }
 
 // تابع به‌روزرسانی وضعیت
-function updateStatus(message) {
-    statusSpan.textContent = message;
+function updateStatus2(message) {
+    if (statusSpan2) {
+        statusSpan2.textContent = message;
+    }
 }
 
 // تابع شمارش معکوس
@@ -495,7 +573,8 @@ function startCountdown() {
         if (countdown > 0) {
             // فقط اگر soundEnabled فعال باشد، شمارش معکوس نمایش داده شود
             if (soundEnabled) {
-                updateStatus(t.statusNextPlayIn.replace('{0}', countdown));
+                const message = t.statusNextPlayIn.replace('{0}', countdown);
+                updateStatus2(message);
             }
         } else {
             clearInterval(countdownId);
@@ -522,14 +601,82 @@ function startTimer() {
     }, intervalTime);
 }
 
-// رویداد کلیک دکمه تغییر بازه
-updateBtn.addEventListener('click', () => {
-    const newInterval = parseInt(intervalInput.value);
+// ============================================
+// توابع مدیریت پیش‌فرض‌های بازه زمانی
+// ============================================
+
+// تابع انتخاب پیش‌فرض
+function selectPreset(preset) {
+    currentPreset = preset;
+    
+    // به‌روزرسانی کلاس active برای دکمه‌ها
+    presetButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.preset === preset) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // ذخیره در localStorage
+    localStorage.setItem('calm-preset', preset);
+    
+    // اعمال تنظیمات بازه زمانی
+    if (preset === 'silent') {
+        // حالت بدون صدا
+        soundToggle2.checked = false;
+        soundToggle2.dispatchEvent(new Event('change'));
+        customIntervalRow2.style.display = 'none';
+    } else if (preset === 'custom') {
+        // نمایش فیلد سفارشی
+        customIntervalRow2.style.display = 'flex';
+        // ذخیره مقدار سفارشی
+        localStorage.setItem('calm-custom-interval', intervalInput2.value);
+        // بازگشت به وضعیت قبلی soundToggle
+        if (!soundEnabled && intervalInput2.value) {
+            soundToggle2.checked = true;
+            soundToggle2.dispatchEvent(new Event('change'));
+        }
+    } else {
+        // پیش‌فرض‌های استاندارد
+        customIntervalRow2.style.display = 'none';
+        const intervalSeconds = intervalPresets[preset];
+        intervalInput2.value = intervalSeconds;
+        intervalTime = intervalSeconds * 1000;
+        
+        // فعال کردن صدا اگر غیرفعال بود
+        if (!soundEnabled) {
+            soundToggle2.checked = true;
+            soundToggle2.dispatchEvent(new Event('change'));
+        } else {
+            // شروع مجدد تایمر با بازه جدید
+            startTimer();
+        }
+        
+        const t = translations[currentLang];
+        updateStatus2(t.statusIntervalChanged.replace('{0}', intervalSeconds));
+    }
+}
+
+// رویداد کلیک برای دکمه‌های پیش‌فرض
+presetButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        selectPreset(btn.dataset.preset);
+    });
+});
+
+// ============================================
+// رویدادهای تغییر تنظیمات
+// ============================================
+
+// رویداد کلیک دکمه تغییر بازه در پنل جدید
+updateBtn2.addEventListener('click', () => {
+    const newInterval = parseInt(intervalInput2.value);
     const t = translations[currentLang];
     
     if (newInterval && newInterval > 0) {
-        intervalTime = newInterval * 1000; // تبدیل به میلی‌ثانیه
-        updateStatus(t.statusIntervalChanged.replace('{0}', newInterval));
+        intervalTime = newInterval * 1000;
+        selectPreset('custom');
+        updateStatus2(t.statusIntervalChanged.replace('{0}', newInterval));
         startTimer();
     } else {
         alert(t.alertInvalidNumber);
@@ -537,9 +684,16 @@ updateBtn.addEventListener('click', () => {
 });
 
 // رویداد Enter در فیلد ورودی
-intervalInput.addEventListener('keypress', (e) => {
+intervalInput2.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-        updateBtn.click();
+        updateBtn2.click();
+    }
+});
+
+// رویداد Enter در فیلد ورودی پنل جدید
+intervalInput2.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        updateBtn2.click();
     }
 });
 
@@ -576,7 +730,7 @@ updateBgBtn.addEventListener('click', () => {
         if (bgMode === 'rotation') {
             startBackgroundRotation();
         }
-        updateStatus(t.statusBgIntervalChanged.replace('{0}', newInterval));
+        updateStatus2(t.statusBgIntervalChanged.replace('{0}', newInterval));
     } else {
         alert(t.alertMinimum5Seconds);
     }
@@ -589,43 +743,39 @@ bgIntervalInput.addEventListener('keypress', (e) => {
     }
 });
 
-// رویداد تغییر وضعیت پخش صدا
-soundToggle.addEventListener('change', (e) => {
+// رویداد تغییر وضعیت پخش صدا در پنل جدید
+soundToggle2.addEventListener('change', (e) => {
     soundEnabled = e.target.checked;
     const t = translations[currentLang];
     
     if (soundEnabled) {
-        updateStatus(t.statusSoundEnabled);
-        // اگر تایمر در حال اجرا نیست، شروع کن
+        updateStatus2(t.statusSoundEnabled);
         if (!intervalId) {
             startTimer();
         }
     } else {
-        // متوقف کردن صدای در حال پخش
         audio.pause();
         audio.currentTime = 0;
         
-        // متوقف کردن تایمر اصلی
         if (intervalId) {
             clearInterval(intervalId);
             intervalId = null;
         }
         
-        // متوقف کردن شمارش معکوس
         if (countdownId) {
             clearInterval(countdownId);
             countdownId = null;
         }
         
-        updateStatus(t.statusSoundDisabled);
+        updateStatus2(t.statusSoundDisabled);
     }
 });
 
-// رویداد تغییر انتخاب صدا
-soundSelect.addEventListener('change', (e) => {
+// رویداد تغییر انتخاب صدا در پنل جدید
+soundSelect2.addEventListener('change', (e) => {
     currentSound = e.target.value;
     const t = translations[currentLang];
-    updateStatus(t.statusSoundChanged.replace('{0}', e.target.options[e.target.selectedIndex].text));
+    updateStatus2(t.statusSoundChanged.replace('{0}', e.target.options[e.target.selectedIndex].text));
 });
 
 // رویداد تغییر زبان
@@ -675,6 +825,23 @@ settingsIcon.addEventListener('click', () => {
     lazyLoadThumbnails();
 });
 
+// رویداد باز کردن پنل بازه زمانی
+intervalIcon.addEventListener('click', () => {
+    intervalOverlay.classList.add('show');
+});
+
+// رویداد بستن پنل بازه زمانی
+closeIntervalPanel.addEventListener('click', () => {
+    intervalOverlay.classList.remove('show');
+});
+
+// بستن پنل با کلیک روی overlay
+intervalOverlay.addEventListener('click', (e) => {
+    if (e.target === intervalOverlay) {
+        intervalOverlay.classList.remove('show');
+    }
+});
+
 // تابع مخفی کردن loading overlay
 function hideLoadingOverlay() {
     if (loadingOverlay) {
@@ -685,14 +852,28 @@ function hideLoadingOverlay() {
 // بارگذاری اولیه: فقط تصویر فعلی
 async function initializeApp() {
     try {
+        console.log('شروع بارگذاری...');
+        
         // بارگذاری زبان ذخیره شده
         loadSavedLanguage();
+        console.log('زبان بارگذاری شد');
+        
+        // بارگذاری پیش‌فرض صدا ذخیره شده
+        loadSavedPreset();
+        console.log('پیش‌فرض بارگذاری شد');
         
         // بارگذاری تصویر اولیه
+        console.log('در حال بارگذاری تصویر:', images[currentImageIndex]);
         await preloadImage(images[currentImageIndex]);
+        console.log('تصویر بارگذاری شد');
         
         // تنظیم پس‌زمینه
-        backgroundImage.style.backgroundImage = `url('assets/images/${images[currentImageIndex]}')`;
+        if (backgroundImage) {
+            backgroundImage.style.backgroundImage = `url('assets/images/${images[currentImageIndex]}')`;
+            console.log('پس‌زمینه تنظیم شد');
+        } else {
+            console.error('backgroundImage element not found!');
+        }
         
         // به‌روزرسانی thumbnail فعال
         const activeThumbnail = document.querySelector(`.thumbnail[data-index="${currentImageIndex}"]`);
@@ -702,6 +883,7 @@ async function initializeApp() {
         
         // مخفی کردن loading overlay
         hideLoadingOverlay();
+        console.log('بارگذاری کامل شد');
         
         // preload بقیه تصاویر در پس‌زمینه
         preloadAllImages();
