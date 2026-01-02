@@ -59,7 +59,77 @@
         </div>
     </div>
     
+    <!-- Overlay و پنل تنظیمات بازه پخش صدا -->
+    <div class="interval-overlay" id="intervalOverlay">
+        <div class="interval-panel" id="intervalPanel">
+            <button class="close-panel" id="closeIntervalPanel" aria-label="بستن">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            
+            <h3 class="panel-title" data-i18n="intervalPanelTitle">⏱️ تنظیمات بازه پخش صدا</h3>
+            
+            <div class="control-row">
+                <label data-i18n="soundIntervalPresets">الگوهای پخش صدا:</label>
+                <div class="preset-buttons">
+                    <button class="preset-btn" data-preset="silent" data-i18n="presetSilent">بدون صدا</button>
+                    <button class="preset-btn active" data-preset="standard" data-i18n="presetStandard">استاندارد (۵ دقیقه)</button>
+                    <button class="preset-btn" data-preset="short" data-i18n="presetShort">کوتاه (۳ دقیقه)</button>
+                    <button class="preset-btn" data-preset="long" data-i18n="presetLong">بلند (۱۰ دقیقه)</button>
+                    <button class="preset-btn" data-preset="extended" data-i18n="presetExtended">طولانی (۱۵ دقیقه)</button>
+                    <button class="preset-btn" data-preset="custom" data-i18n="presetCustom">سفارشی</button>
+                </div>
+            </div>
+            
+            <div class="control-row" id="customIntervalRow2" style="display: none;">
+                <label for="interval2" data-i18n="soundInterval">بازه زمانی پخش صدا (ثانیه):</label>
+                <input type="number" id="interval2" min="1" max="300000" value="300">
+                <button id="updateBtn2" data-i18n="updateInterval">تغییر بازه</button>
+            </div>
+            
+            <div class="control-row">
+                <div class="sound-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="soundToggle2" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" data-i18n="soundPlayback">پخش صدا</span>
+                </div>
+                
+                <label for="soundSelect2" data-i18n="selectSound">انتخاب صدا:</label>
+                <select id="soundSelect2">
+                    <option value="singing-bowl-gong.mp3" data-i18n="soundGong">کاسه آواز - گونگ</option>
+                    <option value="chimes-bronze-singing-bowl-ding.mp3" data-i18n="soundChimes">کاسه برنزی - زنگ</option>
+                </select>
+            </div>
+            
+            <div class="status">
+                <span id="status2">منتظر پخش...</span>
+            </div>
+        </div>
+    </div>
+    
     <div class="controls">
+        <!-- دکمه آیکون بازه پخش صدا (کاسه ژاپنی) -->
+        <button class="interval-icon" id="intervalIcon" aria-label="Sound Interval">
+            <svg width="32" height="32" viewBox="0 0 512 512" fill="currentColor">
+                <g transform="translate(0,512) scale(0.1,-0.1)">
+                    <path d="M3276 4739 c-47 -11 -125 -50 -169 -83 -18 -14 -255 -291 -527 -615 l-495 -590 -892 -1 -893 0 0 -178 c0 -462 103 -840 332 -1221 166 -275 431 -547 703 -723 l90 -58 -500 0 c-552 0 -587 -3 -695 -61 -112 -59 -188 -166 -217 -303 -46 -219 78 -439 289 -513 51 -17 145 -18 2258 -18 2113 0 2207 1 2258 18 75 27 161 88 206 147 164 216 98 545 -134 669 -108 58 -143 61 -695 61 l-499 0 99 66 c398 264 704 643 872 1079 106 272 141 462 150 797 l6 238 -780 2 -781 3 249 295 c267 318 302 371 318 483 26 186 -62 363 -230 460 -90 52 -219 70 -323 46z m191 -318 c28 -20 47 -45 58 -76 18 -45 18 -48 -1 -91 -11 -27 -145 -195 -338 -424 l-319 -380 -195 0 c-183 0 -194 1 -181 17 146 183 800 950 823 964 47 29 105 25 153 -10z m1047 -1279 c7 -12 -20 -212 -44 -330 -95 -457 -345 -862 -698 -1130 -375 -286 -881 -432 -1360 -394 -910 74 -1587 665 -1766 1542 -26 130 -48 299 -40 312 7 11 3901 10 3908 0z m222 -2193 c109 -52 107 -219 -2 -265 -50 -21 -4298 -21 -4348 0 -109 45 -111 212 -3 265 l42 21 2134 0 2135 0 42 -21z"/>
+                    <path d="M1170 2665 l-105 -105 108 -108 107 -107 107 107 108 108 -105 105 c-58 58 -107 105 -110 105 -3 0 -52 -47 -110 -105z"/>
+                    <path d="M1810 2665 l-105 -105 108 -108 107 -107 107 107 108 108 -105 105 c-58 58 -107 105 -110 105 -3 0 -52 -47 -110 -105z"/>
+                    <path d="M2450 2665 l-105 -105 108 -108 107 -107 107 107 108 108 -105 105 c-58 58 -107 105 -110 105 -3 0 -52 -47 -110 -105z"/>
+                    <path d="M3090 2665 l-105 -105 108 -108 107 -107 107 107 108 108 -105 105 c-58 58 -107 105 -110 105 -3 0 -52 -47 -110 -105z"/>
+                    <path d="M3730 2665 l-105 -105 108 -108 107 -107 107 107 108 108 -105 105 c-58 58 -107 105 -110 105 -3 0 -52 -47 -110 -105z"/>
+                    <path d="M830 4693 c-218 -36 -406 -137 -563 -303 -157 -166 -244 -362 -264 -595 l-6 -75 152 0 151 0 0 38 c1 72 30 178 76 272 101 204 313 351 531 367 l73 6 0 148 0 149 -62 -1 c-35 -1 -74 -4 -88 -6z"/>
+                    <path d="M4140 4553 l0 -150 73 -6 c150 -11 287 -77 407 -197 114 -113 180 -252 196 -410 l7 -70 150 0 150 0 -7 78 c-14 171 -82 360 -180 496 -53 75 -181 198 -259 249 -134 89 -293 143 -449 154 l-88 6 0 -150z"/>
+                    <path d="M891 4169 c-110 -21 -230 -103 -291 -199 -38 -59 -70 -156 -70 -211 l0 -40 147 3 147 3 9 38 c11 48 56 93 108 108 l39 12 0 149 c0 168 8 156 -89 137z"/>
+                    <path d="M4140 4032 l0 -149 39 -12 c52 -15 97 -60 108 -108 l9 -38 147 -3 147 -3 0 40 c0 96 -64 228 -149 303 -70 63 -205 118 -287 118 -11 0 -14 -30 -14 -148z"/>
+                </g>
+            </svg>
+        </button>
+        
         <!-- دکمه آیکون صداهای پس‌زمینه -->
         <button class="bg-sounds-icon" id="bgSoundsIcon" aria-label="Background Sounds">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -97,29 +167,6 @@
             
             <!-- محتوای تب تنظیمات -->
             <div class="tab-content active" id="settings-tab">
-            <div class="control-row">
-                <label for="interval" data-i18n="soundInterval">بازه زمانی پخش صدا (ثانیه):</label>
-                <input type="number" id="interval" min="1" max="300000" value="300">
-                <button id="updateBtn" data-i18n="updateInterval">تغییر بازه</button>
-                <div class="sound-toggle">
-                    <label class="switch">
-                        <input type="checkbox" id="soundToggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                    <span class="toggle-label" data-i18n="soundPlayback">پخش صدا</span>
-                </div>
-            </div>
-            
-            <div class="control-row">
-                <label for="soundSelect" data-i18n="selectSound">انتخاب صدا:</label>
-                <select id="soundSelect">
-                    <option value="singing-bowl-gong.mp3" data-i18n="soundGong">کاسه آواز - گونگ</option>
-                    <option value="chimes-bronze-singing-bowl-ding.mp3" data-i18n="soundChimes">کاسه برنزی - زنگ</option>
-                </select>
-            </div>
-            
-            <div class="separator"></div>
-            
             <div class="control-row">
                 <label for="languageSelect" data-i18n="language">Language / زبان:</label>
                 <select id="languageSelect">
@@ -163,10 +210,6 @@
                 <label for="bgInterval" data-i18n="imageChangeInterval">زمان تغییر تصویر (ثانیه):</label>
                 <input type="number" id="bgInterval" min="5" max="600" value="60">
                 <button id="updateBgBtn" data-i18n="updateBgInterval">تغییر زمان</button>
-            </div>
-            
-            <div class="status">
-                <span id="status">منتظر پخش...</span>
             </div>
             </div>
             
