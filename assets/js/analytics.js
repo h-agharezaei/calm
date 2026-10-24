@@ -4,6 +4,7 @@
  * - Nothing is loaded and nothing is sent before the user accepts.
  * - The user can turn analytics off at any time from Settings.
  * - If ANALYTICS_ID is empty, the whole feature is disabled (no banner, no settings row).
+ *   (window.CALM_ANALYTICS_ID, if defined before this script, overrides it; handy for tests.)
  *
  * Set ANALYTICS_ID to one of:
  *   'G-XXXXXXXXXX'   Google Analytics 4 measurement ID (events are sent with gtag)
@@ -11,7 +12,7 @@
  *                    create the GA4 tags/triggers inside Tag Manager)
  */
 (function () {
-    const ANALYTICS_ID = window.CALM_ANALYTICS_ID || '';
+    const ANALYTICS_ID = window.CALM_ANALYTICS_ID || 'G-223Q9E18JP';
     const CONSENT_KEY = 'calm-analytics-consent'; // 'granted' | 'denied'
 
     const configured = /^(G|GTM)-[A-Z0-9]+$/i.test(ANALYTICS_ID);
