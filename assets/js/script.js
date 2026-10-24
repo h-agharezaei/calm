@@ -283,8 +283,6 @@ const intervalPresets = {
 let currentSound = 'singing-bowl-gong.mp3';
 let intervalTime = 300000; // پیش‌فرض 300 ثانیه (به میلی‌ثانیه)
 let intervalId = null;
-let countdown = intervalTime / 1000;
-let countdownId = null;
 let soundEnabled = true;
 let currentPreset = 'standard'; // پیش‌فرض استاندارد
 
@@ -461,7 +459,6 @@ function loadSavedPreset() {
         intervalTime = intervalSeconds * 1000;
     }
     
-    countdown = intervalTime / 1000;
 }
 
 
@@ -545,10 +542,15 @@ function stopBackgroundRotation() {
 // توابع مدیریت پخش صدا
 // ============================================
 
+// زمان‌بندی بر اساس ساعت واقعی (Date.now) است، نه شمارش tickها؛
+// پس اگر مرورگر تایمرها را کند کند (تب پس‌زمینه، موبایل، sleep)، پخش بعدی سر وقت یا با کمترین تأخیر انجام می‌شود.
+let nextPlayAt = 0;        // زمان پخش بعدی (میلی‌ثانیه)
+let statusHoldUntil = 0;   // تا این زمان پیام «در حال پخش» روی صفحه می‌ماند
+const MAX_LATE_MS = 90 * 1000; // اگر بیش از این دیر شد (مثلاً بعد از sleep)، گونگ ناگهانی پخش نشود
+
 // تابع پخش صدا
 function playSound() {
     if (!soundEnabled) {
-        // اگر صدا غیرفعال است، نباید شمارنده شروع شود
         return;
     }
     
@@ -559,15 +561,13 @@ function playSound() {
     audio.currentTime = 0;
     audio.play()
         .then(() => {
-            console.log('صدا با موفقیت پخش شد');
             updateStatus2(t.statusPlaying);
-            setTimeout(() => {
-                startCountdown();
-            }, 1000);
+            statusHoldUntil = Date.now() + 1000;
         })
         .catch(error => {
             console.error('خطا در پخش صدا:', error);
             updateStatus2(t.statusError);
+            statusHoldUntil = Date.now() + 3000;
         });
 }
 
@@ -578,28 +578,28 @@ function updateStatus2(message) {
     }
 }
 
-// تابع شمارش معکوس
-function startCountdown() {
-    // پاک کردن شمارش معکوس قبلی
-    if (countdownId) {
-        clearInterval(countdownId);
+// هر ثانیه (و هنگام بازگشت به تب) اجرا می‌شود
+function tick() {
+    if (!soundEnabled) {
+        return;
     }
     
-    countdown = intervalTime / 1000;
-    const t = translations[currentLang];
+    const now = Date.now();
+    const remaining = Math.ceil((nextPlayAt - now) / 1000);
     
-    countdownId = setInterval(() => {
-        countdown--;
-        if (countdown > 0) {
-            // فقط اگر soundEnabled فعال باشد، شمارش معکوس نمایش داده شود
-            if (soundEnabled) {
-                const message = t.statusNextPlayIn.replace('{0}', countdown);
-                updateStatus2(message);
-            }
-        } else {
-            clearInterval(countdownId);
+    if (remaining <= 0) {
+        const lateBy = now - nextPlayAt;
+        nextPlayAt = now + intervalTime;
+        if (lateBy <= MAX_LATE_MS) {
+            playSound();
         }
-    }, 1000);
+        return;
+    }
+    
+    if (now >= statusHoldUntil) {
+        const t = translations[currentLang];
+        updateStatus2(t.statusNextPlayIn.replace('{0}', remaining));
+    }
 }
 
 // تابع شروع تایمر
@@ -609,23 +609,18 @@ function startTimer() {
         clearInterval(intervalId);
         intervalId = null;
     }
-    if (countdownId) {
-        clearInterval(countdownId);
-        countdownId = null;
-    }
-
+    
     // در حالت بدون صدا هیچ تایمری ساخته نشود
     if (!soundEnabled || intervalTime <= 0) {
         return;
     }
-
+    
     // پخش فوری اولین صدا
     playSound();
+    nextPlayAt = Date.now() + intervalTime;
     
-    // تنظیم تایمر برای پخش‌های بعدی
-    intervalId = setInterval(() => {
-        playSound();
-    }, intervalTime);
+    // بررسی هر ثانیه
+    intervalId = setInterval(tick, 1000);
 }
 
 // ============================================
@@ -788,11 +783,6 @@ soundToggle2.addEventListener('change', (e) => {
         if (intervalId) {
             clearInterval(intervalId);
             intervalId = null;
-        }
-        
-        if (countdownId) {
-            clearInterval(countdownId);
-            countdownId = null;
         }
         
         updateStatus2(t.statusSoundDisabled);
@@ -984,7 +974,13 @@ tabButtons.forEach(button => {
 
 // جلوگیری از توقف تایمر هنگام تغییر تب
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && !intervalId && soundEnabled && startOverlay.classList.contains('hidden')) {
+    if (document.hidden || !soundEnabled || !startOverlay.classList.contains('hidden')) {
+        return;
+    }
+    if (intervalId) {
+        // تایمرها در پس‌زمینه ممکن است کند شده باشند: فوراً با ساعت واقعی هماهنگ شو
+        tick();
+    } else {
         startTimer();
     }
 });
