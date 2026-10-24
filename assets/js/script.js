@@ -177,11 +177,8 @@ const translations = {
         installIosHint: 'To install: tap the Share button in Safari, then choose "Add to Home Screen".',
         
         // Analytics
-        consentMessage: 'To improve Calm, we collect anonymous usage statistics. No personal information is recorded.',
-        consentAccept: 'Accept',
-        consentReject: 'Decline',
         analyticsToggleLabel: 'Anonymous usage statistics',
-        analyticsNote: 'To improve the app, visits and feature usage (no name, email or exact location) are recorded with Google Analytics. You can turn this off at any time.',
+        analyticsNote: 'To improve the app, visits and feature usage (no name, email or exact location) are recorded with Google Analytics. You can turn this off here at any time.',
         
         // Alerts
         alertInvalidNumber: 'Please enter a valid number',
@@ -294,9 +291,6 @@ const translations = {
         installIosHint: 'برای نصب: دکمه‌ی اشتراک‌گذاری (Share) را در Safari بزنید و «Add to Home Screen» را انتخاب کنید.',
         
         // آمار استفاده
-        consentMessage: 'برای بهبود Calm، آمار ناشناس استفاده را جمع‌آوری می‌کنیم. هیچ اطلاعات شخصی ثبت نمی‌شود.',
-        consentAccept: 'قبول',
-        consentReject: 'رد',
         analyticsToggleLabel: 'آمار ناشناس استفاده',
         analyticsNote: 'برای بهبود برنامه، بازدیدها و استفاده از بخش‌ها (بدون نام، ایمیل یا موقعیت دقیق) با Google Analytics ثبت می‌شود. هر زمان می‌توانید آن را خاموش کنید.',
         

@@ -220,7 +220,7 @@
                 <p class="install-hint" id="installIosHint" data-i18n="installIosHint" hidden>برای نصب: دکمه‌ی اشتراک‌گذاری (Share) را در Safari بزنید و «Add to Home Screen» را انتخاب کنید.</p>
             </div>
             
-            <!-- آمار ناشناس استفاده (فقط وقتی شناسه‌ی Analytics تنظیم شده باشد نمایش داده می‌شود) -->
+            <!-- آمار ناشناس استفاده: به‌صورت پیش‌فرض روشن است و کاربر می‌تواند خاموشش کند -->
             <div class="analytics-section" id="analyticsSection" hidden>
                 <div class="separator"></div>
                 <div class="control-row">
@@ -446,15 +446,6 @@
             <path d="M5 21h14"></path>
         </svg>
     </button>
-
-    <!-- Analytics consent (shown only when analytics is configured and the user has not chosen yet) -->
-    <div class="consent-banner" id="consentBanner" role="region" aria-label="Analytics" hidden>
-        <p data-i18n="consentMessage">برای بهبود Calm، آمار ناشناس استفاده را جمع‌آوری می‌کنیم. هیچ اطلاعات شخصی ثبت نمی‌شود.</p>
-        <div class="consent-actions">
-            <button type="button" id="consentReject" data-i18n="consentReject">رد</button>
-            <button type="button" id="consentAccept" data-i18n="consentAccept">قبول</button>
-        </div>
-    </div>
 
     <audio id="audio" preload="auto">
         <source src="assets/sounds/singing-bowl-gong.mp3" type="audio/mpeg">
