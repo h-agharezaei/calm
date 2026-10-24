@@ -1482,29 +1482,36 @@ setupOfflineButtons();
     const section = document.getElementById('installSection');
     const button = document.getElementById('installBtn');
     const iosHint = document.getElementById('installIosHint');
-    if (!section || !button || !iosHint) return;
+    const fab = document.getElementById('installFab'); // دکمه‌ی محو گوشه‌ی پایین سمت چپ
+    if (!section || !button || !iosHint || !fab) return;
     
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    // اگر برنامه نصب شده و از خود آیکون باز شده است، هیچ دکمه‌ای نشان داده نمی‌شود
+    const isInstalledApp = ['standalone', 'fullscreen', 'minimal-ui']
+        .some(mode => window.matchMedia(`(display-mode: ${mode})`).matches)
         || window.navigator.standalone === true;
-    if (isStandalone) return; // قبلاً نصب شده و از همان باز شده است
+    if (isInstalledApp) return;
     
     const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
         || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     let deferredPrompt = null;
     
-    if (isIos) {
-        section.hidden = false;
-        iosHint.hidden = false;
-    }
-    
-    window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault(); // منوی پیش‌فرض نشان داده نشود؛ دکمه‌ی خودمان را نشان می‌دهیم
-        deferredPrompt = e;
+    function showInstallUI() {
         section.hidden = false;
         button.hidden = false;
-    });
+        fab.hidden = false;
+        document.body.classList.add('install-available');
+    }
     
-    button.addEventListener('click', async () => {
+    function hideInstallUI() {
+        button.hidden = true;
+        fab.hidden = true;
+        document.body.classList.remove('install-available');
+        if (iosHint.hidden) {
+            section.hidden = true;
+        }
+    }
+    
+    async function promptInstall() {
         if (!deferredPrompt) return;
         try {
             await deferredPrompt.prompt();
@@ -1514,13 +1521,27 @@ setupOfflineButtons();
         }
         // هر پیشنهاد فقط یک بار قابل استفاده است
         deferredPrompt = null;
-        section.hidden = true;
-        button.hidden = true;
+        hideInstallUI();
+    }
+    
+    // iPhone/iPad: نصب خودکار نیست، فقط راهنما در تنظیمات
+    if (isIos) {
+        section.hidden = false;
+        iosHint.hidden = false;
+    }
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); // منوی پیش‌فرض نشان داده نشود؛ دکمه‌های خودمان را نشان می‌دهیم
+        deferredPrompt = e;
+        showInstallUI();
     });
+    
+    button.addEventListener('click', promptInstall);
+    fab.addEventListener('click', promptInstall);
     
     window.addEventListener('appinstalled', () => {
         deferredPrompt = null;
-        section.hidden = true;
+        hideInstallUI();
     });
 })();
 
