@@ -322,6 +322,9 @@ function changeLanguage(lang) {
     
     // به‌روزرسانی meta tags
     updateMetaTags();
+    
+    // اطلاع به بخش‌هایی که متن پویا دارند
+    document.dispatchEvent(new Event('calm:languagechange'));
 }
 
 // دکمه‌ی تغییر زبان (بالا سمت راست): زبان مقصد را نشان می‌دهد
@@ -1135,7 +1138,7 @@ bgSoundsOverlay.addEventListener('click', (e) => {
 document.querySelectorAll('.sound-card').forEach(card => {
     card.addEventListener('click', function(e) {
         // اگر کلیک روی volume slider بود، از پخش/توقف جلوگیری کن
-        if (e.target.classList.contains('volume-slider')) {
+        if (e.target.closest('.volume-slider, .offline-btn')) {
             return;
         }
         
@@ -1196,6 +1199,167 @@ document.querySelectorAll('.volume-slider').forEach(slider => {
 });
 
 // حذف مقداردهی اولیه - صداها به صورت lazy load بارگذاری می‌شوند
+
+// ============================================
+// ذخیره‌ی صداهای پس‌زمینه برای استفاده‌ی آفلاین
+// ============================================
+
+translations.en.offlineDownload = 'Save for offline use';
+translations.en.offlineSaving = 'Saving... {0}%';
+translations.en.offlineSaved = 'Saved offline - tap to remove';
+translations.en.offlineError = 'Download failed - tap to retry';
+translations.fa.offlineDownload = 'ذخیره برای استفاده آفلاین';
+translations.fa.offlineSaving = 'در حال ذخیره... {0}٪';
+translations.fa.offlineSaved = 'ذخیره شده - برای حذف کلیک کنید';
+translations.fa.offlineError = 'دانلود ناموفق بود - برای تلاش مجدد کلیک کنید';
+
+const OFFLINE_CACHE = 'calm-offline-sounds'; // باید با sw.js یکی باشد
+const offlineSupported = 'caches' in window && 'serviceWorker' in navigator;
+const offlineButtons = {}; // soundName -> { button, state, progress }
+
+const OFFLINE_ICONS = {
+    idle: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 11 5 5 5-5"></path><path d="M5 21h14"></path></svg>',
+    saved: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>',
+    error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5"></path><path d="M12 17h.01"></path><circle cx="12" cy="12" r="10"></circle></svg>'
+};
+
+function bgSoundUrl(soundName) {
+    return new URL(`assets/bg-sounds/${soundName}.mp3`, document.baseURI).href;
+}
+
+async function isSoundSavedOffline(soundName) {
+    try {
+        const cache = await caches.open(OFFLINE_CACHE);
+        return !!(await cache.match(bgSoundUrl(soundName)));
+    } catch (err) {
+        return false;
+    }
+}
+
+async function saveSoundOffline(soundName, onProgress) {
+    const url = bgSoundUrl(soundName);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    const total = parseInt(res.headers.get('Content-Length'), 10) || 0;
+    const reader = res.body.getReader();
+    const chunks = [];
+    let received = 0;
+    
+    for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        if (total) onProgress(received / total);
+    }
+    
+    const cache = await caches.open(OFFLINE_CACHE);
+    await cache.put(url, new Response(new Blob(chunks, { type: 'audio/mpeg' }), {
+        status: 200,
+        headers: { 'Content-Type': 'audio/mpeg' }
+    }));
+    
+    // درخواست ذخیره‌سازی پایدار تا مرورگر فایل‌ها را خودسرانه پاک نکند
+    if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});
+    }
+}
+
+async function removeSoundOffline(soundName) {
+    const cache = await caches.open(OFFLINE_CACHE);
+    await cache.delete(bgSoundUrl(soundName));
+}
+
+function renderOfflineButton(soundName) {
+    const item = offlineButtons[soundName];
+    const t = translations[currentLang];
+    let label;
+    let html;
+    
+    if (item.state === 'loading') {
+        const percent = Math.round(item.progress * 100);
+        label = t.offlineSaving.replace('{0}', percent);
+        html = `<span class="offline-percent">${percent}%</span>`;
+    } else if (item.state === 'saved') {
+        label = t.offlineSaved;
+        html = OFFLINE_ICONS.saved;
+    } else if (item.state === 'error') {
+        label = t.offlineError;
+        html = OFFLINE_ICONS.error;
+    } else {
+        label = t.offlineDownload;
+        html = OFFLINE_ICONS.idle;
+    }
+    
+    item.button.innerHTML = html;
+    item.button.title = label;
+    item.button.setAttribute('aria-label', label);
+    item.button.dataset.state = item.state;
+    item.button.disabled = item.state === 'loading';
+}
+
+function setupOfflineButtons() {
+    if (!offlineSupported) return;
+    
+    document.querySelectorAll('.sound-card').forEach(card => {
+        const soundName = card.dataset.sound;
+        const control = card.querySelector('.volume-control');
+        if (!control) return;
+        
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'offline-btn';
+        control.appendChild(button);
+        
+        offlineButtons[soundName] = { button, state: 'idle', progress: 0 };
+        renderOfflineButton(soundName);
+        
+        isSoundSavedOffline(soundName).then(saved => {
+            if (saved) {
+                offlineButtons[soundName].state = 'saved';
+                renderOfflineButton(soundName);
+            }
+        });
+        
+        button.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const item = offlineButtons[soundName];
+            
+            if (item.state === 'saved') {
+                await removeSoundOffline(soundName);
+                item.state = 'idle';
+                renderOfflineButton(soundName);
+                return;
+            }
+            
+            item.state = 'loading';
+            item.progress = 0;
+            renderOfflineButton(soundName);
+            
+            try {
+                await saveSoundOffline(soundName, (p) => {
+                    item.progress = p;
+                    renderOfflineButton(soundName);
+                });
+                item.state = 'saved';
+            } catch (err) {
+                console.error(`Offline save failed for ${soundName}:`, err);
+                item.state = 'error';
+            }
+            renderOfflineButton(soundName);
+        });
+        
+        // جلوگیری از فعال شدن کارت با کیبورد روی دکمه
+        button.addEventListener('keydown', (e) => e.stopPropagation());
+    });
+}
+
+document.addEventListener('calm:languagechange', () => {
+    Object.keys(offlineButtons).forEach(renderOfflineButton);
+});
+
+setupOfflineButtons();
 
 // ============================================
 // PWA: ثبت Service Worker (نیازمند HTTPS یا localhost)
