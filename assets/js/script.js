@@ -587,11 +587,18 @@ function startTimer() {
     // پاک کردن تایمر قبلی
     if (intervalId) {
         clearInterval(intervalId);
+        intervalId = null;
     }
     if (countdownId) {
         clearInterval(countdownId);
+        countdownId = null;
     }
-    
+
+    // در حالت بدون صدا هیچ تایمری ساخته نشود
+    if (!soundEnabled || intervalTime <= 0) {
+        return;
+    }
+
     // پخش فوری اولین صدا
     playSound();
     
@@ -690,17 +697,16 @@ intervalInput2.addEventListener('keypress', (e) => {
     }
 });
 
-// رویداد Enter در فیلد ورودی پنل جدید
-intervalInput2.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        updateBtn2.click();
-    }
-});
-
 // رویداد تغییر حالت پس‌زمینه
 bgModeSelect.addEventListener('change', (e) => {
-    bgMode = e.target.value;
-    
+    applyBgMode(e.target.value);
+    localStorage.setItem('calm-bg-mode', bgMode);
+});
+
+function applyBgMode(mode) {
+    bgMode = mode;
+    bgModeSelect.value = mode;
+
     if (bgMode === 'rotation') {
         bgIntervalRow.style.display = 'flex';
         imageSelectRow.style.display = 'none';
@@ -710,13 +716,14 @@ bgModeSelect.addEventListener('change', (e) => {
         imageSelectRow.style.display = 'flex';
         stopBackgroundRotation();
     }
-});
+}
 
 // رویداد انتخاب عکس در حالت ثابت
 thumbnails.forEach(thumbnail => {
     thumbnail.addEventListener('click', () => {
         const selectedIndex = parseInt(thumbnail.dataset.index);
         setBackground(selectedIndex);
+        localStorage.setItem('calm-image', selectedIndex);
     });
 });
 
@@ -727,6 +734,7 @@ updateBgBtn.addEventListener('click', () => {
     
     if (newInterval && newInterval >= 5) {
         bgIntervalTime = newInterval * 1000;
+        localStorage.setItem('calm-bg-interval', newInterval);
         if (bgMode === 'rotation') {
             startBackgroundRotation();
         }
@@ -774,6 +782,7 @@ soundToggle2.addEventListener('change', (e) => {
 // رویداد تغییر انتخاب صدا در پنل جدید
 soundSelect2.addEventListener('change', (e) => {
     currentSound = e.target.value;
+    localStorage.setItem('calm-sound', currentSound);
     const t = translations[currentLang];
     updateStatus2(t.statusSoundChanged.replace('{0}', e.target.options[e.target.selectedIndex].text));
 });
@@ -849,6 +858,35 @@ function hideLoadingOverlay() {
     }
 }
 
+// بارگذاری سایر تنظیمات ذخیره‌شده (صدا، تصویر، حالت پس‌زمینه)
+function loadSavedSettings() {
+    try {
+        const savedSound = localStorage.getItem('calm-sound');
+        if (savedSound && sounds[savedSound]) {
+            currentSound = savedSound;
+            soundSelect2.value = savedSound;
+        }
+
+        const savedImage = parseInt(localStorage.getItem('calm-image'));
+        if (!isNaN(savedImage) && savedImage >= 0 && savedImage < images.length) {
+            currentImageIndex = savedImage;
+        }
+
+        const savedBgInterval = parseInt(localStorage.getItem('calm-bg-interval'));
+        if (savedBgInterval >= 5) {
+            bgIntervalTime = savedBgInterval * 1000;
+            bgIntervalInput.value = savedBgInterval;
+        }
+
+        const savedMode = localStorage.getItem('calm-bg-mode');
+        if (savedMode === 'rotation' || savedMode === 'single') {
+            applyBgMode(savedMode);
+        }
+    } catch (err) {
+        console.warn('Could not load saved settings:', err);
+    }
+}
+
 // بارگذاری اولیه: فقط تصویر فعلی
 async function initializeApp() {
     try {
@@ -860,7 +898,7 @@ async function initializeApp() {
         
         // بارگذاری پیش‌فرض صدا ذخیره شده
         loadSavedPreset();
-        console.log('پیش‌فرض بارگذاری شد');
+        loadSavedSettings();
         
         // بارگذاری تصویر اولیه
         console.log('در حال بارگذاری تصویر:', images[currentImageIndex]);
@@ -931,7 +969,7 @@ tabButtons.forEach(button => {
 
 // جلوگیری از توقف تایمر هنگام تغییر تب
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && !intervalId) {
+    if (!document.hidden && !intervalId && soundEnabled && startOverlay.classList.contains('hidden')) {
         startTimer();
     }
 });
@@ -1041,13 +1079,24 @@ translations.fa.soundJungle = 'جنگل';
 translations.fa.soundRiver = 'رودخانه';
 translations.fa.soundSea = 'دریا';
 
+// حجم ذخیره‌شده هر صدا (۰ تا ۱)
+function getSavedVolume(soundName) {
+    const v = parseFloat(localStorage.getItem(`calm-volume-${soundName}`));
+    return (!isNaN(v) && v >= 0 && v <= 1) ? v : 0.5;
+}
+
+// اعمال حجم ذخیره‌شده روی اسلایدرها
+document.querySelectorAll('.volume-slider').forEach(slider => {
+    slider.value = Math.round(getSavedVolume(slider.dataset.sound) * 100);
+});
+
 // تابع بارگذاری تنبل صداها - فقط زمانی که نیاز است
 function loadBgSound(soundName) {
     if (!bgSounds[soundName].audio) {
-        const audio = new Audio(`assets/bg-sounds/${soundName}.mp3`);
-        audio.loop = true; // حلقه‌ای شدن صدا
-        audio.volume = 0.5; // حجم پیش‌فرض 50%
-        bgSounds[soundName].audio = audio;
+        const bgAudio = new Audio(`assets/bg-sounds/${soundName}.mp3`);
+        bgAudio.loop = true; // حلقه‌ای شدن صدا
+        bgAudio.volume = getSavedVolume(soundName); // حجم ذخیره‌شده (پیش‌فرض 50%)
+        bgSounds[soundName].audio = bgAudio;
         console.log(`صدای ${soundName} بارگذاری شد`);
     }
     return bgSounds[soundName].audio;
@@ -1089,6 +1138,7 @@ document.querySelectorAll('.sound-card').forEach(card => {
             audio.pause();
             soundData.playing = false;
             this.classList.remove('playing');
+            this.setAttribute('aria-pressed', 'false');
         } else {
             // پخش صدا
             audio.play().catch(err => {
@@ -1096,8 +1146,27 @@ document.querySelectorAll('.sound-card').forEach(card => {
             });
             soundData.playing = true;
             this.classList.add('playing');
+            this.setAttribute('aria-pressed', 'true');
         }
     });
+
+    // پشتیبانی از کیبورد (Enter / Space)
+    card.addEventListener('keydown', function(e) {
+        if (e.target !== this) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            this.click();
+        }
+    });
+});
+
+// بستن پنل‌ها با Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        settingsOverlay.classList.remove('show');
+        intervalOverlay.classList.remove('show');
+        bgSoundsOverlay.classList.remove('show');
+    }
 });
 
 // مدیریت اسلایدر حجم صدا
@@ -1105,7 +1174,8 @@ document.querySelectorAll('.volume-slider').forEach(slider => {
     slider.addEventListener('input', function() {
         const soundName = this.dataset.sound;
         const soundData = bgSounds[soundName];
-        
+        localStorage.setItem(`calm-volume-${soundName}`, this.value / 100);
+
         // تنظیم حجم صدا - اگر صدا بارگذاری شده باشد
         if (soundData.audio) {
             soundData.audio.volume = this.value / 100;

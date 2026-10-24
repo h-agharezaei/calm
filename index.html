@@ -61,7 +61,7 @@
     
     <!-- Overlay و پنل تنظیمات بازه پخش صدا -->
     <div class="interval-overlay" id="intervalOverlay">
-        <div class="interval-panel" id="intervalPanel">
+        <div class="interval-panel" id="intervalPanel" role="dialog" aria-modal="true">
             <button class="close-panel" id="closeIntervalPanel" aria-label="بستن">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -150,7 +150,7 @@
     
     <!-- Overlay و پنل تنظیمات -->
     <div class="settings-overlay" id="settingsOverlay">
-        <div class="control-panel" id="controlPanel">
+        <div class="control-panel" id="controlPanel" role="dialog" aria-modal="true">
             <button class="close-panel" id="closePanel" aria-label="بستن">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -297,7 +297,7 @@
 
     <!-- Overlay صداهای پس‌زمینه -->
     <div class="bg-sounds-overlay" id="bgSoundsOverlay">
-        <div class="bg-sounds-panel" id="bgSoundsPanel">
+        <div class="bg-sounds-panel" id="bgSoundsPanel" role="dialog" aria-modal="true">
             <button class="close-panel" id="closeBgSoundsPanel" aria-label="بستن">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -310,7 +310,7 @@
             
             <div class="bg-sounds-grid">
                 <!-- Fire Sound -->
-                <div class="sound-card" data-sound="Fire">
+                <div class="sound-card" data-sound="Fire" role="button" tabindex="0" aria-pressed="false">
                     <div class="sound-icon-wrapper">
                         <div class="sound-icon">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -331,7 +331,7 @@
                 </div>
                 
                 <!-- Jungle Sound -->
-                <div class="sound-card" data-sound="Jungle">
+                <div class="sound-card" data-sound="Jungle" role="button" tabindex="0" aria-pressed="false">
                     <div class="sound-icon-wrapper">
                         <div class="sound-icon">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -357,7 +357,7 @@
                 </div>
                 
                 <!-- River Sound -->
-                <div class="sound-card" data-sound="River">
+                <div class="sound-card" data-sound="River" role="button" tabindex="0" aria-pressed="false">
                     <div class="sound-icon-wrapper">
                         <div class="sound-icon">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -379,7 +379,7 @@
                 </div>
                 
                 <!-- Sea Sound -->
-                <div class="sound-card" data-sound="Sea">
+                <div class="sound-card" data-sound="Sea" role="button" tabindex="0" aria-pressed="false">
                     <div class="sound-icon-wrapper">
                         <div class="sound-icon">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
