@@ -1388,3 +1388,45 @@ label {
         scroll-behavior: auto !important;
     }
 }
+
+/* ============================================
+   Language toggle (top right, faded)
+   ============================================ */
+.lang-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #667eea;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    direction: ltr;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    opacity: 0.2;
+    transition: opacity 0.3s ease, transform 0.2s ease;
+}
+
+.lang-toggle:hover,
+.lang-toggle:focus-visible {
+    opacity: 1;
+}
+
+.lang-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Touch devices have no hover: keep it faintly visible but tappable */
+@media (hover: none) {
+    .lang-toggle {
+        opacity: 0.45;
+    }
+}
