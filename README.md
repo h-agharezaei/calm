@@ -77,6 +77,24 @@ Access the settings panel by clicking the gear icon in the top-right corner:
 
 Visit the live demo at: [https://tpis.ir/](https://tpis.ir/)
 
+## Analytics (optional)
+
+Calm can send anonymous usage statistics to Google Analytics 4 or Google Tag Manager. It is **off by default**:
+nothing is loaded until you set an ID and the visitor accepts the consent banner. Visitors can turn it off at
+any time in Settings.
+
+To enable it, set `ANALYTICS_ID` in [assets/js/analytics.js](assets/js/analytics.js):
+
+- `G-XXXXXXXXXX` - GA4 measurement ID. Events are sent with `gtag`.
+- `GTM-XXXXXXX` - Tag Manager container ID. Events are pushed to `dataLayer`; create the GA4 tag and
+  one trigger per custom event inside Tag Manager.
+
+Tracked events (no personal data): `app_start`, `sound_play`, `sound_toggle`, `sound_selected`,
+`preset_selected`, `custom_interval_set`, `language_change`, `background_mode`, `background_change`,
+`bg_sound_play`, `offline_sound_saved`, `panel_open`, `tab_switch`, `donation_click`, `donation_copy`,
+`install_available`, `install_prompt_result`, `pwa_installed`. Page views and engagement time are
+collected by GA4 itself. Cloudflare Web Analytics (cookieless) is separate and always on.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
