@@ -79,9 +79,9 @@ Visit the live demo at: [https://tpis.ir/](https://tpis.ir/)
 
 ## Analytics (optional)
 
-Calm can send anonymous usage statistics to Google Analytics 4 or Google Tag Manager. It is **off by default**:
-nothing is loaded until you set an ID and the visitor accepts the consent banner. Visitors can turn it off at
-any time in Settings.
+Calm can send anonymous usage statistics to Google Analytics 4 or Google Tag Manager. It is **off until you set
+an ID**; once set, it is on for everyone (there is no consent banner), and visitors can turn it off at any time in
+Settings.
 
 To enable it, set `ANALYTICS_ID` in [assets/js/analytics.js](assets/js/analytics.js):
 

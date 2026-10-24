@@ -1,8 +1,8 @@
 /**
  * Calm - Analytics (Google Analytics 4 / Google Tag Manager)
  *
- * - Nothing is loaded and nothing is sent before the user accepts.
- * - The user can turn analytics off at any time from Settings.
+ * - Analytics is on by default (no consent banner).
+ * - The user can turn it off at any time from Settings; the choice is remembered.
  * - If ANALYTICS_ID is empty, the whole feature is disabled (no banner, no settings row).
  *   (window.CALM_ANALYTICS_ID, if defined before this script, overrides it; handy for tests.)
  *
@@ -13,20 +13,20 @@
  */
 (function () {
     const ANALYTICS_ID = window.CALM_ANALYTICS_ID || 'G-223Q9E18JP';
-    const CONSENT_KEY = 'calm-analytics-consent'; // 'granted' | 'denied'
+    const OPT_OUT_KEY = 'calm-analytics-consent'; // 'denied' = user turned analytics off
 
     const configured = /^(G|GTM)-[A-Z0-9]+$/i.test(ANALYTICS_ID);
     const useTagManager = /^GTM-/i.test(ANALYTICS_ID);
 
     let scriptLoaded = false;
-    let active = false; // consent granted and not switched off
+    let active = false; // analytics running (not switched off by the user)
 
-    function readConsent() {
-        try { return localStorage.getItem(CONSENT_KEY); } catch (e) { return null; }
+    function readChoice() {
+        try { return localStorage.getItem(OPT_OUT_KEY); } catch (e) { return null; }
     }
 
-    function writeConsent(value) {
-        try { localStorage.setItem(CONSENT_KEY, value); } catch (e) { /* ignore */ }
+    function writeChoice(value) {
+        try { localStorage.setItem(OPT_OUT_KEY, value); } catch (e) { /* ignore */ }
     }
 
     function loadScript() {
@@ -68,18 +68,14 @@
         }
     }
 
-    // ---------- UI: consent banner and Settings switch ----------
-    const banner = document.getElementById('consentBanner');
-    const acceptBtn = document.getElementById('consentAccept');
-    const rejectBtn = document.getElementById('consentReject');
+    // ---------- Settings switch ----------
     const section = document.getElementById('analyticsSection');
     const toggle = document.getElementById('analyticsToggle');
 
-    function applyConsent(value) {
-        writeConsent(value);
-        setActive(value === 'granted');
-        if (toggle) toggle.checked = value === 'granted';
-        if (banner) banner.hidden = true;
+    function applyChoice(value) {
+        writeChoice(value);
+        setActive(value !== 'denied');
+        if (toggle) toggle.checked = value !== 'denied';
     }
 
     window.calmAnalytics = { track, enabled: configured };
@@ -91,17 +87,10 @@
 
     if (section) section.hidden = false;
 
-    const saved = readConsent();
-    if (saved === 'granted') {
-        setActive(true);
-        if (toggle) toggle.checked = true;
-    } else if (saved === 'denied') {
-        if (toggle) toggle.checked = false;
-    } else if (banner) {
-        banner.hidden = false; // first visit: ask
-    }
+    // On unless the user turned it off earlier
+    const optedOut = readChoice() === 'denied';
+    if (toggle) toggle.checked = !optedOut;
+    setActive(!optedOut);
 
-    if (acceptBtn) acceptBtn.addEventListener('click', () => applyConsent('granted'));
-    if (rejectBtn) rejectBtn.addEventListener('click', () => applyConsent('denied'));
-    if (toggle) toggle.addEventListener('change', () => applyConsent(toggle.checked ? 'granted' : 'denied'));
+    if (toggle) toggle.addEventListener('change', () => applyChoice(toggle.checked ? 'granted' : 'denied'));
 })();
