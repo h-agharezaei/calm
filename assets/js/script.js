@@ -400,6 +400,14 @@ function updateAllTexts() {
         }
     });
     
+    // tooltip (title) برای دکمه‌های فقط‌آیکون
+    document.querySelectorAll('[data-i18n-title]').forEach(element => {
+        const key = element.getAttribute('data-i18n-title');
+        if (t[key]) {
+            element.title = t[key];
+        }
+    });
+    
     // alt تصاویر بندانگشتی و برچسب اسلایدرهای حجم صدا
     document.querySelectorAll('img[data-i18n-alt-index]').forEach((img, i) => {
         img.alt = t.imageAlt.replace('{0}', i + 1);

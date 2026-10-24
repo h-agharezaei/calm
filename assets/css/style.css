@@ -1500,19 +1500,18 @@ label {
 .install-fab {
     position: fixed;
     bottom: 30px;
-    left: 30px;
+    left: 38px; /* centered under the 60px round buttons */
     z-index: 100;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 9px 16px;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
     border: none;
-    border-radius: 999px;
+    border-radius: 50%;
     background: rgba(255, 255, 255, 0.95);
     color: #667eea;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
     cursor: pointer;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     opacity: 0.35;
@@ -1548,7 +1547,7 @@ body.install-available .controls {
 @media (max-width: 600px) {
     .install-fab {
         bottom: 20px;
-        left: 20px;
+        left: 23px; /* centered under the 50px round buttons */
     }
     
     body.install-available .controls {
