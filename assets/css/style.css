@@ -1493,3 +1493,65 @@ label {
     line-height: 1.7;
     text-align: center;
 }
+
+/* ============================================
+   Install app (faded, bottom left)
+   ============================================ */
+.install-fab {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #667eea;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    opacity: 0.35;
+    transition: opacity 0.3s ease, transform 0.2s ease;
+}
+
+.install-fab[hidden] {
+    display: none;
+}
+
+.install-fab:hover,
+.install-fab:focus-visible {
+    opacity: 1;
+}
+
+.install-fab:active {
+    transform: scale(0.96);
+}
+
+/* Make room: lift the round icon buttons above the install pill */
+body.install-available .controls {
+    bottom: 90px;
+    transition: bottom 0.3s ease;
+}
+
+/* Touch devices have no hover: keep it faint but easy to see and tap */
+@media (hover: none) {
+    .install-fab {
+        opacity: 0.5;
+    }
+}
+
+@media (max-width: 600px) {
+    .install-fab {
+        bottom: 20px;
+        left: 20px;
+    }
+    
+    body.install-available .controls {
+        bottom: 76px;
+    }
+}
