@@ -1554,3 +1554,82 @@ body.install-available .controls {
         bottom: 76px;
     }
 }
+
+/* ============================================
+   Analytics consent
+   ============================================ */
+.analytics-section[hidden],
+.consent-banner[hidden] {
+    display: none !important;
+}
+
+.settings-note {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(102, 126, 234, 0.1);
+    color: #4a4a68;
+    font-size: 14px;
+    line-height: 1.7;
+    text-align: center;
+}
+
+.consent-banner {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: min(560px, calc(100% - 32px));
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.97);
+    color: #3a3a4a;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.consent-banner p {
+    flex: 1;
+    margin: 0;
+}
+
+.consent-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.consent-actions button {
+    padding: 8px 18px;
+    border: 1px solid rgba(102, 126, 234, 0.5);
+    border-radius: 8px;
+    background: transparent;
+    color: #667eea;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.consent-actions #consentAccept {
+    background: #667eea;
+    border-color: #667eea;
+    color: #fff;
+}
+
+@media (max-width: 600px) {
+    .consent-banner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .consent-actions {
+        justify-content: flex-end;
+    }
+}

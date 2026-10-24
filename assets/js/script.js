@@ -63,6 +63,13 @@ const presetButtons = document.querySelectorAll('.preset-btn');
 // متغیرهای برنامه
 // ============================================
 
+// ثبت رویداد آمار (فقط اگر کاربر موافقت کرده باشد؛ در غیر این صورت هیچ کاری نمی‌کند)
+function track(name, params) {
+    if (window.calmAnalytics) {
+        window.calmAnalytics.track(name, params);
+    }
+}
+
 // متغیر زبان
 let currentLang = 'fa'; // پیش‌فرض فارسی
 
@@ -168,6 +175,13 @@ const translations = {
         // Install
         installApp: 'Install app',
         installIosHint: 'To install: tap the Share button in Safari, then choose "Add to Home Screen".',
+        
+        // Analytics
+        consentMessage: 'To improve Calm, we collect anonymous usage statistics. No personal information is recorded.',
+        consentAccept: 'Accept',
+        consentReject: 'Decline',
+        analyticsToggleLabel: 'Anonymous usage statistics',
+        analyticsNote: 'To improve the app, visits and feature usage (no name, email or exact location) are recorded with Google Analytics. You can turn this off at any time.',
         
         // Alerts
         alertInvalidNumber: 'Please enter a valid number',
@@ -279,6 +293,13 @@ const translations = {
         installApp: 'نصب برنامه',
         installIosHint: 'برای نصب: دکمه‌ی اشتراک‌گذاری (Share) را در Safari بزنید و «Add to Home Screen» را انتخاب کنید.',
         
+        // آمار استفاده
+        consentMessage: 'برای بهبود Calm، آمار ناشناس استفاده را جمع‌آوری می‌کنیم. هیچ اطلاعات شخصی ثبت نمی‌شود.',
+        consentAccept: 'قبول',
+        consentReject: 'رد',
+        analyticsToggleLabel: 'آمار ناشناس استفاده',
+        analyticsNote: 'برای بهبود برنامه، بازدیدها و استفاده از بخش‌ها (بدون نام، ایمیل یا موقعیت دقیق) با Google Analytics ثبت می‌شود. هر زمان می‌توانید آن را خاموش کنید.',
+        
         // هشدارها
         alertInvalidNumber: 'لطفا یک عدد معتبر وارد کنید',
         alertMinimum5Seconds: 'لطفا یک عدد معتبر وارد کنید (حداقل 5 ثانیه)',
@@ -373,6 +394,7 @@ function updateLangToggle() {
 
 langToggle.addEventListener('click', () => {
     changeLanguage(currentLang === 'fa' ? 'en' : 'fa');
+    track('language_change', { language: currentLang });
 });
 
 // تابع به‌روزرسانی تمام متن‌ها
@@ -608,6 +630,7 @@ function stopBackgroundRotation() {
 
 // زمان‌بندی بر اساس ساعت واقعی (Date.now) است، نه شمارش tickها؛
 // پس اگر مرورگر تایمرها را کند کند (تب پس‌زمینه، موبایل، sleep)، پخش بعدی سر وقت یا با کمترین تأخیر انجام می‌شود.
+let soundPlayTracked = false;
 let nextPlayAt = 0;        // زمان پخش بعدی (میلی‌ثانیه)
 let statusHoldUntil = 0;   // تا این زمان پیام «در حال پخش» روی صفحه می‌ماند
 const MAX_LATE_MS = 90 * 1000; // اگر بیش از این دیر شد (مثلاً بعد از sleep)، گونگ ناگهانی پخش نشود
@@ -627,6 +650,11 @@ function playSound() {
         .then(() => {
             updateStatus2(t.statusPlaying);
             statusHoldUntil = Date.now() + 1000;
+            // فقط اولین پخش هر نشست ثبت می‌شود، نه هر تکرار
+            if (!soundPlayTracked) {
+                soundPlayTracked = true;
+                track('sound_play', { sound: currentSound });
+            }
         })
         .catch(error => {
             console.error('خطا در پخش صدا:', error);
@@ -747,6 +775,7 @@ function selectPreset(preset) {
 presetButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         selectPreset(btn.dataset.preset);
+        track('preset_selected', { preset: btn.dataset.preset });
     });
 });
 
@@ -762,6 +791,7 @@ updateBtn2.addEventListener('click', () => {
     if (newInterval && newInterval > 0) {
         intervalTime = newInterval * 1000;
         selectPreset('custom');
+        track('custom_interval_set', { seconds: newInterval });
         updateStatus2(t.statusIntervalChanged.replace('{0}', newInterval));
         startTimer();
     } else {
@@ -780,6 +810,7 @@ intervalInput2.addEventListener('keypress', (e) => {
 bgModeSelect.addEventListener('change', (e) => {
     applyBgMode(e.target.value);
     localStorage.setItem('calm-bg-mode', bgMode);
+    track('background_mode', { mode: bgMode });
 });
 
 function applyBgMode(mode) {
@@ -803,6 +834,7 @@ thumbnails.forEach(thumbnail => {
         const selectedIndex = parseInt(thumbnail.dataset.index);
         setBackground(selectedIndex);
         localStorage.setItem('calm-image', selectedIndex);
+        track('background_change', { image: selectedIndex + 1, mode: 'single' });
     });
 });
 
@@ -833,6 +865,9 @@ bgIntervalInput.addEventListener('keypress', (e) => {
 // رویداد تغییر وضعیت پخش صدا در پنل جدید
 soundToggle2.addEventListener('change', (e) => {
     soundEnabled = e.target.checked;
+    if (e.isTrusted) {
+        track('sound_toggle', { enabled: soundEnabled });
+    }
     const t = translations[currentLang];
     
     if (soundEnabled) {
@@ -857,6 +892,7 @@ soundToggle2.addEventListener('change', (e) => {
 soundSelect2.addEventListener('change', (e) => {
     currentSound = e.target.value;
     localStorage.setItem('calm-sound', currentSound);
+    track('sound_selected', { sound: currentSound });
     const t = translations[currentLang];
     updateStatus2(t.statusSoundChanged.replace('{0}', e.target.options[e.target.selectedIndex].text));
 });
@@ -870,6 +906,7 @@ audio.addEventListener('ended', () => {
 startBtn.addEventListener('click', () => {
     // مخفی کردن overlay
     startOverlay.classList.add('hidden');
+    track('app_start', { language: currentLang });
     
     // شروع تایمر
     startTimer();
@@ -899,6 +936,7 @@ function lazyLoadThumbnails() {
 // رویداد باز شدن پنل تنظیمات - بارگذاری thumbnails
 settingsIcon.addEventListener('click', () => {
     settingsOverlay.classList.add('show');
+    track('panel_open', { panel: 'settings' });
     // بارگذاری thumbnails زمانی که پنل باز می‌شود
     lazyLoadThumbnails();
 });
@@ -906,6 +944,7 @@ settingsIcon.addEventListener('click', () => {
 // رویداد باز کردن پنل بازه زمانی
 intervalIcon.addEventListener('click', () => {
     intervalOverlay.classList.add('show');
+    track('panel_open', { panel: 'sound_interval' });
 });
 
 // رویداد بستن پنل بازه زمانی
@@ -1025,6 +1064,7 @@ const tabContents = document.querySelectorAll('.tab-content');
 tabButtons.forEach(button => {
     button.addEventListener('click', () => {
         const targetTab = button.dataset.tab;
+        track('tab_switch', { tab: targetTab });
         
         // حذف active از همه تب‌ها
         tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -1071,6 +1111,7 @@ const cryptoData = {
     }
 };
 
+let selectedCrypto = null;
 const cryptoButtons = document.querySelectorAll('.crypto-btn');
 const cryptoDetails = document.getElementById('cryptoDetails');
 const cryptoQR = document.getElementById('cryptoQR');
@@ -1084,6 +1125,8 @@ cryptoButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         const crypto = btn.dataset.crypto;
         const data = cryptoData[crypto];
+        selectedCrypto = crypto;
+        track('donation_click', { crypto });
         
         cryptoQR.src = data.qr;
         cryptoQR.alt = translations[currentLang].qrAlt.replace('{0}', data.name);
@@ -1104,6 +1147,7 @@ closeCrypto.addEventListener('click', () => {
 copyBtn.addEventListener('click', async () => {
     try {
         await navigator.clipboard.writeText(cryptoAddress.value);
+        track('donation_copy', { crypto: selectedCrypto });
         copyFeedback.classList.add('show');
         
         setTimeout(() => {
@@ -1173,6 +1217,7 @@ function loadBgSound(soundName) {
 // باز کردن overlay
 bgSoundsIcon.addEventListener('click', () => {
     bgSoundsOverlay.classList.add('show');
+    track('panel_open', { panel: 'background_sounds' });
 });
 
 // بستن overlay با دکمه بستن
@@ -1212,6 +1257,7 @@ document.querySelectorAll('.sound-card').forEach(card => {
             audio.play().catch(err => {
                 console.error(`Error playing ${soundName}:`, err);
             });
+            track('bg_sound_play', { sound: soundName });
             soundData.playing = true;
             this.classList.add('playing');
             this.setAttribute('aria-pressed', 'true');
@@ -1465,6 +1511,7 @@ function setupOfflineButtons() {
                     renderOfflineButton(soundName);
                 });
                 item.state = 'saved';
+                track('offline_sound_saved', { sound: soundName });
             } catch (err) {
                 console.error(`Offline save failed for ${soundName}:`, err);
                 item.state = 'error';
@@ -1523,7 +1570,8 @@ setupOfflineButtons();
         if (!deferredPrompt) return;
         try {
             await deferredPrompt.prompt();
-            await deferredPrompt.userChoice;
+            const choice = await deferredPrompt.userChoice;
+            track('install_prompt_result', { outcome: choice && choice.outcome });
         } catch (err) {
             console.warn('Install prompt failed:', err);
         }
@@ -1542,12 +1590,14 @@ setupOfflineButtons();
         e.preventDefault(); // منوی پیش‌فرض نشان داده نشود؛ دکمه‌های خودمان را نشان می‌دهیم
         deferredPrompt = e;
         showInstallUI();
+        track('install_available');
     });
     
     button.addEventListener('click', promptInstall);
     fab.addEventListener('click', promptInstall);
     
     window.addEventListener('appinstalled', () => {
+        track('pwa_installed');
         deferredPrompt = null;
         hideInstallUI();
     });
