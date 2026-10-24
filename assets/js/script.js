@@ -45,7 +45,6 @@ const settingsOverlay = document.getElementById('settingsOverlay');
 const controlPanel = document.getElementById('controlPanel');
 const closePanel = document.getElementById('closePanel');
 const loadingOverlay = document.getElementById('loadingOverlay');
-const languageSelect = document.getElementById('languageSelect');
 
 // عناصر پنل بازه زمانی
 const intervalIcon = document.getElementById('intervalIcon');
@@ -90,7 +89,6 @@ const translations = {
         selectSound: 'Select Sound:',
         soundGong: 'Singing Bowl - Gong',
         soundChimes: 'Bronze Bowl - Chimes',
-        language: 'Language / زبان:',
         bgMode: 'Background Mode:',
         bgModeSingle: 'Static Image',
         bgModeRotation: 'Rotation',
@@ -188,7 +186,6 @@ const translations = {
         selectSound: 'انتخاب صدا:',
         soundGong: 'کاسه آواز - گونگ',
         soundChimes: 'کاسه برنزی - زنگ',
-        language: 'Language / زبان:',
         bgMode: 'حالت پس‌زمینه:',
         bgModeSingle: 'تصویر ثابت',
         bgModeRotation: 'چرخشی',
@@ -307,7 +304,6 @@ let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌
 function changeLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('calm-language', lang);
-    languageSelect.value = lang;
     updateLangToggle();
     
     // تغییر جهت متن
@@ -415,7 +411,6 @@ function updateMetaTags() {
 // بارگذاری زبان ذخیره شده
 function loadSavedLanguage() {
     const savedLang = localStorage.getItem('calm-language') || 'fa'; // پیش‌فرض فارسی
-    languageSelect.value = savedLang;
     changeLanguage(savedLang);
 }
 
@@ -803,11 +798,6 @@ soundSelect2.addEventListener('change', (e) => {
     localStorage.setItem('calm-sound', currentSound);
     const t = translations[currentLang];
     updateStatus2(t.statusSoundChanged.replace('{0}', e.target.options[e.target.selectedIndex].text));
-});
-
-// رویداد تغییر زبان
-languageSelect.addEventListener('change', (e) => {
-    changeLanguage(e.target.value);
 });
 
 // رویداد پایان پخش صدا
