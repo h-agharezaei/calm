@@ -128,20 +128,20 @@ const translations = {
         donationThanks: 'Thank you for your support! ❤️',
         
         // About tab
-        aboutTitle: 'About Calm',
-        aboutDescription: 'Calm is a simple web application designed to help you relax, meditate, and focus. With calming background images and soothing sounds, you can create your perfect environment for peace and concentration.',
-        aboutFeatures: 'Features:',
-        aboutFeature1: 'Automatic sound playback at customizable intervals',
-        aboutFeature2: 'Choice of multiple calming sounds',
-        aboutFeature3: 'Beautiful background images (static or rotating)',
-        aboutFeature4: 'Simple and distraction-free interface',
-        aboutFeature5: 'Fully customizable settings',
-        aboutFeature6: 'Works offline after initial load',
-        aboutUsage: 'How to Use:',
+        aboutTitle: '🌸 About Calm',
+        aboutDescription: '<strong>Calm</strong> is a peaceful web space designed to help you relax, meditate and focus. Calming images and soothing sounds, without distractions.',
+        aboutFeatures: '✨ Features',
+        aboutFeature1: '🖼️ <strong>Beautiful images:</strong> a collection of calming images, fixed or rotating automatically',
+        aboutFeature2: '🔔 <strong>Singing bowl:</strong> a gentle chime at intervals you choose, or silence',
+        aboutFeature3: '🌿 <strong>Nature sounds:</strong> fire, jungle, river and sea, each with its own volume',
+        aboutFeature4: '⚙️ <strong>Your settings, remembered:</strong> language, background, sounds and volumes',
+        aboutFeature5: '🎨 <strong>Simple interface:</strong> no distractions, full focus',
+        aboutFeature6: '📲 <strong>Installable:</strong> add it to your home screen; the interface and images work offline',
+        aboutUsage: '💡 How to use',
         aboutUsage1: 'Click "Start" to begin',
-        aboutUsage2: 'Adjust sound interval and volume to your preference',
-        aboutUsage3: 'Choose your preferred background image or enable rotation',
-        aboutUsage4: 'Relax and enjoy your peaceful environment',
+        aboutUsage2: 'Enjoy the images and calming sounds',
+        aboutUsage3: 'Adjust the sound interval, background and volumes to your taste',
+        aboutUsage4: 'Relax, meditate or focus',
         aboutVersion: 'Version',
         aboutDeveloper: 'Developed with ❤️ by Calm Team',
         
@@ -155,6 +155,15 @@ const translations = {
         feedbackNote: 'Your feedback will be sent to us privately',
         feedbackSuccess: 'Thank you! Your feedback has been sent successfully.',
         feedbackError: 'Sorry, there was an error sending your feedback. Please try again.',
+        
+        // Accessibility labels
+        ariaClose: 'Close',
+        ariaSoundInterval: 'Sound interval settings',
+        ariaBgSounds: 'Background sounds',
+        ariaSettings: 'Settings',
+        ariaVolume: '{0} volume',
+        imageAlt: 'Background image {0}',
+        qrAlt: '{0} QR code',
         
         // Alerts
         alertInvalidNumber: 'Please enter a valid number',
@@ -225,20 +234,20 @@ const translations = {
         donationThanks: 'از حمایت شما متشکریم! ❤️',
         
         // تب درباره
-        aboutTitle: 'درباره Calm',
-        aboutDescription: 'Calm یک برنامه وب ساده است که برای کمک به شما در آرامش، مدیتیشن و تمرکز طراحی شده است. با تصاویر پس‌زمینه آرامش‌بخش و صداهای دلنشین، می‌توانید محیط ایده‌آل خود را برای آرامش و تمرکز ایجاد کنید.',
-        aboutFeatures: 'ویژگی‌ها:',
-        aboutFeature1: 'پخش خودکار صدا در بازه‌های زمانی قابل تنظیم',
-        aboutFeature2: 'امکان انتخاب از میان صداهای مختلف آرامش‌بخش',
-        aboutFeature3: 'تصاویر پس‌زمینه زیبا (ثابت یا چرخشی)',
-        aboutFeature4: 'رابط کاربری ساده و بدون حواس‌پرتی',
-        aboutFeature5: 'تنظیمات کاملا قابل شخصی‌سازی',
-        aboutFeature6: 'قابلیت کار آفلاین پس از بارگذاری اولیه',
-        aboutUsage: 'نحوه استفاده:',
-        aboutUsage1: 'روی "شروع" کلیک کنید',
-        aboutUsage2: 'بازه زمانی و صدا را به دلخواه تنظیم کنید',
-        aboutUsage3: 'تصویر پس‌زمینه دلخواه را انتخاب کنید یا حالت چرخشی را فعال کنید',
-        aboutUsage4: 'آرام بگیرید و از محیط آرامش‌بخش خود لذت ببرید',
+        aboutTitle: '🌸 درباره Calm',
+        aboutDescription: '<strong>Calm</strong> یک محیط وب آرامش‌بخش است که برای کمک به تمرکز، مدیتیشن و آرامش طراحی شده است. تصاویر و صداهای آرام، بدون حواس‌پرتی.',
+        aboutFeatures: '✨ ویژگی‌ها',
+        aboutFeature1: '🖼️ <strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش، ثابت یا با چرخش خودکار',
+        aboutFeature2: '🔔 <strong>کاسه آواز:</strong> صدای ملایم کاسه در بازه‌های دلخواه شما، یا سکوت',
+        aboutFeature3: '🌿 <strong>صداهای طبیعت:</strong> آتش، جنگل، رودخانه و دریا، هرکدام با میزان صدای جداگانه',
+        aboutFeature4: '⚙️ <strong>تنظیمات شخصی:</strong> زبان، پس‌زمینه، صداها و میزان صدا به خاطر سپرده می‌شوند',
+        aboutFeature5: '🎨 <strong>رابط ساده:</strong> بدون حواس‌پرتی، تمرکز کامل',
+        aboutFeature6: '📲 <strong>قابل نصب:</strong> به صفحه‌ی اصلی اضافه کنید؛ ظاهر و تصاویر آفلاین هم کار می‌کنند',
+        aboutUsage: '💡 نحوه استفاده',
+        aboutUsage1: 'روی دکمه «شروع» کلیک کنید',
+        aboutUsage2: 'از تصاویر زیبا و صداهای آرامش‌بخش لذت ببرید',
+        aboutUsage3: 'بازه‌ی صدا، پس‌زمینه و میزان صداها را به سلیقه‌ی خود تنظیم کنید',
+        aboutUsage4: 'آرام بگیرید، مدیتیشن کنید یا تمرکز کنید',
         aboutVersion: 'نسخه',
         aboutDeveloper: 'ساخته شده با ❤️ توسط تیم Calm',
         
@@ -253,6 +262,15 @@ const translations = {
         feedbackSuccess: 'متشکریم! پیشنهاد شما با موفقیت ارسال شد.',
         feedbackError: 'متاسفانه خطایی در ارسال پیشنهاد رخ داد. لطفا دوباره تلاش کنید.',
         
+        // برچسب‌های دسترس‌پذیری
+        ariaClose: 'بستن',
+        ariaSoundInterval: 'تنظیمات بازه پخش صدا',
+        ariaBgSounds: 'صداهای پس‌زمینه',
+        ariaSettings: 'تنظیمات',
+        ariaVolume: 'میزان صدای {0}',
+        imageAlt: 'تصویر پس‌زمینه {0}',
+        qrAlt: 'کد QR {0}',
+        
         // هشدارها
         alertInvalidNumber: 'لطفا یک عدد معتبر وارد کنید',
         alertMinimum5Seconds: 'لطفا یک عدد معتبر وارد کنید (حداقل 5 ثانیه)',
@@ -263,6 +281,14 @@ const translations = {
         metaKeywords: 'آرامش, مدیتیشن, تمرکز, صدای آرامش‌بخش, تصاویر طبیعت'
     }
 };
+
+// ترجمه‌های پنل صداهای پس‌زمینه (باید قبل از اولین updateAllTexts تعریف شوند)
+translations.en.bgSoundsTitle = '🎵 Background Sounds';
+translations.en.bgSoundsSubtitle = 'Choose nature sounds for relaxation';
+translations.en.soundFire = 'Fire';
+translations.en.soundJungle = 'Jungle';
+translations.en.soundRiver = 'River';
+translations.en.soundSea = 'Sea';
 
 // متغیرهای مربوط به پخش صدا
 const sounds = {
@@ -283,8 +309,6 @@ const intervalPresets = {
 let currentSound = 'singing-bowl-gong.mp3';
 let intervalTime = 300000; // پیش‌فرض 300 ثانیه (به میلی‌ثانیه)
 let intervalId = null;
-let countdown = intervalTime / 1000;
-let countdownId = null;
 let soundEnabled = true;
 let currentPreset = 'standard'; // پیش‌فرض استاندارد
 
@@ -322,6 +346,9 @@ function changeLanguage(lang) {
     
     // به‌روزرسانی meta tags
     updateMetaTags();
+    
+    // اطلاع به بخش‌هایی که متن پویا دارند
+    document.dispatchEvent(new Event('calm:languagechange'));
 }
 
 // دکمه‌ی تغییر زبان (بالا سمت راست): زبان مقصد را نشان می‌دهد
@@ -348,8 +375,30 @@ function updateAllTexts() {
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
         if (t[key]) {
-            element.textContent = t[key];
+            // متن‌های داخلی خودمان که HTML (مثل <strong>) دارند با data-i18n-html علامت‌گذاری شده‌اند
+            if (element.hasAttribute('data-i18n-html')) {
+                element.innerHTML = t[key];
+            } else {
+                element.textContent = t[key];
+            }
         }
+    });
+    
+    // به‌روزرسانی aria-labelها
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(element => {
+        const key = element.getAttribute('data-i18n-aria-label');
+        if (t[key]) {
+            element.setAttribute('aria-label', t[key]);
+        }
+    });
+    
+    // alt تصاویر بندانگشتی و برچسب اسلایدرهای حجم صدا
+    document.querySelectorAll('img[data-i18n-alt-index]').forEach((img, i) => {
+        img.alt = t.imageAlt.replace('{0}', i + 1);
+    });
+    document.querySelectorAll('.volume-slider').forEach(slider => {
+        const name = t['sound' + slider.dataset.sound] || slider.dataset.sound;
+        slider.setAttribute('aria-label', t.ariaVolume.replace('{0}', name));
     });
     
     // به‌روزرسانی عناصر با data-i18n-placeholder
@@ -458,7 +507,6 @@ function loadSavedPreset() {
         intervalTime = intervalSeconds * 1000;
     }
     
-    countdown = intervalTime / 1000;
 }
 
 
@@ -542,10 +590,15 @@ function stopBackgroundRotation() {
 // توابع مدیریت پخش صدا
 // ============================================
 
+// زمان‌بندی بر اساس ساعت واقعی (Date.now) است، نه شمارش tickها؛
+// پس اگر مرورگر تایمرها را کند کند (تب پس‌زمینه، موبایل، sleep)، پخش بعدی سر وقت یا با کمترین تأخیر انجام می‌شود.
+let nextPlayAt = 0;        // زمان پخش بعدی (میلی‌ثانیه)
+let statusHoldUntil = 0;   // تا این زمان پیام «در حال پخش» روی صفحه می‌ماند
+const MAX_LATE_MS = 90 * 1000; // اگر بیش از این دیر شد (مثلاً بعد از sleep)، گونگ ناگهانی پخش نشود
+
 // تابع پخش صدا
 function playSound() {
     if (!soundEnabled) {
-        // اگر صدا غیرفعال است، نباید شمارنده شروع شود
         return;
     }
     
@@ -556,15 +609,13 @@ function playSound() {
     audio.currentTime = 0;
     audio.play()
         .then(() => {
-            console.log('صدا با موفقیت پخش شد');
             updateStatus2(t.statusPlaying);
-            setTimeout(() => {
-                startCountdown();
-            }, 1000);
+            statusHoldUntil = Date.now() + 1000;
         })
         .catch(error => {
             console.error('خطا در پخش صدا:', error);
             updateStatus2(t.statusError);
+            statusHoldUntil = Date.now() + 3000;
         });
 }
 
@@ -575,28 +626,28 @@ function updateStatus2(message) {
     }
 }
 
-// تابع شمارش معکوس
-function startCountdown() {
-    // پاک کردن شمارش معکوس قبلی
-    if (countdownId) {
-        clearInterval(countdownId);
+// هر ثانیه (و هنگام بازگشت به تب) اجرا می‌شود
+function tick() {
+    if (!soundEnabled) {
+        return;
     }
     
-    countdown = intervalTime / 1000;
-    const t = translations[currentLang];
+    const now = Date.now();
+    const remaining = Math.ceil((nextPlayAt - now) / 1000);
     
-    countdownId = setInterval(() => {
-        countdown--;
-        if (countdown > 0) {
-            // فقط اگر soundEnabled فعال باشد، شمارش معکوس نمایش داده شود
-            if (soundEnabled) {
-                const message = t.statusNextPlayIn.replace('{0}', countdown);
-                updateStatus2(message);
-            }
-        } else {
-            clearInterval(countdownId);
+    if (remaining <= 0) {
+        const lateBy = now - nextPlayAt;
+        nextPlayAt = now + intervalTime;
+        if (lateBy <= MAX_LATE_MS) {
+            playSound();
         }
-    }, 1000);
+        return;
+    }
+    
+    if (now >= statusHoldUntil) {
+        const t = translations[currentLang];
+        updateStatus2(t.statusNextPlayIn.replace('{0}', remaining));
+    }
 }
 
 // تابع شروع تایمر
@@ -606,23 +657,18 @@ function startTimer() {
         clearInterval(intervalId);
         intervalId = null;
     }
-    if (countdownId) {
-        clearInterval(countdownId);
-        countdownId = null;
-    }
-
+    
     // در حالت بدون صدا هیچ تایمری ساخته نشود
     if (!soundEnabled || intervalTime <= 0) {
         return;
     }
-
+    
     // پخش فوری اولین صدا
     playSound();
+    nextPlayAt = Date.now() + intervalTime;
     
-    // تنظیم تایمر برای پخش‌های بعدی
-    intervalId = setInterval(() => {
-        playSound();
-    }, intervalTime);
+    // بررسی هر ثانیه
+    intervalId = setInterval(tick, 1000);
 }
 
 // ============================================
@@ -785,11 +831,6 @@ soundToggle2.addEventListener('change', (e) => {
         if (intervalId) {
             clearInterval(intervalId);
             intervalId = null;
-        }
-        
-        if (countdownId) {
-            clearInterval(countdownId);
-            countdownId = null;
         }
         
         updateStatus2(t.statusSoundDisabled);
@@ -981,7 +1022,13 @@ tabButtons.forEach(button => {
 
 // جلوگیری از توقف تایمر هنگام تغییر تب
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && !intervalId && soundEnabled && startOverlay.classList.contains('hidden')) {
+    if (document.hidden || !soundEnabled || !startOverlay.classList.contains('hidden')) {
+        return;
+    }
+    if (intervalId) {
+        // تایمرها در پس‌زمینه ممکن است کند شده باشند: فوراً با ساعت واقعی هماهنگ شو
+        tick();
+    } else {
         startTimer();
     }
 });
@@ -1023,7 +1070,7 @@ cryptoButtons.forEach(btn => {
         const data = cryptoData[crypto];
         
         cryptoQR.src = data.qr;
-        cryptoQR.alt = `${data.name} QR Code`;
+        cryptoQR.alt = translations[currentLang].qrAlt.replace('{0}', data.name);
         cryptoAddress.value = data.address;
         cryptoDetails.style.display = 'block';
         
@@ -1076,13 +1123,6 @@ const bgSounds = {
     Sea: { audio: null, playing: false }
 };
 
-// ترجمه‌های نام صداها
-translations.en.bgSoundsTitle = '🎵 Background Sounds';
-translations.en.bgSoundsSubtitle = 'Choose nature sounds for relaxation';
-translations.en.soundFire = 'Fire';
-translations.en.soundJungle = 'Jungle';
-translations.en.soundRiver = 'River';
-translations.en.soundSea = 'Sea';
 
 translations.fa.bgSoundsTitle = '🎵 صداهای پس‌زمینه';
 translations.fa.bgSoundsSubtitle = 'صداهای طبیعت را برای آرامش انتخاب کنید';
@@ -1135,7 +1175,7 @@ bgSoundsOverlay.addEventListener('click', (e) => {
 document.querySelectorAll('.sound-card').forEach(card => {
     card.addEventListener('click', function(e) {
         // اگر کلیک روی volume slider بود، از پخش/توقف جلوگیری کن
-        if (e.target.classList.contains('volume-slider')) {
+        if (e.target.closest('.volume-slider, .offline-btn')) {
             return;
         }
         
@@ -1265,6 +1305,164 @@ function setupDialogFocusTrap(overlay) {
 }
 
 [settingsOverlay, intervalOverlay, bgSoundsOverlay].forEach(setupDialogFocusTrap);
+
+// ============================================
+// ذخیره‌ی صداهای پس‌زمینه برای استفاده‌ی آفلاین
+// ============================================
+
+translations.en.offlineDownload = 'Save for offline use';
+translations.en.offlineSaving = 'Saving... {0}%';
+translations.en.offlineSaved = 'Saved offline - tap to remove';
+translations.en.offlineError = 'Download failed - tap to retry';
+translations.fa.offlineDownload = 'ذخیره برای استفاده آفلاین';
+translations.fa.offlineSaving = 'در حال ذخیره... {0}٪';
+translations.fa.offlineSaved = 'ذخیره شده - برای حذف کلیک کنید';
+translations.fa.offlineError = 'دانلود ناموفق بود - برای تلاش مجدد کلیک کنید';
+
+const OFFLINE_CACHE = 'calm-offline-sounds'; // باید با sw.js یکی باشد
+const offlineSupported = 'caches' in window && 'serviceWorker' in navigator;
+const offlineButtons = {}; // soundName -> { button, state, progress }
+
+const OFFLINE_ICONS = {
+    idle: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"></path><path d="m7 11 5 5 5-5"></path><path d="M5 21h14"></path></svg>',
+    saved: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>',
+    error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5"></path><path d="M12 17h.01"></path><circle cx="12" cy="12" r="10"></circle></svg>'
+};
+
+function bgSoundUrl(soundName) {
+    return new URL(`assets/bg-sounds/${soundName}.mp3`, document.baseURI).href;
+}
+
+async function isSoundSavedOffline(soundName) {
+    try {
+        const cache = await caches.open(OFFLINE_CACHE);
+        return !!(await cache.match(bgSoundUrl(soundName)));
+    } catch (err) {
+        return false;
+    }
+}
+
+async function saveSoundOffline(soundName, onProgress) {
+    const url = bgSoundUrl(soundName);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    
+    const total = parseInt(res.headers.get('Content-Length'), 10) || 0;
+    const reader = res.body.getReader();
+    const chunks = [];
+    let received = 0;
+    
+    for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length;
+        if (total) onProgress(received / total);
+    }
+    
+    const cache = await caches.open(OFFLINE_CACHE);
+    await cache.put(url, new Response(new Blob(chunks, { type: 'audio/mpeg' }), {
+        status: 200,
+        headers: { 'Content-Type': 'audio/mpeg' }
+    }));
+    
+    // درخواست ذخیره‌سازی پایدار تا مرورگر فایل‌ها را خودسرانه پاک نکند
+    if (navigator.storage && navigator.storage.persist) {
+        navigator.storage.persist().catch(() => {});
+    }
+}
+
+async function removeSoundOffline(soundName) {
+    const cache = await caches.open(OFFLINE_CACHE);
+    await cache.delete(bgSoundUrl(soundName));
+}
+
+function renderOfflineButton(soundName) {
+    const item = offlineButtons[soundName];
+    const t = translations[currentLang];
+    let label;
+    let html;
+    
+    if (item.state === 'loading') {
+        const percent = Math.round(item.progress * 100);
+        label = t.offlineSaving.replace('{0}', percent);
+        html = `<span class="offline-percent">${percent}%</span>`;
+    } else if (item.state === 'saved') {
+        label = t.offlineSaved;
+        html = OFFLINE_ICONS.saved;
+    } else if (item.state === 'error') {
+        label = t.offlineError;
+        html = OFFLINE_ICONS.error;
+    } else {
+        label = t.offlineDownload;
+        html = OFFLINE_ICONS.idle;
+    }
+    
+    item.button.innerHTML = html;
+    item.button.title = label;
+    item.button.setAttribute('aria-label', label);
+    item.button.dataset.state = item.state;
+    item.button.disabled = item.state === 'loading';
+}
+
+function setupOfflineButtons() {
+    if (!offlineSupported) return;
+    
+    document.querySelectorAll('.sound-card').forEach(card => {
+        const soundName = card.dataset.sound;
+        const control = card.querySelector('.volume-control');
+        if (!control) return;
+        
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'offline-btn';
+        control.appendChild(button);
+        
+        offlineButtons[soundName] = { button, state: 'idle', progress: 0 };
+        renderOfflineButton(soundName);
+        
+        isSoundSavedOffline(soundName).then(saved => {
+            if (saved) {
+                offlineButtons[soundName].state = 'saved';
+                renderOfflineButton(soundName);
+            }
+        });
+        
+        button.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const item = offlineButtons[soundName];
+            
+            if (item.state === 'saved') {
+                await removeSoundOffline(soundName);
+                item.state = 'idle';
+                renderOfflineButton(soundName);
+                return;
+            }
+            
+            item.state = 'loading';
+            item.progress = 0;
+            renderOfflineButton(soundName);
+            
+            try {
+                await saveSoundOffline(soundName, (p) => {
+                    item.progress = p;
+                    renderOfflineButton(soundName);
+                });
+                item.state = 'saved';
+            } catch (err) {
+                console.error(`Offline save failed for ${soundName}:`, err);
+                item.state = 'error';
+            }
+            renderOfflineButton(soundName);
+        });
+    });
+}
+
+document.addEventListener('calm:languagechange', () => {
+    Object.keys(offlineButtons).forEach(renderOfflineButton);
+});
+
+setupOfflineButtons();
 
 // ============================================
 // PWA: ثبت Service Worker (نیازمند HTTPS یا localhost)

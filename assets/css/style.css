@@ -1430,3 +1430,47 @@ label {
         opacity: 0.45;
     }
 }
+
+/* ============================================
+   Offline download button (background sounds)
+   ============================================ */
+.offline-btn {
+    flex-shrink: 0;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 6px;
+    border: 1px solid rgba(102, 126, 234, 0.4);
+    border-radius: 15px;
+    background: transparent;
+    color: #667eea;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.offline-btn:hover:not(:disabled) {
+    background: rgba(102, 126, 234, 0.12);
+}
+
+.offline-btn:disabled {
+    cursor: progress;
+}
+
+.offline-btn[data-state="saved"] {
+    background: #667eea;
+    color: #fff;
+}
+
+.offline-btn[data-state="error"] {
+    color: #d64545;
+    border-color: rgba(214, 69, 69, 0.5);
+}
+
+/* Keyboard users: show the volume/offline controls when the card has focus */
+.sound-card:focus-within .volume-control {
+    display: flex;
+}

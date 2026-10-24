@@ -71,7 +71,7 @@
     <!-- Overlay و پنل تنظیمات بازه پخش صدا -->
     <div class="interval-overlay" id="intervalOverlay">
         <div class="interval-panel" id="intervalPanel" role="dialog" aria-modal="true" aria-labelledby="intervalPanelTitle">
-            <button class="close-panel" id="closeIntervalPanel" aria-label="بستن">
+            <button class="close-panel" id="closeIntervalPanel" aria-label="بستن" data-i18n-aria-label="ariaClose">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -122,7 +122,7 @@
     
     <div class="controls">
         <!-- دکمه آیکون بازه پخش صدا (کاسه ژاپنی) -->
-        <button class="interval-icon" id="intervalIcon" aria-label="Sound Interval">
+        <button class="interval-icon" id="intervalIcon" aria-label="Sound Interval" data-i18n-aria-label="ariaSoundInterval">
             <svg width="32" height="32" viewBox="0 0 512 512" fill="currentColor">
                 <g transform="translate(0,512) scale(0.1,-0.1)">
                     <path d="M3276 4739 c-47 -11 -125 -50 -169 -83 -18 -14 -255 -291 -527 -615 l-495 -590 -892 -1 -893 0 0 -178 c0 -462 103 -840 332 -1221 166 -275 431 -547 703 -723 l90 -58 -500 0 c-552 0 -587 -3 -695 -61 -112 -59 -188 -166 -217 -303 -46 -219 78 -439 289 -513 51 -17 145 -18 2258 -18 2113 0 2207 1 2258 18 75 27 161 88 206 147 164 216 98 545 -134 669 -108 58 -143 61 -695 61 l-499 0 99 66 c398 264 704 643 872 1079 106 272 141 462 150 797 l6 238 -780 2 -781 3 249 295 c267 318 302 371 318 483 26 186 -62 363 -230 460 -90 52 -219 70 -323 46z m191 -318 c28 -20 47 -45 58 -76 18 -45 18 -48 -1 -91 -11 -27 -145 -195 -338 -424 l-319 -380 -195 0 c-183 0 -194 1 -181 17 146 183 800 950 823 964 47 29 105 25 153 -10z m1047 -1279 c7 -12 -20 -212 -44 -330 -95 -457 -345 -862 -698 -1130 -375 -286 -881 -432 -1360 -394 -910 74 -1587 665 -1766 1542 -26 130 -48 299 -40 312 7 11 3901 10 3908 0z m222 -2193 c109 -52 107 -219 -2 -265 -50 -21 -4298 -21 -4348 0 -109 45 -111 212 -3 265 l42 21 2134 0 2135 0 42 -21z"/>
@@ -140,7 +140,7 @@
         </button>
         
         <!-- دکمه آیکون صداهای پس‌زمینه -->
-        <button class="bg-sounds-icon" id="bgSoundsIcon" aria-label="Background Sounds">
+        <button class="bg-sounds-icon" id="bgSoundsIcon" aria-label="Background Sounds" data-i18n-aria-label="ariaBgSounds">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 18V5l12-2v13"></path>
                 <circle cx="6" cy="18" r="3"></circle>
@@ -149,7 +149,7 @@
         </button>
         
         <!-- دکمه آیکون تنظیمات -->
-        <button class="settings-icon" id="settingsIcon" aria-label="تنظیمات">
+        <button class="settings-icon" id="settingsIcon" aria-label="تنظیمات" data-i18n-aria-label="ariaSettings">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
@@ -159,8 +159,8 @@
     
     <!-- Overlay و پنل تنظیمات -->
     <div class="settings-overlay" id="settingsOverlay">
-        <div class="control-panel" id="controlPanel" role="dialog" aria-modal="true">
-            <button class="close-panel" id="closePanel" aria-label="بستن">
+        <div class="control-panel" id="controlPanel" role="dialog" aria-modal="true" aria-label="تنظیمات" data-i18n-aria-label="ariaSettings">
+            <button class="close-panel" id="closePanel" aria-label="بستن" data-i18n-aria-label="ariaClose">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -188,19 +188,19 @@
                 <label data-i18n="selectImage">انتخاب تصویر:</label>
                 <div class="thumbnails-container">
                     <div class="thumbnail" data-index="0">
-                        <img data-src="assets/images/00-thumb.webp" alt="تصویر 1" class="lazy-thumbnail">
+                        <img data-src="assets/images/00-thumb.webp" alt="" data-i18n-alt-index class="lazy-thumbnail">
                     </div>
                     <div class="thumbnail" data-index="1">
-                        <img data-src="assets/images/01-thumb.webp" alt="تصویر 2" class="lazy-thumbnail">
+                        <img data-src="assets/images/01-thumb.webp" alt="" data-i18n-alt-index class="lazy-thumbnail">
                     </div>
                     <div class="thumbnail" data-index="2">
-                        <img data-src="assets/images/02-thumb.webp" alt="تصویر 3" class="lazy-thumbnail">
+                        <img data-src="assets/images/02-thumb.webp" alt="" data-i18n-alt-index class="lazy-thumbnail">
                     </div>
                     <div class="thumbnail" data-index="3">
-                        <img data-src="assets/images/03-thumb.webp" alt="تصویر 4" class="lazy-thumbnail">
+                        <img data-src="assets/images/03-thumb.webp" alt="" data-i18n-alt-index class="lazy-thumbnail">
                     </div>
                     <div class="thumbnail" data-index="4">
-                        <img data-src="assets/images/04-thumb.webp" alt="تصویر 5" class="lazy-thumbnail">
+                        <img data-src="assets/images/04-thumb.webp" alt="" data-i18n-alt-index class="lazy-thumbnail">
                     </div>
                 </div>
             </div>
@@ -234,7 +234,7 @@
                 </div>
                 
                 <div class="crypto-details" id="cryptoDetails" style="display: none;">
-                    <button class="close-crypto" id="closeCrypto" aria-label="Close">
+                    <button class="close-crypto" id="closeCrypto" aria-label="Close" data-i18n-aria-label="ariaClose">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -256,25 +256,26 @@
                     <h2 class="about-title" data-i18n="aboutTitle">🌸 درباره Calm</h2>
                     
                     <div class="about-content">
-                        <p data-i18n="aboutDescription">
-                            <strong>Calm</strong> یک محیط وب آرامش‌بخش است که برای کمک به تمرکز، مدیتیشن و آرامش طراحی شده است.
+                        <p data-i18n="aboutDescription" data-i18n-html>
+                            <strong>Calm</strong> یک محیط وب آرامش‌بخش است که برای کمک به تمرکز، مدیتیشن و آرامش طراحی شده است. تصاویر و صداهای آرام، بدون حواس‌پرتی.
                         </p>
                         
                         <h3 data-i18n="aboutFeatures">✨ ویژگی‌ها</h3>
                         <ul class="features-list">
-                            <li data-i18n="aboutFeature1">🖼️ <strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش با قابلیت چرخش خودکار</li>
-                            <li data-i18n="aboutFeature2">🎵 <strong>صداهای طبیعی:</strong> صداهای آرامش‌دهنده کاسه‌های آواز</li>
-                            <li data-i18n="aboutFeature3">⚙️ <strong>تنظیمات شخصی:</strong> کنترل کامل بر روی زمان‌بندی و محتوا</li>
-                            <li data-i18n="aboutFeature4">📱 <strong>طراحی واکنش‌گرا:</strong> تجربه یکسان در تمام دستگاه‌ها</li>
-                            <li data-i18n="aboutFeature5">🎨 <strong>رابط ساده:</strong> بدون حواس‌پرتی، تمرکز کامل</li>
+                            <li data-i18n="aboutFeature1" data-i18n-html>🖼️ <strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش، ثابت یا با چرخش خودکار</li>
+                            <li data-i18n="aboutFeature2" data-i18n-html>🔔 <strong>کاسه آواز:</strong> صدای ملایم کاسه در بازه‌های دلخواه شما، یا سکوت</li>
+                            <li data-i18n="aboutFeature3" data-i18n-html>🌿 <strong>صداهای طبیعت:</strong> آتش، جنگل، رودخانه و دریا، هرکدام با میزان صدای جداگانه</li>
+                            <li data-i18n="aboutFeature4" data-i18n-html>⚙️ <strong>تنظیمات شخصی:</strong> زبان، پس‌زمینه، صداها و میزان صدا به خاطر سپرده می‌شوند</li>
+                            <li data-i18n="aboutFeature5" data-i18n-html>🎨 <strong>رابط ساده:</strong> بدون حواس‌پرتی، تمرکز کامل</li>
+                            <li data-i18n="aboutFeature6" data-i18n-html>📲 <strong>قابل نصب:</strong> به صفحه‌ی اصلی اضافه کنید؛ ظاهر و تصاویر آفلاین هم کار می‌کنند</li>
                         </ul>
                         
                         <h3 data-i18n="aboutUsage">💡 نحوه استفاده</h3>
                         <ol class="usage-list">
-                            <li data-i18n="aboutUsage1">روی دکمه "شروع" کلیک کنید</li>
+                            <li data-i18n="aboutUsage1">روی دکمه «شروع» کلیک کنید</li>
                             <li data-i18n="aboutUsage2">از تصاویر زیبا و صداهای آرامش‌بخش لذت ببرید</li>
-                            <li data-i18n="aboutUsage3">تنظیمات را بر اساس سلیقه خود تغییر دهید</li>
-                            <li data-i18n="aboutUsage4">به حالت تمرکز یا مدیتیشن بروید</li>
+                            <li data-i18n="aboutUsage3">بازه‌ی صدا، پس‌زمینه و میزان صداها را به سلیقه‌ی خود تنظیم کنید</li>
+                            <li data-i18n="aboutUsage4">آرام بگیرید، مدیتیشن کنید یا تمرکز کنید</li>
                         </ol>
                         
                         <h3 data-i18n="feedbackTitle">💌 پیشنهادات و بازخورد</h3>
@@ -297,7 +298,7 @@
     <!-- Overlay صداهای پس‌زمینه -->
     <div class="bg-sounds-overlay" id="bgSoundsOverlay">
         <div class="bg-sounds-panel" id="bgSoundsPanel" role="dialog" aria-modal="true" aria-labelledby="bgSoundsTitle">
-            <button class="close-panel" id="closeBgSoundsPanel" aria-label="بستن">
+            <button class="close-panel" id="closeBgSoundsPanel" aria-label="بستن" data-i18n-aria-label="ariaClose">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -309,7 +310,7 @@
             
             <div class="bg-sounds-grid">
                 <!-- Fire Sound -->
-                <div class="sound-card" data-sound="Fire" role="button" tabindex="0" aria-pressed="false">
+                <div class="sound-card" data-sound="Fire" role="button" tabindex="0" aria-pressed="false" aria-label="Fire" data-i18n-aria-label="soundFire">
                     <div class="sound-icon-wrapper">
                         <div class="sound-icon">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -325,12 +326,12 @@
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
-                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="Fire">
+                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="Fire" aria-label="Volume">
                     </div>
                 </div>
                 
                 <!-- Jungle Sound -->
-                <div class="sound-card" data-sound="Jungle" role="button" tabindex="0" aria-pressed="false">
+                <div class="sound-card" data-sound="Jungle" role="button" tabindex="0" aria-pressed="false" aria-label="Jungle" data-i18n-aria-label="soundJungle">
                     <div class="sound-icon-wrapper">
                         <div class="sound-icon">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -351,12 +352,12 @@
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
-                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="Jungle">
+                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="Jungle" aria-label="Volume">
                     </div>
                 </div>
                 
                 <!-- River Sound -->
-                <div class="sound-card" data-sound="River" role="button" tabindex="0" aria-pressed="false">
+                <div class="sound-card" data-sound="River" role="button" tabindex="0" aria-pressed="false" aria-label="River" data-i18n-aria-label="soundRiver">
                     <div class="sound-icon-wrapper">
                         <div class="sound-icon">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -373,12 +374,12 @@
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
-                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="River">
+                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="River" aria-label="Volume">
                     </div>
                 </div>
                 
                 <!-- Sea Sound -->
-                <div class="sound-card" data-sound="Sea" role="button" tabindex="0" aria-pressed="false">
+                <div class="sound-card" data-sound="Sea" role="button" tabindex="0" aria-pressed="false" aria-label="Sea" data-i18n-aria-label="soundSea">
                     <div class="sound-icon-wrapper">
                         <div class="sound-icon">
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -396,7 +397,7 @@
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                         </svg>
-                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="Sea">
+                        <input type="range" class="volume-slider" min="0" max="100" value="50" data-sound="Sea" aria-label="Volume">
                     </div>
                 </div>
             </div>
