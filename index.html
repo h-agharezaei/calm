@@ -210,6 +210,15 @@
                 <input type="number" id="bgInterval" min="5" max="600" value="60">
                 <button id="updateBgBtn" data-i18n="updateBgInterval">تغییر زمان</button>
             </div>
+            
+            <!-- نصب برنامه (فقط وقتی نصب ممکن و هنوز انجام نشده باشد نمایش داده می‌شود) -->
+            <div class="install-section" id="installSection" hidden>
+                <div class="separator"></div>
+                <div class="control-row">
+                    <button id="installBtn" data-i18n="installApp" hidden>📲 نصب برنامه</button>
+                </div>
+                <p class="install-hint" id="installIosHint" data-i18n="installIosHint" hidden>برای نصب: دکمه‌ی اشتراک‌گذاری (Share) را در Safari بزنید و «Add to Home Screen» را انتخاب کنید.</p>
+            </div>
             </div>
             
             <!-- محتوای تب حمایت مالی -->

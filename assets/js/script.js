@@ -165,6 +165,10 @@ const translations = {
         imageAlt: 'Background image {0}',
         qrAlt: '{0} QR code',
         
+        // Install
+        installApp: '📲 Install app',
+        installIosHint: 'To install: tap the Share button in Safari, then choose "Add to Home Screen".',
+        
         // Alerts
         alertInvalidNumber: 'Please enter a valid number',
         alertMinimum5Seconds: 'Please enter a valid number (minimum 5 seconds)',
@@ -270,6 +274,10 @@ const translations = {
         ariaVolume: 'میزان صدای {0}',
         imageAlt: 'تصویر پس‌زمینه {0}',
         qrAlt: 'کد QR {0}',
+        
+        // نصب برنامه
+        installApp: '📲 نصب برنامه',
+        installIosHint: 'برای نصب: دکمه‌ی اشتراک‌گذاری (Share) را در Safari بزنید و «Add to Home Screen» را انتخاب کنید.',
         
         // هشدارها
         alertInvalidNumber: 'لطفا یک عدد معتبر وارد کنید',
@@ -1463,6 +1471,58 @@ document.addEventListener('calm:languagechange', () => {
 });
 
 setupOfflineButtons();
+
+// ============================================
+// نصب برنامه (PWA)
+// ============================================
+// - Chrome/Edge/Samsung Internet: دکمه‌ی «نصب برنامه» با رویداد beforeinstallprompt
+// - iPhone/iPad (Safari): نصب خودکار پشتیبانی نمی‌شود، فقط راهنما نمایش داده می‌شود
+
+(function setupInstall() {
+    const section = document.getElementById('installSection');
+    const button = document.getElementById('installBtn');
+    const iosHint = document.getElementById('installIosHint');
+    if (!section || !button || !iosHint) return;
+    
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+    if (isStandalone) return; // قبلاً نصب شده و از همان باز شده است
+    
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    let deferredPrompt = null;
+    
+    if (isIos) {
+        section.hidden = false;
+        iosHint.hidden = false;
+    }
+    
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); // منوی پیش‌فرض نشان داده نشود؛ دکمه‌ی خودمان را نشان می‌دهیم
+        deferredPrompt = e;
+        section.hidden = false;
+        button.hidden = false;
+    });
+    
+    button.addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        try {
+            await deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+        } catch (err) {
+            console.warn('Install prompt failed:', err);
+        }
+        // هر پیشنهاد فقط یک بار قابل استفاده است
+        deferredPrompt = null;
+        section.hidden = true;
+        button.hidden = true;
+    });
+    
+    window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        section.hidden = true;
+    });
+})();
 
 // ============================================
 // PWA: ثبت Service Worker (نیازمند HTTPS یا localhost)
