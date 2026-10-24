@@ -1196,3 +1196,14 @@ document.querySelectorAll('.volume-slider').forEach(slider => {
 });
 
 // حذف مقداردهی اولیه - صداها به صورت lazy load بارگذاری می‌شوند
+
+// ============================================
+// PWA: ثبت Service Worker (نیازمند HTTPS یا localhost)
+// ============================================
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+            console.warn('Service worker registration failed:', err);
+        });
+    });
+}
