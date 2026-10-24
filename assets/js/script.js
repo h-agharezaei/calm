@@ -292,7 +292,14 @@ let soundEnabled = true;
 let currentPreset = 'standard'; // پیش‌فرض استاندارد
 
 // متغیرهای مربوط به تصاویر پس‌زمینه
-const images = ['00.jpg', '01.jpg', '02.jpg', '03.jpg', '04.jpg'];
+const images = ['00', '01', '02', '03', '04'];
+
+// انتخاب اندازه‌ی مناسب تصویر: نسخه‌ی کوچک‌تر برای صفحه‌نمایش‌های کوچک
+function imageUrl(name) {
+    const pixelWidth = window.screen.width * (window.devicePixelRatio || 1);
+    const suffix = pixelWidth <= 1400 ? '-m' : '';
+    return `assets/images/${name}${suffix}.webp`;
+}
 let currentImageIndex = Math.floor(Math.random() * images.length); // شروع با عکس تصادفی
 let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
@@ -460,7 +467,7 @@ function preloadImage(imageName) {
             resolve(imageName);
         };
         img.onerror = reject;
-        img.src = `assets/images/${imageName}`;
+        img.src = imageUrl(imageName);
     });
 }
 
@@ -471,7 +478,9 @@ function setBackground(index) {
     
     // preload تصویر قبل از نمایش
     preloadImage(imageName).then(() => {
-        backgroundImage.style.backgroundImage = `url('assets/images/${imageName}')`;
+        backgroundImage.style.backgroundImage = `url('${imageUrl(imageName)}')`;
+        
+        preloadNextImage();
         
         // به‌روزرسانی thumbnail فعال
         thumbnails.forEach(thumb => thumb.classList.remove('active'));
@@ -482,16 +491,11 @@ function setBackground(index) {
     });
 }
 
-// تابع preload همه تصاویر در پس‌زمینه
-function preloadAllImages() {
-    images.forEach((imageName, index) => {
-        // اولویت به تصویر فعلی و تصاویر بعدی
-        if (index !== currentImageIndex) {
-            setTimeout(() => {
-                preloadImage(imageName);
-            }, index * 500); // فاصله 500ms بین هر preload
-        }
-    });
+// preload فقط تصویر بعدی (و فقط در حالت چرخشی)
+function preloadNextImage() {
+    if (bgMode !== 'rotation') return;
+    const next = images[(currentImageIndex + 1) % images.length];
+    preloadImage(next).catch(() => {});
 }
 
 // تابع تغییر به عکس بعدی
@@ -869,7 +873,7 @@ async function initializeApp() {
         
         // تنظیم پس‌زمینه
         if (backgroundImage) {
-            backgroundImage.style.backgroundImage = `url('assets/images/${images[currentImageIndex]}')`;
+            backgroundImage.style.backgroundImage = `url('${imageUrl(images[currentImageIndex])}')`;
             console.log('پس‌زمینه تنظیم شد');
         } else {
             console.error('backgroundImage element not found!');
@@ -885,8 +889,8 @@ async function initializeApp() {
         hideLoadingOverlay();
         console.log('بارگذاری کامل شد');
         
-        // preload بقیه تصاویر در پس‌زمینه
-        preloadAllImages();
+        // در حالت چرخشی تصویر بعدی از قبل بارگذاری شود
+        preloadNextImage();
     } catch (error) {
         console.error('خطا در بارگذاری تصویر:', error);
         hideLoadingOverlay();

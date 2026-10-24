@@ -2,7 +2,7 @@
 
 A peaceful web environment with automatic playback of calming sounds and beautiful images for meditation and focus.
 
-![Calm App](assets/images/00.jpg)
+![Calm App](assets/images/00.webp)
 
 ## 🌟 Features
 
