@@ -70,7 +70,7 @@
     
     <!-- Overlay و پنل تنظیمات بازه پخش صدا -->
     <div class="interval-overlay" id="intervalOverlay">
-        <div class="interval-panel" id="intervalPanel" role="dialog" aria-modal="true">
+        <div class="interval-panel" id="intervalPanel" role="dialog" aria-modal="true" aria-labelledby="intervalPanelTitle">
             <button class="close-panel" id="closeIntervalPanel" aria-label="بستن" data-i18n-aria-label="ariaClose">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -78,7 +78,7 @@
                 </svg>
             </button>
             
-            <h3 class="panel-title" data-i18n="intervalPanelTitle">⏱️ تنظیمات بازه پخش صدا</h3>
+            <h3 class="panel-title" id="intervalPanelTitle" data-i18n="intervalPanelTitle">⏱️ تنظیمات بازه پخش صدا</h3>
             
             <div class="control-row">
                 <label data-i18n="soundIntervalPresets">الگوهای پخش صدا:</label>
@@ -297,7 +297,7 @@
 
     <!-- Overlay صداهای پس‌زمینه -->
     <div class="bg-sounds-overlay" id="bgSoundsOverlay">
-        <div class="bg-sounds-panel" id="bgSoundsPanel" role="dialog" aria-modal="true">
+        <div class="bg-sounds-panel" id="bgSoundsPanel" role="dialog" aria-modal="true" aria-labelledby="bgSoundsTitle">
             <button class="close-panel" id="closeBgSoundsPanel" aria-label="بستن" data-i18n-aria-label="ariaClose">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -305,7 +305,7 @@
                 </svg>
             </button>
             
-            <h2 class="bg-sounds-title" data-i18n="bgSoundsTitle">🎵 صداهای پس‌زمینه</h2>
+            <h2 class="bg-sounds-title" id="bgSoundsTitle" data-i18n="bgSoundsTitle">🎵 صداهای پس‌زمینه</h2>
             <p class="bg-sounds-subtitle" data-i18n="bgSoundsSubtitle">صداهای طبیعت را برای آرامش انتخاب کنید</p>
             
             <div class="bg-sounds-grid">

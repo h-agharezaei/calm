@@ -1238,6 +1238,75 @@ document.querySelectorAll('.volume-slider').forEach(slider => {
 // حذف مقداردهی اولیه - صداها به صورت lazy load بارگذاری می‌شوند
 
 // ============================================
+// دسترس‌پذیری پنل‌ها: focus trap و بازگرداندن فوکوس
+// ============================================
+
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function setupDialogFocusTrap(overlay) {
+    if (!overlay || !overlay.firstElementChild) return;
+    const panel = overlay.firstElementChild;
+    panel.setAttribute('tabindex', '-1'); // fallback برای فوکوس روی خود پنل
+    let opener = null;
+    let wasOpen = overlay.classList.contains('show');
+    
+    // فقط عناصری که واقعاً دیده می‌شوند (تب‌های غیرفعال display:none هستند)
+    const getFocusable = () => Array.from(panel.querySelectorAll(FOCUSABLE_SELECTOR))
+        .filter(el => el.offsetParent !== null || el === document.activeElement);
+    
+    new MutationObserver(() => {
+        const isOpen = overlay.classList.contains('show');
+        if (isOpen === wasOpen) return;
+        wasOpen = isOpen;
+        
+        if (isOpen) {
+            opener = document.activeElement;
+            // تا پایان انیمیشن (visibility) ممکن است فوکوس ناموفق باشد؛ چند بار تلاش می‌کنیم
+            let attempts = 0;
+            const focusFirst = () => {
+                if (!overlay.classList.contains('show') || panel.contains(document.activeElement)) return;
+                const items = getFocusable();
+                (items[0] || panel).focus();
+                if (!panel.contains(document.activeElement) && ++attempts < 8) {
+                    setTimeout(focusFirst, 50);
+                }
+            };
+            setTimeout(focusFirst, 30);
+        } else {
+            if (opener && document.contains(opener) && (panel.contains(document.activeElement) || document.activeElement === document.body)) {
+                opener.focus();
+            }
+            opener = null;
+        }
+    }).observe(overlay, { attributes: true, attributeFilter: ['class'] });
+    
+    overlay.addEventListener('keydown', (e) => {
+        if (e.key !== 'Tab') return;
+        
+        const items = getFocusable();
+        if (!items.length) {
+            e.preventDefault();
+            return;
+        }
+        
+        const first = items[0];
+        const last = items[items.length - 1];
+        const active = document.activeElement;
+        const outside = !panel.contains(active);
+        
+        if (e.shiftKey && (active === first || outside)) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && (active === last || outside)) {
+            e.preventDefault();
+            first.focus();
+        }
+    });
+}
+
+[settingsOverlay, intervalOverlay, bgSoundsOverlay].forEach(setupDialogFocusTrap);
+
+// ============================================
 // ذخیره‌ی صداهای پس‌زمینه برای استفاده‌ی آفلاین
 // ============================================
 
@@ -1386,9 +1455,6 @@ function setupOfflineButtons() {
             }
             renderOfflineButton(soundName);
         });
-        
-        // جلوگیری از فعال شدن کارت با کیبورد روی دکمه
-        button.addEventListener('keydown', (e) => e.stopPropagation());
     });
 }
 
