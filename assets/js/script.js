@@ -70,12 +70,12 @@ let currentLang = 'fa'; // پیش‌فرض فارسی
 const translations = {
     en: {
         // Tab titles
-        tabSettings: '⚙️ Settings',
-        tabDonation: '💝 Support',
-        tabAbout: 'ℹ️ About',
+        tabSettings: 'Settings',
+        tabDonation: 'Support',
+        tabAbout: 'About',
         
         // Settings tab
-        intervalPanelTitle: '⏱️ Sound Interval Settings',
+        intervalPanelTitle: 'Sound Interval Settings',
         soundIntervalPresets: 'Sound Playback Templates:',
         presetSilent: 'Silent',
         presetStandard: 'Standard (5 min)',
@@ -125,28 +125,28 @@ const translations = {
         donationCopy: 'Copy Address',
         donationCopied: 'Address copied!',
         donationClose: 'Close',
-        donationThanks: 'Thank you for your support! ❤️',
+        donationThanks: 'Thank you for your support!',
         
         // About tab
-        aboutTitle: '🌸 About Calm',
+        aboutTitle: 'About Calm',
         aboutDescription: '<strong>Calm</strong> is a peaceful web space designed to help you relax, meditate and focus. Calming images and soothing sounds, without distractions.',
-        aboutFeatures: '✨ Features',
-        aboutFeature1: '🖼️ <strong>Beautiful images:</strong> a collection of calming images, fixed or rotating automatically',
-        aboutFeature2: '🔔 <strong>Singing bowl:</strong> a gentle chime at intervals you choose, or silence',
-        aboutFeature3: '🌿 <strong>Nature sounds:</strong> fire, jungle, river and sea, each with its own volume',
-        aboutFeature4: '⚙️ <strong>Your settings, remembered:</strong> language, background, sounds and volumes',
-        aboutFeature5: '🎨 <strong>Simple interface:</strong> no distractions, full focus',
-        aboutFeature6: '📲 <strong>Installable:</strong> add it to your home screen; the interface and images work offline',
-        aboutUsage: '💡 How to use',
+        aboutFeatures: 'Features',
+        aboutFeature1: '<strong>Beautiful images:</strong> a collection of calming images, fixed or rotating automatically',
+        aboutFeature2: '<strong>Singing bowl:</strong> a gentle chime at intervals you choose, or silence',
+        aboutFeature3: '<strong>Nature sounds:</strong> fire, jungle, river and sea, each with its own volume',
+        aboutFeature4: '<strong>Your settings, remembered:</strong> language, background, sounds and volumes',
+        aboutFeature5: '<strong>Simple interface:</strong> no distractions, full focus',
+        aboutFeature6: '<strong>Installable:</strong> add it to your home screen; the interface and images work offline',
+        aboutUsage: 'How to use',
         aboutUsage1: 'Click "Start" to begin',
         aboutUsage2: 'Enjoy the images and calming sounds',
         aboutUsage3: 'Adjust the sound interval, background and volumes to your taste',
         aboutUsage4: 'Relax, meditate or focus',
         aboutVersion: 'Version',
-        aboutDeveloper: 'Developed with ❤️ by Calm Team',
+        aboutDeveloper: 'Developed by Calm Team',
         
         // Feedback form
-        feedbackTitle: '💌 Feedback & Suggestions',
+        feedbackTitle: 'Feedback & Suggestions',
         feedbackDescription: 'Your feedback and suggestions are valuable to us',
         feedbackName: 'Name (optional)',
         feedbackEmail: 'Email (optional)',
@@ -166,7 +166,7 @@ const translations = {
         qrAlt: '{0} QR code',
         
         // Install
-        installApp: '📲 Install app',
+        installApp: 'Install app',
         installIosHint: 'To install: tap the Share button in Safari, then choose "Add to Home Screen".',
         
         // Alerts
@@ -180,12 +180,12 @@ const translations = {
     },
     fa: {
         // عناوین تب‌ها
-        tabSettings: '⚙️ تنظیمات',
-        tabDonation: '💝 حمایت مالی',
-        tabAbout: 'ℹ️ درباره',
+        tabSettings: 'تنظیمات',
+        tabDonation: 'حمایت مالی',
+        tabAbout: 'درباره',
         
         // تب تنظیمات
-        intervalPanelTitle: '⏱️ تنظیمات بازه پخش صدا',
+        intervalPanelTitle: 'تنظیمات بازه پخش صدا',
         soundIntervalPresets: 'الگوهای پخش صدا:',
         presetSilent: 'بدون صدا',
         presetStandard: 'استاندارد (۵ دقیقه)',
@@ -235,28 +235,28 @@ const translations = {
         donationCopy: 'کپی آدرس',
         donationCopied: 'آدرس کپی شد!',
         donationClose: 'بستن',
-        donationThanks: 'از حمایت شما متشکریم! ❤️',
+        donationThanks: 'از حمایت شما متشکریم!',
         
         // تب درباره
-        aboutTitle: '🌸 درباره Calm',
+        aboutTitle: 'درباره Calm',
         aboutDescription: '<strong>Calm</strong> یک محیط وب آرامش‌بخش است که برای کمک به تمرکز، مدیتیشن و آرامش طراحی شده است. تصاویر و صداهای آرام، بدون حواس‌پرتی.',
-        aboutFeatures: '✨ ویژگی‌ها',
-        aboutFeature1: '🖼️ <strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش، ثابت یا با چرخش خودکار',
-        aboutFeature2: '🔔 <strong>کاسه آواز:</strong> صدای ملایم کاسه در بازه‌های دلخواه شما، یا سکوت',
-        aboutFeature3: '🌿 <strong>صداهای طبیعت:</strong> آتش، جنگل، رودخانه و دریا، هرکدام با میزان صدای جداگانه',
-        aboutFeature4: '⚙️ <strong>تنظیمات شخصی:</strong> زبان، پس‌زمینه، صداها و میزان صدا به خاطر سپرده می‌شوند',
-        aboutFeature5: '🎨 <strong>رابط ساده:</strong> بدون حواس‌پرتی، تمرکز کامل',
-        aboutFeature6: '📲 <strong>قابل نصب:</strong> به صفحه‌ی اصلی اضافه کنید؛ ظاهر و تصاویر آفلاین هم کار می‌کنند',
-        aboutUsage: '💡 نحوه استفاده',
+        aboutFeatures: 'ویژگی‌ها',
+        aboutFeature1: '<strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش، ثابت یا با چرخش خودکار',
+        aboutFeature2: '<strong>کاسه آواز:</strong> صدای ملایم کاسه در بازه‌های دلخواه شما، یا سکوت',
+        aboutFeature3: '<strong>صداهای طبیعت:</strong> آتش، جنگل، رودخانه و دریا، هرکدام با میزان صدای جداگانه',
+        aboutFeature4: '<strong>تنظیمات شخصی:</strong> زبان، پس‌زمینه، صداها و میزان صدا به خاطر سپرده می‌شوند',
+        aboutFeature5: '<strong>رابط ساده:</strong> بدون حواس‌پرتی، تمرکز کامل',
+        aboutFeature6: '<strong>قابل نصب:</strong> به صفحه‌ی اصلی اضافه کنید؛ ظاهر و تصاویر آفلاین هم کار می‌کنند',
+        aboutUsage: 'نحوه استفاده',
         aboutUsage1: 'روی دکمه «شروع» کلیک کنید',
         aboutUsage2: 'از تصاویر زیبا و صداهای آرامش‌بخش لذت ببرید',
         aboutUsage3: 'بازه‌ی صدا، پس‌زمینه و میزان صداها را به سلیقه‌ی خود تنظیم کنید',
         aboutUsage4: 'آرام بگیرید، مدیتیشن کنید یا تمرکز کنید',
         aboutVersion: 'نسخه',
-        aboutDeveloper: 'ساخته شده با ❤️ توسط تیم Calm',
+        aboutDeveloper: 'ساخته شده توسط تیم Calm',
         
         // فرم بازخورد
-        feedbackTitle: '💌 پیشنهادات و بازخورد',
+        feedbackTitle: 'پیشنهادات و بازخورد',
         feedbackDescription: 'نظرات و پیشنهادات شما برای ما ارزشمند است',
         feedbackName: 'نام (اختیاری)',
         feedbackEmail: 'ایمیل (اختیاری)',
@@ -276,7 +276,7 @@ const translations = {
         qrAlt: 'کد QR {0}',
         
         // نصب برنامه
-        installApp: '📲 نصب برنامه',
+        installApp: 'نصب برنامه',
         installIosHint: 'برای نصب: دکمه‌ی اشتراک‌گذاری (Share) را در Safari بزنید و «Add to Home Screen» را انتخاب کنید.',
         
         // هشدارها
@@ -291,7 +291,7 @@ const translations = {
 };
 
 // ترجمه‌های پنل صداهای پس‌زمینه (باید قبل از اولین updateAllTexts تعریف شوند)
-translations.en.bgSoundsTitle = '🎵 Background Sounds';
+translations.en.bgSoundsTitle = 'Background Sounds';
 translations.en.bgSoundsSubtitle = 'Choose nature sounds for relaxation';
 translations.en.soundFire = 'Fire';
 translations.en.soundJungle = 'Jungle';
@@ -1132,7 +1132,7 @@ const bgSounds = {
 };
 
 
-translations.fa.bgSoundsTitle = '🎵 صداهای پس‌زمینه';
+translations.fa.bgSoundsTitle = 'صداهای پس‌زمینه';
 translations.fa.bgSoundsSubtitle = 'صداهای طبیعت را برای آرامش انتخاب کنید';
 translations.fa.soundFire = 'آتش';
 translations.fa.soundJungle = 'جنگل';
