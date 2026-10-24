@@ -128,20 +128,20 @@ const translations = {
         donationThanks: 'Thank you for your support! ❤️',
         
         // About tab
-        aboutTitle: 'About Calm',
-        aboutDescription: 'Calm is a simple web application designed to help you relax, meditate, and focus. With calming background images and soothing sounds, you can create your perfect environment for peace and concentration.',
-        aboutFeatures: 'Features:',
-        aboutFeature1: 'Automatic sound playback at customizable intervals',
-        aboutFeature2: 'Choice of multiple calming sounds',
-        aboutFeature3: 'Beautiful background images (static or rotating)',
-        aboutFeature4: 'Simple and distraction-free interface',
-        aboutFeature5: 'Fully customizable settings',
-        aboutFeature6: 'Works offline after initial load',
-        aboutUsage: 'How to Use:',
+        aboutTitle: '🌸 About Calm',
+        aboutDescription: '<strong>Calm</strong> is a peaceful web space designed to help you relax, meditate and focus. Calming images and soothing sounds, without distractions.',
+        aboutFeatures: '✨ Features',
+        aboutFeature1: '🖼️ <strong>Beautiful images:</strong> a collection of calming images, fixed or rotating automatically',
+        aboutFeature2: '🔔 <strong>Singing bowl:</strong> a gentle chime at intervals you choose, or silence',
+        aboutFeature3: '🌿 <strong>Nature sounds:</strong> fire, jungle, river and sea, each with its own volume',
+        aboutFeature4: '⚙️ <strong>Your settings, remembered:</strong> language, background, sounds and volumes',
+        aboutFeature5: '🎨 <strong>Simple interface:</strong> no distractions, full focus',
+        aboutFeature6: '📲 <strong>Installable:</strong> add it to your home screen; the interface and images work offline',
+        aboutUsage: '💡 How to use',
         aboutUsage1: 'Click "Start" to begin',
-        aboutUsage2: 'Adjust sound interval and volume to your preference',
-        aboutUsage3: 'Choose your preferred background image or enable rotation',
-        aboutUsage4: 'Relax and enjoy your peaceful environment',
+        aboutUsage2: 'Enjoy the images and calming sounds',
+        aboutUsage3: 'Adjust the sound interval, background and volumes to your taste',
+        aboutUsage4: 'Relax, meditate or focus',
         aboutVersion: 'Version',
         aboutDeveloper: 'Developed with ❤️ by Calm Team',
         
@@ -225,20 +225,20 @@ const translations = {
         donationThanks: 'از حمایت شما متشکریم! ❤️',
         
         // تب درباره
-        aboutTitle: 'درباره Calm',
-        aboutDescription: 'Calm یک برنامه وب ساده است که برای کمک به شما در آرامش، مدیتیشن و تمرکز طراحی شده است. با تصاویر پس‌زمینه آرامش‌بخش و صداهای دلنشین، می‌توانید محیط ایده‌آل خود را برای آرامش و تمرکز ایجاد کنید.',
-        aboutFeatures: 'ویژگی‌ها:',
-        aboutFeature1: 'پخش خودکار صدا در بازه‌های زمانی قابل تنظیم',
-        aboutFeature2: 'امکان انتخاب از میان صداهای مختلف آرامش‌بخش',
-        aboutFeature3: 'تصاویر پس‌زمینه زیبا (ثابت یا چرخشی)',
-        aboutFeature4: 'رابط کاربری ساده و بدون حواس‌پرتی',
-        aboutFeature5: 'تنظیمات کاملا قابل شخصی‌سازی',
-        aboutFeature6: 'قابلیت کار آفلاین پس از بارگذاری اولیه',
-        aboutUsage: 'نحوه استفاده:',
-        aboutUsage1: 'روی "شروع" کلیک کنید',
-        aboutUsage2: 'بازه زمانی و صدا را به دلخواه تنظیم کنید',
-        aboutUsage3: 'تصویر پس‌زمینه دلخواه را انتخاب کنید یا حالت چرخشی را فعال کنید',
-        aboutUsage4: 'آرام بگیرید و از محیط آرامش‌بخش خود لذت ببرید',
+        aboutTitle: '🌸 درباره Calm',
+        aboutDescription: '<strong>Calm</strong> یک محیط وب آرامش‌بخش است که برای کمک به تمرکز، مدیتیشن و آرامش طراحی شده است. تصاویر و صداهای آرام، بدون حواس‌پرتی.',
+        aboutFeatures: '✨ ویژگی‌ها',
+        aboutFeature1: '🖼️ <strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش، ثابت یا با چرخش خودکار',
+        aboutFeature2: '🔔 <strong>کاسه آواز:</strong> صدای ملایم کاسه در بازه‌های دلخواه شما، یا سکوت',
+        aboutFeature3: '🌿 <strong>صداهای طبیعت:</strong> آتش، جنگل، رودخانه و دریا، هرکدام با میزان صدای جداگانه',
+        aboutFeature4: '⚙️ <strong>تنظیمات شخصی:</strong> زبان، پس‌زمینه، صداها و میزان صدا به خاطر سپرده می‌شوند',
+        aboutFeature5: '🎨 <strong>رابط ساده:</strong> بدون حواس‌پرتی، تمرکز کامل',
+        aboutFeature6: '📲 <strong>قابل نصب:</strong> به صفحه‌ی اصلی اضافه کنید؛ ظاهر و تصاویر آفلاین هم کار می‌کنند',
+        aboutUsage: '💡 نحوه استفاده',
+        aboutUsage1: 'روی دکمه «شروع» کلیک کنید',
+        aboutUsage2: 'از تصاویر زیبا و صداهای آرامش‌بخش لذت ببرید',
+        aboutUsage3: 'بازه‌ی صدا، پس‌زمینه و میزان صداها را به سلیقه‌ی خود تنظیم کنید',
+        aboutUsage4: 'آرام بگیرید، مدیتیشن کنید یا تمرکز کنید',
         aboutVersion: 'نسخه',
         aboutDeveloper: 'ساخته شده با ❤️ توسط تیم Calm',
         
@@ -348,7 +348,12 @@ function updateAllTexts() {
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
         if (t[key]) {
-            element.textContent = t[key];
+            // متن‌های داخلی خودمان که HTML (مثل <strong>) دارند با data-i18n-html علامت‌گذاری شده‌اند
+            if (element.hasAttribute('data-i18n-html')) {
+                element.innerHTML = t[key];
+            } else {
+                element.textContent = t[key];
+            }
         }
     });
     
