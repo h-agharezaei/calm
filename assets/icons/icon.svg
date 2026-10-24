@@ -5,8 +5,8 @@
       <polygon points="50,50 125,68 92,132" fill="#000"/>
     </mask>
   </defs>
-  <rect width="100" height="100" fill="#f4efe6"/>
-  <path mask="url(#gap)" fill="#1c1a19" fill-rule="evenodd"
+  <rect width="100" height="100" fill="#667eea"/>
+  <path mask="url(#gap)" fill="#f4efe6" fill-rule="evenodd"
         d="M14 50a36 36 0 1 0 72 0a36 36 0 1 0 -72 0Z
            M27 47a26 26 0 1 0 52 0a26 26 0 1 0 -52 0Z"/>
 </svg>
