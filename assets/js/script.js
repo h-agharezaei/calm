@@ -307,6 +307,8 @@ let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌
 function changeLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('calm-language', lang);
+    languageSelect.value = lang;
+    updateLangToggle();
     
     // تغییر جهت متن
     document.documentElement.setAttribute('dir', lang === 'fa' ? 'rtl' : 'ltr');
@@ -318,6 +320,22 @@ function changeLanguage(lang) {
     // به‌روزرسانی meta tags
     updateMetaTags();
 }
+
+// دکمه‌ی تغییر زبان (بالا سمت راست): زبان مقصد را نشان می‌دهد
+const langToggle = document.getElementById('langToggle');
+const langToggleLabel = document.getElementById('langToggleLabel');
+
+function updateLangToggle() {
+    const target = currentLang === 'fa' ? 'en' : 'fa';
+    langToggleLabel.textContent = target === 'en' ? 'EN' : 'فا';
+    const label = target === 'en' ? 'Switch to English' : 'تغییر به فارسی';
+    langToggle.setAttribute('aria-label', label);
+    langToggle.title = label;
+}
+
+langToggle.addEventListener('click', () => {
+    changeLanguage(currentLang === 'fa' ? 'en' : 'fa');
+});
 
 // تابع به‌روزرسانی تمام متن‌ها
 function updateAllTexts() {
