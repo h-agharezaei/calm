@@ -1,3 +1,12 @@
+/* Estedad (SIL OFL 1.1) - self-hosted variable font */
+@font-face {
+    font-family: 'Estedad';
+    src: url('../fonts/Estedad-VF.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
 /*
  * ============================================
  * Calm - فضای آرامش و تمرکز
@@ -25,19 +34,16 @@
 }
 
 body {
-    font-family: 'Inter', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', 'Estedad', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
     overflow: hidden;
     height: 100vh;
     width: 100vw;
 }
 
-/* Font optimization for RTL/LTR */
-body[dir="rtl"] {
-    font-family: 'Vazirmatn', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-body[dir="ltr"] {
-    font-family: 'Inter', 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* Persian: Estedad first (also covers Persian digits and punctuation) */
+html[lang="fa"] body {
+    font-family: 'Estedad', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif;
+    line-height: 1.7;
 }
 
 /* Loading Overlay */

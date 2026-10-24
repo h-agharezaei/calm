@@ -110,7 +110,7 @@ Created by [h-agharezaei](https://github.com/h-agharezaei)
 
 - Nature images used for backgrounds
 - Sound samples for meditation and relaxation
-- Font families: Inter and Vazirmatn
+- Font families: Inter and [Estedad](https://github.com/aminabedi68/Estedad) (SIL OFL 1.1)
 
 ---
 
