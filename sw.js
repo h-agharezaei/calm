@@ -4,13 +4,15 @@
  * - Precaches the app shell (HTML, CSS, JS, font, icons, bowl sounds)
  * - HTML/CSS/JS: network first (new deploys show up immediately), cache as offline fallback
  * - Images, fonts, short sounds: cache first (filled as they are used)
- * - Large background sounds (assets/bg-sounds) are NOT cached: they are streamed from the network
+ * - Large background sounds (assets/bg-sounds) are streamed from the network, unless the user saved
+ *   them for offline use (stored by the page in OFFLINE_CACHE, which survives VERSION bumps)
  *
  * Bump VERSION whenever a cached, non-versioned file (images, sounds, font) changes.
  */
 const VERSION = 'calm-v1';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
+const OFFLINE_CACHE = 'calm-offline-sounds'; // keep in sync with script.js
 
 const PRECACHE = [
     './',
@@ -37,7 +39,8 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys()
             .then((keys) => Promise.all(
-                keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))
+                // only delete old versioned caches; keep the user's offline sounds
+                keys.filter((k) => /^calm-v\d+-/.test(k) && !k.startsWith(VERSION)).map((k) => caches.delete(k))
             ))
             .then(() => self.clients.claim())
     );
@@ -57,8 +60,11 @@ self.addEventListener('fetch', (event) => {
     }
     if (!sameOrigin) return; // analytics etc.: leave to the network
 
-    // Large looping sounds: stream from the network
-    if (url.pathname.includes('/assets/bg-sounds/')) return;
+    // Large looping sounds: from the offline cache if saved, otherwise from the network
+    if (url.pathname.includes('/assets/bg-sounds/')) {
+        event.respondWith(offlineSound(req));
+        return;
+    }
 
     if (/\/assets\/(images|fonts|sounds|icons)\//.test(url.pathname)) {
         event.respondWith(cacheFirst(req));
@@ -67,6 +73,14 @@ self.addEventListener('fetch', (event) => {
 
     event.respondWith(networkFirst(req));
 });
+
+async function offlineSound(req) {
+    const hit = await caches.match(req.url, { cacheName: OFFLINE_CACHE });
+    if (hit) {
+        return req.headers.has('range') ? rangeResponse(req, hit) : hit;
+    }
+    return fetch(req);
+}
 
 async function networkFirst(req) {
     try {
@@ -115,11 +129,11 @@ async function staleWhileRevalidate(req) {
 
 // Safari/Chrome request audio with Range headers; answer from the cached full file
 async function rangeResponse(req, res) {
-    const buf = await res.clone().arrayBuffer();
+    const blob = await res.clone().blob();
     const match = /bytes=(\d*)-(\d*)/.exec(req.headers.get('range') || '');
     if (!match) return res;
 
-    const size = buf.byteLength;
+    const size = blob.size;
     let start;
     let end;
     if (match[1] === '') {
@@ -134,7 +148,7 @@ async function rangeResponse(req, res) {
         return new Response(null, { status: 416, headers: { 'Content-Range': `bytes */${size}` } });
     }
 
-    return new Response(buf.slice(start, end + 1), {
+    return new Response(blob.slice(start, end + 1), {
         status: 206,
         statusText: 'Partial Content',
         headers: {
