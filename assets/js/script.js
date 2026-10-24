@@ -156,6 +156,15 @@ const translations = {
         feedbackSuccess: 'Thank you! Your feedback has been sent successfully.',
         feedbackError: 'Sorry, there was an error sending your feedback. Please try again.',
         
+        // Accessibility labels
+        ariaClose: 'Close',
+        ariaSoundInterval: 'Sound interval settings',
+        ariaBgSounds: 'Background sounds',
+        ariaSettings: 'Settings',
+        ariaVolume: '{0} volume',
+        imageAlt: 'Background image {0}',
+        qrAlt: '{0} QR code',
+        
         // Alerts
         alertInvalidNumber: 'Please enter a valid number',
         alertMinimum5Seconds: 'Please enter a valid number (minimum 5 seconds)',
@@ -253,6 +262,15 @@ const translations = {
         feedbackSuccess: 'متشکریم! پیشنهاد شما با موفقیت ارسال شد.',
         feedbackError: 'متاسفانه خطایی در ارسال پیشنهاد رخ داد. لطفا دوباره تلاش کنید.',
         
+        // برچسب‌های دسترس‌پذیری
+        ariaClose: 'بستن',
+        ariaSoundInterval: 'تنظیمات بازه پخش صدا',
+        ariaBgSounds: 'صداهای پس‌زمینه',
+        ariaSettings: 'تنظیمات',
+        ariaVolume: 'میزان صدای {0}',
+        imageAlt: 'تصویر پس‌زمینه {0}',
+        qrAlt: 'کد QR {0}',
+        
         // هشدارها
         alertInvalidNumber: 'لطفا یک عدد معتبر وارد کنید',
         alertMinimum5Seconds: 'لطفا یک عدد معتبر وارد کنید (حداقل 5 ثانیه)',
@@ -263,6 +281,14 @@ const translations = {
         metaKeywords: 'آرامش, مدیتیشن, تمرکز, صدای آرامش‌بخش, تصاویر طبیعت'
     }
 };
+
+// ترجمه‌های پنل صداهای پس‌زمینه (باید قبل از اولین updateAllTexts تعریف شوند)
+translations.en.bgSoundsTitle = '🎵 Background Sounds';
+translations.en.bgSoundsSubtitle = 'Choose nature sounds for relaxation';
+translations.en.soundFire = 'Fire';
+translations.en.soundJungle = 'Jungle';
+translations.en.soundRiver = 'River';
+translations.en.soundSea = 'Sea';
 
 // متغیرهای مربوط به پخش صدا
 const sounds = {
@@ -351,6 +377,23 @@ function updateAllTexts() {
         if (t[key]) {
             element.textContent = t[key];
         }
+    });
+    
+    // به‌روزرسانی aria-labelها
+    document.querySelectorAll('[data-i18n-aria-label]').forEach(element => {
+        const key = element.getAttribute('data-i18n-aria-label');
+        if (t[key]) {
+            element.setAttribute('aria-label', t[key]);
+        }
+    });
+    
+    // alt تصاویر بندانگشتی و برچسب اسلایدرهای حجم صدا
+    document.querySelectorAll('img[data-i18n-alt-index]').forEach((img, i) => {
+        img.alt = t.imageAlt.replace('{0}', i + 1);
+    });
+    document.querySelectorAll('.volume-slider').forEach(slider => {
+        const name = t['sound' + slider.dataset.sound] || slider.dataset.sound;
+        slider.setAttribute('aria-label', t.ariaVolume.replace('{0}', name));
     });
     
     // به‌روزرسانی عناصر با data-i18n-placeholder
@@ -1022,7 +1065,7 @@ cryptoButtons.forEach(btn => {
         const data = cryptoData[crypto];
         
         cryptoQR.src = data.qr;
-        cryptoQR.alt = `${data.name} QR Code`;
+        cryptoQR.alt = translations[currentLang].qrAlt.replace('{0}', data.name);
         cryptoAddress.value = data.address;
         cryptoDetails.style.display = 'block';
         
@@ -1075,13 +1118,6 @@ const bgSounds = {
     Sea: { audio: null, playing: false }
 };
 
-// ترجمه‌های نام صداها
-translations.en.bgSoundsTitle = '🎵 Background Sounds';
-translations.en.bgSoundsSubtitle = 'Choose nature sounds for relaxation';
-translations.en.soundFire = 'Fire';
-translations.en.soundJungle = 'Jungle';
-translations.en.soundRiver = 'River';
-translations.en.soundSea = 'Sea';
 
 translations.fa.bgSoundsTitle = '🎵 صداهای پس‌زمینه';
 translations.fa.bgSoundsSubtitle = 'صداهای طبیعت را برای آرامش انتخاب کنید';
