@@ -344,6 +344,7 @@ Object.assign(translations.en, {
     sessionNoSound: 'No sound',
     sessionEnd: 'End',
     sessionStatus: 'Meditating…',
+    sessionPrep: 'Get ready',
     sessionDone: 'Your meditation is complete. Be well.'
 });
 Object.assign(translations.fa, {
@@ -364,6 +365,7 @@ Object.assign(translations.fa, {
     sessionNoSound: 'بدون صدا',
     sessionEnd: 'پایان',
     sessionStatus: 'در حال مدیتیشن…',
+    sessionPrep: 'آماده شوید',
     sessionDone: 'مدیتیشن به پایان رسید. آرامش با شما.'
 });
 
@@ -1842,6 +1844,7 @@ setupOfflineButtons();
 
 const SESSION_BG_DELAY_MS = 4000;    // فاصله‌ی زنگ شروع تا ورود صدای پس‌زمینه
 const SESSION_FADE_IN_MS = 5000;
+const SESSION_PREP_MS = 5000;        // مهلت آماده‌شدن قبل از شروع شمارش جلسه
 const SESSION_FADE_OUT_MS = 4000;    // fade-out پایانی، درست قبل از زنگ پایان
 const SESSION_STOP_FADE_MS = 1500;   // fade-out وقتی کاربر زودتر «پایان» را می‌زند
 const SESSION_MIN_MINUTES = 1;
@@ -1851,6 +1854,8 @@ const sessionBar = document.getElementById('sessionBar');
 const sessionTimeEl = document.getElementById('sessionTime');
 const sessionEndBtn = document.getElementById('sessionEndBtn');
 const sessionDoneEl = document.getElementById('sessionDone');
+const sessionStatusEl = document.getElementById('sessionStatus');
+const sessionSky = document.getElementById('sessionSky');
 const meditationIcon = document.getElementById('meditationIcon');
 const meditationOverlay = document.getElementById('meditationOverlay');
 const closeMeditationPanel = document.getElementById('closeMeditationPanel');
@@ -2062,6 +2067,122 @@ function formatClock(ms) {
 
 // ---------- چرخه‌ی جلسه ----------
 
+// متن وضعیت: «آماده شوید» در مهلت اولیه، «در حال مدیتیشن» بعد از آن
+function setSessionPrepping(on) {
+    session.prepping = on;
+    const key = on ? 'sessionPrep' : 'sessionStatus';
+    sessionStatusEl.dataset.i18n = key;
+    sessionStatusEl.textContent = bt(key);
+}
+
+// ---------- آسمان: ابر و باد تصادفی ----------
+// هر ابر با اندازه، ارتفاع، جهت، سرعت و شفافیت تصادفی ساخته می‌شود و بعد از خروج از صفحه
+// با مشخصات تازه دوباره ظاهر می‌شود؛ پس حرکت‌ها تکراری و همه در یک جهت نیستند.
+const SKY_CLOUDS = 5;
+const SKY_WINDS = 4;
+let skyActive = false;
+const skyTimers = new Set();
+
+const rand = (a, b) => a + Math.random() * (b - a);
+
+function skyReduceMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function spawnCloud(initial) {
+    if (!skyActive) return;
+    const vw = window.innerWidth;
+    const width = rand(Math.min(vw * 0.45, 200), Math.min(vw * 0.9, 460));
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    const duration = rand(70, 150);
+    const cloud = document.createElement('div');
+    cloud.className = 'sky-cloud';
+    cloud.style.width = `${width}px`;
+    cloud.style.height = `${width * 0.42}px`;
+    cloud.style.top = `${rand(2, 85)}%`;
+    cloud.style.setProperty('--sx', Math.random() < 0.5 ? -1 : 1);       // آینه‌ای برای تنوع شکل
+    cloud.style.setProperty('--s', rand(0.8, 1.4).toFixed(2));
+    cloud.style.setProperty('--x0', `${dir > 0 ? -width * 1.5 : vw + width * 0.5}px`);
+    cloud.style.setProperty('--x1', `${dir > 0 ? vw + width * 0.5 : -width * 1.5}px`);
+    cloud.style.setProperty('--dy', `${rand(-40, 40).toFixed(0)}px`);
+    cloud.style.setProperty('--o', rand(0.16, 0.3).toFixed(2));
+    cloud.style.animationDuration = `${duration.toFixed(0)}s`;
+    // اولین ابرها وسط راه شروع می‌شوند تا آسمان از ابتدا خالی نباشد
+    if (initial) cloud.style.animationDelay = `-${(duration * rand(0.05, 0.85)).toFixed(0)}s`;
+
+    // ابر از چند برآمدگی گرد ساخته می‌شود: بزرگ‌تر در وسط، کوچک‌تر در لبه‌ها، با کف تقریباً صاف
+    const puffs = [
+        [4, 38, 34], [20, 12, 44], [42, 0, 50], [64, 10, 42], [80, 34, 32], [30, 40, 46], [56, 38, 44]
+    ];
+    puffs.forEach(([l, t, size]) => {
+        const puff = document.createElement('span');
+        puff.className = 'sky-puff';
+        const jitter = rand(0.9, 1.12);
+        puff.style.left = `${l}%`;
+        puff.style.top = `${t}%`;
+        puff.style.width = `${size * jitter}%`;
+        puff.style.height = `${size * jitter * 1.6}%`;
+        cloud.appendChild(puff);
+    });
+
+    if (skyReduceMotion()) {
+        cloud.classList.add('still');
+        cloud.style.setProperty('--xs', `${rand(0, Math.max(0, vw - width)).toFixed(0)}px`);
+    } else {
+        cloud.addEventListener('animationend', () => {
+            cloud.remove();
+            spawnCloud(false);
+        }, { once: true });
+    }
+    sessionSky.appendChild(cloud);
+}
+
+function spawnWind() {
+    if (!skyActive || skyReduceMotion()) return;
+    const vw = window.innerWidth;
+    const dir = Math.random() < 0.5 ? 1 : -1;
+    const length = rand(120, 320);
+    const wind = document.createElement('span');
+    wind.className = 'sky-wind';
+    wind.style.width = `${length}px`;
+    wind.style.top = `${rand(5, 92)}%`;
+    wind.style.setProperty('--x0', `${dir > 0 ? -length : vw}px`);
+    wind.style.setProperty('--x1', `${dir > 0 ? vw : -length}px`);
+    wind.style.setProperty('--dy', `${rand(-30, 30).toFixed(0)}px`);
+    wind.style.setProperty('--rot', `${rand(-4, 4).toFixed(1)}deg`);
+    wind.style.animationDuration = `${rand(7, 14).toFixed(1)}s`;
+    wind.addEventListener('animationend', () => {
+        wind.remove();
+        // مکث تصادفی تا باد بعدی
+        const id = setTimeout(() => {
+            skyTimers.delete(id);
+            spawnWind();
+        }, rand(1000, 7000));
+        skyTimers.add(id);
+    }, { once: true });
+    sessionSky.appendChild(wind);
+}
+
+function startSky() {
+    stopSky();
+    skyActive = true;
+    for (let i = 0; i < SKY_CLOUDS; i++) spawnCloud(true);
+    for (let i = 0; i < SKY_WINDS; i++) {
+        const id = setTimeout(() => {
+            skyTimers.delete(id);
+            spawnWind();
+        }, rand(0, 8000));
+        skyTimers.add(id);
+    }
+}
+
+function stopSky() {
+    skyActive = false;
+    skyTimers.forEach(clearTimeout);
+    skyTimers.clear();
+    sessionSky.textContent = '';
+}
+
 // ---------- قفل صفحه‌ی مدیتیشن ----------
 // در طول جلسه بقیه‌ی صفحه (دکمه‌ها و منوها) با inert از دسترس ماوس، لمس و صفحه‌کلید خارج می‌شود
 let sessionInertEls = [];
@@ -2084,6 +2205,7 @@ function beginSession() {
     session.periodic = false;
     session.state = 'running';
     session.startedAt = Date.now();
+    session.prepEnd = session.startedAt + SESSION_PREP_MS;
     // زنگ‌های دوره‌ای تا پایان جلسه متوقف می‌شوند (مگر کاربر دوباره روشنشان کند)
     if (intervalId) {
         clearInterval(intervalId);
@@ -2093,9 +2215,11 @@ function beginSession() {
 
     // زنگ شروع همیشه پخش می‌شود (حتی اگر preset بازه «بدون صدا» باشد)
     playSessionBell();
-    session.endAt = session.startedAt + minutes * 60000;
-    sessionTimeEl.textContent = formatClock(minutes * 60000);
+    session.endAt = session.prepEnd + minutes * 60000;
+    setSessionPrepping(true);
+    sessionTimeEl.textContent = localizeDigits(String(Math.ceil(SESSION_PREP_MS / 1000)));
     sessionBar.hidden = false;
+    startSky();
     lockPageForSession();
     sessionEndBtn.focus({ preventScroll: true });
     session.tickId = setInterval(tickSession, 500);
@@ -2111,7 +2235,16 @@ function beginSession() {
 
 function tickSession() {
     if (session.state === 'idle' || !session.timed) return;
-    const remaining = session.endAt - Date.now();
+    const now = Date.now();
+
+    // مهلت آماده‌شدن: شمارش معکوس چند ثانیه‌ای، بدون کم شدن از زمان جلسه
+    if (now < session.prepEnd) {
+        sessionTimeEl.textContent = localizeDigits(String(Math.ceil((session.prepEnd - now) / 1000)));
+        return;
+    }
+    if (session.prepping) setSessionPrepping(false);
+
+    const remaining = session.endAt - now;
     if (remaining <= 0) {
         finishSession(true);
         return;
@@ -2162,6 +2295,7 @@ function finishSession(completed) {
 
     releaseSessionWakeLock();
     sessionBar.hidden = true;
+    stopSky();
     unlockPageAfterSession();
     renderSessionPanelState();
     if (completed) showSessionDone();
@@ -2671,7 +2805,7 @@ renderBreathPanel();
 //   ?breath=478&rounds=8&img=2       تنفس ۴-۷-۸، ۸ دور، تصویر شماره‌ی ۲
 //   ?min=10&sound=river              مدیتیشن ۱۰ دقیقه‌ای با صدای رودخانه
 //   ?lang=en                         فقط زبان
-// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|none | img=0..4 | rounds=1..99 | lang=fa|en
+// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|none | img=0..4 (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
 // تنظیمات فقط برای همین بازدید اعمال می‌شود (در localStorage ذخیره نمی‌شود)
 // و جلسه بعد از فشردن «شروع» شروع می‌شود، چون مرورگر بدون کلیک اجازه‌ی پخش صدا نمی‌دهد.
 (function applyUrlParams() {
@@ -2690,7 +2824,11 @@ renderBreathPanel();
     const bg = params.get('bg');
     const imgRaw = params.get('img') !== null ? params.get('img') : (/^\d+$/.test(bg || '') ? bg : null);
     const img = parseInt(imgRaw);
-    if (imgRaw !== null && img >= 0 && img < images.length) setBackground(img);
+    if (imgRaw !== null && img >= 0 && img < images.length) {
+        // اگر کاربر حالت چرخشی را ذخیره کرده بود، تصویر انتخاب‌شده با لینک ثابت بماند (ذخیره نمی‌شود)
+        if (bgMode !== 'single') applyBgMode('single');
+        setBackground(img);
+    }
 
     // صدای طبیعت: sound=نام؛ bg=نام هم پذیرفته می‌شود
     const soundRaw = (params.get('sound') || (/^\d+$/.test(bg || '') ? '' : bg) || '').toLowerCase();
