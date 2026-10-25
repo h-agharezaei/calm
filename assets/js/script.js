@@ -128,12 +128,14 @@ const translations = {
         donationDescription: 'If you enjoy using Calm and would like to support its development, you can donate using cryptocurrency:',
         donationDogecoin: 'Dogecoin',
         donationTron: 'Tron',
-        donationToncoin: 'Toncoin',
+        donationGram: 'Gram',
         donationQrScan: 'Scan the QR code or copy the address below:',
         donationCopy: 'Copy Address',
-        donationCopied: 'Address copied!',
+        donationCopied: 'Address copied! Thank you for your support 💜',
         donationClose: 'Close',
         donationThanks: 'Thank you for your support!',
+        donationNetworkWarn: 'Send only on the {0} network. Funds sent on another network may be lost.',
+        donationTapQr: 'Tap the QR code to copy the address',
         
         // About tab
         aboutTitle: 'About Calm',
@@ -245,12 +247,14 @@ const translations = {
         donationDescription: 'اگر از استفاده از Calm لذت می‌برید و مایل به حمایت از توسعه آن هستید، می‌توانید از طریق رمزارزها کمک مالی کنید:',
         donationDogecoin: 'Dogecoin',
         donationTron: 'Tron',
-        donationToncoin: 'Toncoin',
+        donationGram: 'Gram',
         donationQrScan: 'کد QR را اسکن کنید یا آدرس زیر را کپی کنید:',
         donationCopy: 'کپی آدرس',
-        donationCopied: 'آدرس کپی شد!',
+        donationCopied: 'آدرس کپی شد! از حمایت شما متشکریم 💜',
         donationClose: 'بستن',
         donationThanks: 'از حمایت شما متشکریم!',
+        donationNetworkWarn: 'فقط روی شبکه‌ی {0} ارسال کنید. ارسال روی شبکه‌ی دیگر ممکن است باعث از دست رفتن دارایی شود.',
+        donationTapQr: 'برای کپی آدرس روی QR بزنید',
         
         // تب درباره
         aboutTitle: 'درباره Calm',
@@ -1282,17 +1286,20 @@ const cryptoData = {
     doge: {
         name: 'Dogecoin',
         address: 'DRJ5C5DLDpJL4J1goXs2bqD5LBmeNiqGah',
+        network: 'Dogecoin',
         qr: 'assets/crypto-qr/doge-qr.jpeg'
     },
     trx: {
         name: 'Tron',
         address: 'TXaadj5wJPY7tWiBfugxHXQUfRNVoGaKVq',
+        network: 'Tron (TRC20)',
         qr: 'assets/crypto-qr/trx-qr.jpeg'
     },
-    ton: {
-        name: 'Toncoin',
-        address: 'UQCgLRDNp1zO9khx86Y-sdoI_x0JZ3kk9QdAs8tdtmNrXPVP',
-        qr: 'assets/crypto-qr/ton-qr.jpeg'
+    gram: {
+        name: 'Gram',
+        address: 'UQC-51N1lRqKkkRr9AjZw7RbqdZew5mKqbZQWcJ7dJF86ykA',
+        network: 'TON',
+        qr: 'assets/crypto-qr/gram-qr.jpeg'
     }
 };
 
@@ -1305,6 +1312,23 @@ const copyBtn = document.getElementById('copyBtn');
 const closeCrypto = document.getElementById('closeCrypto');
 const copyFeedback = document.getElementById('copyFeedback');
 
+const cryptoNetwork = document.getElementById('cryptoNetwork');
+
+// آدرس کوتاه‌شده برای نمایش (کپی همیشه آدرس کامل را برمی‌دارد)
+function shortAddress(addr) {
+    return addr.length > 20 ? `${addr.slice(0, 8)}…${addr.slice(-6)}` : addr;
+}
+
+// متن‌های وابسته به زبان در جزئیات رمزارز
+function updateCryptoTexts() {
+    if (!selectedCrypto) return;
+    const t = translations[currentLang];
+    const data = cryptoData[selectedCrypto];
+    cryptoQR.alt = t.qrAlt.replace('{0}', data.name);
+    cryptoNetwork.textContent = t.donationNetworkWarn.replace('{0}', data.network);
+}
+document.addEventListener('calm:languagechange', updateCryptoTexts);
+
 // نمایش جزئیات رمزارز
 cryptoButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1312,12 +1336,14 @@ cryptoButtons.forEach(btn => {
         const data = cryptoData[crypto];
         selectedCrypto = crypto;
         track('donation_click', { crypto });
-        
+
+        cryptoButtons.forEach(b => b.classList.toggle('active', b === btn));
         cryptoQR.src = data.qr;
-        cryptoQR.alt = translations[currentLang].qrAlt.replace('{0}', data.name);
-        cryptoAddress.value = data.address;
+        cryptoAddress.value = shortAddress(data.address);
+        cryptoAddress.title = data.address;
+        updateCryptoTexts();
         cryptoDetails.style.display = 'block';
-        
+
         // اسکرول به جزئیات
         cryptoDetails.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
@@ -1326,29 +1352,35 @@ cryptoButtons.forEach(btn => {
 // بستن جزئیات
 closeCrypto.addEventListener('click', () => {
     cryptoDetails.style.display = 'none';
+    cryptoButtons.forEach(b => b.classList.remove('active'));
 });
 
-// کپی آدرس
-copyBtn.addEventListener('click', async () => {
+// کپی آدرس کامل (با دکمه کپی، لمس QR یا لمس آدرس)
+async function copyCryptoAddress() {
+    if (!selectedCrypto) return;
+    const full = cryptoData[selectedCrypto].address;
     try {
-        await navigator.clipboard.writeText(cryptoAddress.value);
-        track('donation_copy', { crypto: selectedCrypto });
-        copyFeedback.classList.add('show');
-        
-        setTimeout(() => {
-            copyFeedback.classList.remove('show');
-        }, 2000);
+        await navigator.clipboard.writeText(full);
     } catch (err) {
         // Fallback برای مرورگرهای قدیمی
-        cryptoAddress.select();
+        const tmp = document.createElement('textarea');
+        tmp.value = full;
+        tmp.style.position = 'fixed';
+        tmp.style.opacity = '0';
+        document.body.appendChild(tmp);
+        tmp.select();
         document.execCommand('copy');
-        copyFeedback.classList.add('show');
-        
-        setTimeout(() => {
-            copyFeedback.classList.remove('show');
-        }, 2000);
+        tmp.remove();
     }
-});
+    track('donation_copy', { crypto: selectedCrypto });
+    copyFeedback.classList.add('show');
+    clearTimeout(copyBtn._t);
+    copyBtn._t = setTimeout(() => copyFeedback.classList.remove('show'), 2500);
+}
+
+copyBtn.addEventListener('click', copyCryptoAddress);
+cryptoQR.addEventListener('click', copyCryptoAddress);
+cryptoAddress.addEventListener('click', copyCryptoAddress);
 
 // ============================================
 // مدیریت پخش‌کننده صداهای پس‌زمینه
