@@ -94,6 +94,7 @@ const translations = {
         updateInterval: 'Update Interval',
         soundPlayback: 'Sound Playback',
         selectSound: 'Select Sound:',
+        chimeVolume: 'Chime Volume:',
         soundGong: 'Singing Bowl - Gong',
         soundChimes: 'Bronze Bowl - Chimes',
         bgMode: 'Background Mode:',
@@ -208,6 +209,7 @@ const translations = {
         updateInterval: 'تغییر بازه',
         soundPlayback: 'پخش صدا',
         selectSound: 'انتخاب صدا:',
+        chimeVolume: 'میزان صدای زنگ:',
         soundGong: 'کاسه آواز - گونگ',
         soundChimes: 'کاسه برنزی - زنگ',
         bgMode: 'حالت پس‌زمینه:',
@@ -361,6 +363,7 @@ const intervalPresets = {
     'custom': null        // سفارشی
 };
 
+const CHIME_DEFAULT_VOLUME = 20; // درصد
 let currentSound = 'singing-bowl-gong.mp3';
 let intervalTime = 300000; // پیش‌فرض 300 ثانیه (به میلی‌ثانیه)
 let intervalId = null;
@@ -922,6 +925,46 @@ soundToggle2.addEventListener('change', (e) => {
     }
 });
 
+// میزان صدای زنگ (گونگ/زنگ بازه‌ای)
+const chimeVolumeInput = document.getElementById('chimeVolume');
+const chimeVolumeValue = document.getElementById('chimeVolumeValue');
+
+function applyChimeVolume(percent) {
+    percent = Math.min(100, Math.max(0, Math.round(percent)));
+    audio.volume = percent / 100;
+    chimeVolumeInput.value = percent;
+    chimeVolumeValue.textContent = `${percent}%`;
+}
+
+function loadChimeVolume() {
+    let percent = CHIME_DEFAULT_VOLUME;
+    try {
+        const saved = parseInt(localStorage.getItem('calm-chime-volume'), 10);
+        if (!isNaN(saved) && saved >= 0 && saved <= 100) {
+            percent = saved;
+        }
+    } catch (err) {
+        // localStorage در دسترس نیست
+    }
+    applyChimeVolume(percent);
+}
+
+chimeVolumeInput.addEventListener('input', () => {
+    applyChimeVolume(parseInt(chimeVolumeInput.value, 10));
+    try {
+        localStorage.setItem('calm-chime-volume', chimeVolumeInput.value);
+    } catch (err) {
+        // نادیده گرفته می‌شود
+    }
+});
+
+// وقتی کاربر اسلایدر را رها کرد، یک نمونه از صدا پخش شود تا میزانش را بشنود
+chimeVolumeInput.addEventListener('change', () => {
+    audio.src = sounds[currentSound];
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+});
+
 // رویداد تغییر انتخاب صدا در پنل جدید
 soundSelect2.addEventListener('change', (e) => {
     currentSound = e.target.value;
@@ -999,6 +1042,8 @@ function hideLoadingOverlay() {
 
 // بارگذاری سایر تنظیمات ذخیره‌شده (صدا، تصویر، حالت پس‌زمینه)
 function loadSavedSettings() {
+    loadChimeVolume();
+    
     try {
         const savedSound = localStorage.getItem('calm-sound');
         if (savedSound && sounds[savedSound]) {

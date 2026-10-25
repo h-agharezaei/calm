@@ -1259,7 +1259,8 @@ label {
     flex-shrink: 0;
 }
 
-.volume-slider {
+.volume-slider,
+.chime-volume-slider {
     flex: 1;
     -webkit-appearance: none;
     appearance: none;
@@ -1275,7 +1276,8 @@ label {
     opacity: 1;
 }
 
-.volume-slider::-webkit-slider-thumb {
+.volume-slider::-webkit-slider-thumb,
+.chime-volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 16px;
@@ -1293,7 +1295,8 @@ label {
     box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
 }
 
-.volume-slider::-moz-range-thumb {
+.volume-slider::-moz-range-thumb,
+.chime-volume-slider::-moz-range-thumb {
     width: 16px;
     height: 16px;
     background: white;
@@ -1722,4 +1725,26 @@ body.install-available .controls {
 .start-content {
     margin: auto;
     padding: 24px 16px;
+}
+
+/* Chime volume (interval panel) */
+.chime-volume-slider {
+    flex: 1;
+    min-width: 140px;
+    max-width: 220px;
+    opacity: 0.85;
+    cursor: pointer;
+}
+
+.chime-volume-slider:hover,
+.chime-volume-slider:focus-visible {
+    opacity: 1;
+}
+
+.chime-volume-value {
+    min-width: 42px;
+    text-align: center;
+    font-weight: 600;
+    color: #667eea;
+    direction: ltr;
 }
