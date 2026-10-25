@@ -8,6 +8,7 @@ A peaceful web environment with automatic playback of calming sounds and beautif
 
 - **Automatic Sound Playback**: Plays calming sounds (singing bowl, bronze chimes) at customizable intervals
 - **Beautiful Background Images**: Static or rotating nature images to create a peaceful atmosphere
+- **Timed Meditation Sessions**: Choose 10 / 15 / 30 minutes, 1 hour, a custom length, or open-ended. A bell opens the session, a nature sound plays (with fade in/out), and a bell closes it. Periodic chimes are off during timed sessions unless you turn them on
 - **Countdown Timer**: Visual countdown to the next sound playback
 - **Multilingual Support**: Available in English and Persian (Farsi)
 - **Customizable Settings**: 
