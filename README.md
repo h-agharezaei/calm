@@ -9,6 +9,7 @@ A peaceful web environment with automatic playback of calming sounds and beautif
 - **Automatic Sound Playback**: Plays calming sounds (singing bowl, bronze chimes) at customizable intervals
 - **Beautiful Background Images**: Static or rotating nature images to create a peaceful atmosphere
 - **Timed Meditation Sessions**: Choose 10 / 15 / 30 minutes, 1 hour, a custom length, from a new meditation icon next to the other icons. A bell opens the session, a nature sound plays (with fade in/out), and a bell closes it. Periodic chimes are off during timed sessions unless you turn them on
+- **Breathing Exercises**: A wind icon opens guided breathing with Box, 4-7-8, 3-6-9, Coherent, 4-6, Long exhale and Physiological sigh presets, plus a custom mode (inhale / hold / exhale / hold lengths and number of rounds, or unlimited). A circle grows and shrinks with your breath and a pause icon marks the holds. A bell opens and closes the exercise. Your settings and practice stats are saved in localStorage
 - **Countdown Timer**: Visual countdown to the next sound playback
 - **Multilingual Support**: Available in English and Persian (Farsi)
 - **Customizable Settings**: 
