@@ -173,6 +173,7 @@ const translations = {
         ariaSoundInterval: 'Sound interval settings',
         ariaBgSounds: 'Background sounds',
         ariaSettings: 'Settings',
+        ariaDonate: 'Support the project',
         ariaVolume: '{0} volume',
         imageAlt: 'Background image {0}',
         qrAlt: '{0} QR code',
@@ -292,6 +293,7 @@ const translations = {
         ariaSoundInterval: 'تنظیمات بازه پخش صدا',
         ariaBgSounds: 'صداهای پس‌زمینه',
         ariaSettings: 'تنظیمات',
+        ariaDonate: 'حمایت از پروژه',
         ariaVolume: 'میزان صدای {0}',
         imageAlt: 'تصویر پس‌زمینه {0}',
         qrAlt: 'کد QR {0}',
@@ -1250,19 +1252,26 @@ settingsOverlay.addEventListener('click', (e) => {
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabContents = document.querySelectorAll('.tab-content');
 
+function activateTab(targetTab) {
+    tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === targetTab));
+    tabContents.forEach(content => content.classList.toggle('active', content.id === `${targetTab}-tab`));
+}
+
 tabButtons.forEach(button => {
     button.addEventListener('click', () => {
         const targetTab = button.dataset.tab;
         track('tab_switch', { tab: targetTab });
-        
-        // حذف active از همه تب‌ها
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        tabContents.forEach(content => content.classList.remove('active'));
-        
-        // فعال کردن تب انتخاب شده
-        button.classList.add('active');
-        document.getElementById(`${targetTab}-tab`).classList.add('active');
+        activateTab(targetTab);
     });
+});
+
+// دکمه‌ی کم‌رنگ حمایت: پنل تنظیمات را روی تب حمایت مالی باز می‌کند
+document.getElementById('donateFab').addEventListener('click', () => {
+    activateTab('donation');
+    settingsOverlay.classList.add('show');
+    track('donation_icon_click');
+    track('panel_open', { panel: 'settings' });
+    lazyLoadThumbnails();
 });
 
 // جلوگیری از توقف تایمر هنگام تغییر تب
