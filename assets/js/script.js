@@ -137,8 +137,10 @@ const translations = {
         
         // About tab
         aboutTitle: 'About Calm',
-        aboutDescription: '<strong>Calm</strong> is a peaceful web space designed to help you relax, meditate and focus. Calming images and soothing sounds, without distractions.',
+        aboutDescription: '<strong>Calm</strong> is a peaceful web space for mindful breathing, meditation and focus. Guided breathing exercises and timed meditation, with calming images and soothing sounds, without distractions.',
         aboutFeatures: 'Features',
+        aboutFeatureBreath: '<strong>Breathing exercises:</strong> eight methods including Box, 4-7-8 and the physiological sigh, with a guided inhale/exhale circle, your choice of rounds and your practice stats',
+        aboutFeatureMeditation: '<strong>Timed meditation:</strong> from 10 minutes to several hours, with a bell at the start and end and a background sound of your choice',
         aboutFeature1: '<strong>Beautiful images:</strong> a collection of calming images, fixed or rotating automatically',
         aboutFeature2: '<strong>Singing bowl:</strong> a gentle chime at intervals you choose, or silence',
         aboutFeature3: '<strong>Nature sounds:</strong> fire, jungle, river and sea, each with its own volume',
@@ -147,9 +149,9 @@ const translations = {
         aboutFeature6: '<strong>Installable:</strong> add it to your home screen; the interface and images work offline',
         aboutUsage: 'How to use',
         aboutUsage1: 'Click "Start" to begin',
-        aboutUsage2: 'Enjoy the images and calming sounds',
-        aboutUsage3: 'Adjust the sound interval, background and volumes to your taste',
-        aboutUsage4: 'Relax, meditate or focus',
+        aboutUsage2: 'For quick calm, open "Breathing exercise" from the corner buttons, pick a method and follow the circle',
+        aboutUsage3: 'To sit in silence, open "Meditation" and choose a length and a sound',
+        aboutUsage4: 'Adjust the background image, nature sounds and chime interval to your taste',
         aboutVersion: 'Version',
         aboutDeveloper: 'Developed by Calm Team',
         
@@ -252,8 +254,10 @@ const translations = {
         
         // تب درباره
         aboutTitle: 'درباره Calm',
-        aboutDescription: '<strong>Calm</strong> یک محیط وب آرامش‌بخش است که برای کمک به تمرکز، مدیتیشن و آرامش طراحی شده است. تصاویر و صداهای آرام، بدون حواس‌پرتی.',
+        aboutDescription: '<strong>Calm</strong> یک محیط وب آرامش‌بخش برای تنفس آگاهانه، مدیتیشن و تمرکز است. تمرین‌های تنفس هدایت‌شده و مدیتیشن زمان‌دار، در کنار تصاویر و صداهای آرام و بدون حواس‌پرتی.',
         aboutFeatures: 'ویژگی‌ها',
+        aboutFeatureBreath: '<strong>تمرین تنفس:</strong> هشت روش از جمله باکس، ۴-۷-۸ و آه فیزیولوژیک، با راهنمای دم و بازدم، تعداد دور دلخواه و آمار تمرین شما',
+        aboutFeatureMeditation: '<strong>مدیتیشن زمان‌دار:</strong> از ۱۰ دقیقه تا چند ساعت، با زنگ آغاز و پایان و صدای پس‌زمینه‌ی دلخواه',
         aboutFeature1: '<strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش، ثابت یا با چرخش خودکار',
         aboutFeature2: '<strong>کاسه آواز:</strong> صدای ملایم کاسه در بازه‌های دلخواه شما، یا سکوت',
         aboutFeature3: '<strong>صداهای طبیعت:</strong> آتش، جنگل، رودخانه و دریا، هرکدام با میزان صدای جداگانه',
@@ -262,9 +266,9 @@ const translations = {
         aboutFeature6: '<strong>قابل نصب:</strong> به صفحه‌ی اصلی اضافه کنید؛ ظاهر و تصاویر آفلاین هم کار می‌کنند',
         aboutUsage: 'نحوه استفاده',
         aboutUsage1: 'روی دکمه «شروع» کلیک کنید',
-        aboutUsage2: 'از تصاویر زیبا و صداهای آرامش‌بخش لذت ببرید',
-        aboutUsage3: 'بازه‌ی صدا، پس‌زمینه و میزان صداها را به سلیقه‌ی خود تنظیم کنید',
-        aboutUsage4: 'آرام بگیرید، مدیتیشن کنید یا تمرکز کنید',
+        aboutUsage2: 'برای آرام شدن سریع، از دکمه‌های گوشه‌ی صفحه «تمرین تنفس» را باز کنید، یک روش انتخاب کنید و دایره را دنبال کنید',
+        aboutUsage3: 'برای نشستن در سکوت، «مدیتیشن» را باز کنید و مدت و صدای دلخواه را انتخاب کنید',
+        aboutUsage4: 'تصویر پس‌زمینه، صداهای طبیعت و بازه‌ی زنگ را به سلیقه‌ی خود تنظیم کنید',
         aboutVersion: 'نسخه',
         aboutDeveloper: 'ساخته شده توسط تیم Calm',
         
