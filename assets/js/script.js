@@ -315,6 +315,38 @@ translations.en.soundJungle = 'Jungle';
 translations.en.soundRiver = 'River';
 translations.en.soundSea = 'Sea';
 
+// ترجمه‌های جلسه‌ی مدیتیشن زمان‌دار
+Object.assign(translations.en, {
+    sessionDurationLabel: 'Meditation length',
+    sessionSoundLabel: 'Meditation sound',
+    session10: '10 min',
+    session15: '15 min',
+    session30: '30 min',
+    session60: '1 hour',
+    sessionCustom: 'Custom',
+    sessionFree: 'Open-ended',
+    sessionMinutesUnit: 'minutes',
+    sessionCustomAria: 'Length in minutes',
+    sessionNoSound: 'No sound',
+    sessionEnd: 'End',
+    sessionDone: 'Your meditation is complete. Be well.'
+});
+Object.assign(translations.fa, {
+    sessionDurationLabel: 'مدت مدیتیشن',
+    sessionSoundLabel: 'صدای مدیتیشن',
+    session10: '۱۰ دقیقه',
+    session15: '۱۵ دقیقه',
+    session30: '۳۰ دقیقه',
+    session60: '۱ ساعت',
+    sessionCustom: 'دلخواه',
+    sessionFree: 'آزاد',
+    sessionMinutesUnit: 'دقیقه',
+    sessionCustomAria: 'مدت به دقیقه',
+    sessionNoSound: 'بدون صدا',
+    sessionEnd: 'پایان',
+    sessionDone: 'مدیتیشن به پایان رسید. آرامش با شما.'
+});
+
 // متغیرهای مربوط به پخش صدا
 const sounds = {
     'singing-bowl-gong.mp3': 'assets/sounds/singing-bowl-gong.mp3',
@@ -703,6 +735,11 @@ function startTimer() {
     if (!soundEnabled || intervalTime <= 0) {
         return;
     }
+
+    // در جلسه‌ی زمان‌دار، زنگ‌های دوره‌ای تا وقتی کاربر خودش روشن نکند خاموش‌اند
+    if (periodicChimesBlocked()) {
+        return;
+    }
     
     // پخش فوری اولین صدا
     playSound();
@@ -771,6 +808,7 @@ function selectPreset(preset) {
 // رویداد کلیک برای دکمه‌های پیش‌فرض
 presetButtons.forEach(btn => {
     btn.addEventListener('click', () => {
+        if (btn.dataset.preset !== 'silent') allowPeriodicChimes();
         selectPreset(btn.dataset.preset);
         track('preset_selected', { preset: btn.dataset.preset });
     });
@@ -786,6 +824,7 @@ updateBtn2.addEventListener('click', () => {
     const t = translations[currentLang];
     
     if (newInterval && newInterval > 0) {
+        allowPeriodicChimes();
         intervalTime = newInterval * 1000;
         selectPreset('custom');
         track('custom_interval_set', { seconds: newInterval });
@@ -864,6 +903,7 @@ soundToggle2.addEventListener('change', (e) => {
     soundEnabled = e.target.checked;
     if (e.isTrusted) {
         track('sound_toggle', { enabled: soundEnabled });
+        if (soundEnabled) allowPeriodicChimes();
     }
     const t = translations[currentLang];
     
@@ -939,14 +979,11 @@ audio.addEventListener('ended', () => {
     console.log('پخش صدا تمام شد');
 });
 
-// رویداد کلیک دکمه شروع
+// رویداد کلیک دکمه شروع (منطق جلسه در بخش «جلسه‌ی مدیتیشن» انتهای فایل)
 startBtn.addEventListener('click', () => {
-    // مخفی کردن overlay
     startOverlay.classList.add('hidden');
     track('app_start', { language: currentLang });
-    
-    // شروع تایمر
-    startTimer();
+    beginSession();
 });
 
 // ============================================
@@ -1117,7 +1154,7 @@ tabButtons.forEach(button => {
 
 // جلوگیری از توقف تایمر هنگام تغییر تب
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden || !soundEnabled || !startOverlay.classList.contains('hidden')) {
+    if (document.hidden || !soundEnabled || !startOverlay.classList.contains('hidden') || periodicChimesBlocked()) {
         return;
     }
     if (intervalId) {
@@ -1641,6 +1678,326 @@ setupOfflineButtons();
         hideInstallUI();
     });
 })();
+
+// ============================================
+// جلسه‌ی مدیتیشن زمان‌دار
+// ============================================
+// جریان: زنگ شروع ← (چند ثانیه) ← صدای پس‌زمینه با fade-in ← ... ← fade-out ← زنگ پایان
+// زمان‌بندی بر اساس ساعت واقعی (Date.now) است تا با کند شدن تایمرها در پس‌زمینه جابه‌جا نشود.
+// «آزاد» همان رفتار قدیمی برنامه است (بدون پایان).
+
+const SESSION_BG_DELAY_MS = 4000;    // فاصله‌ی زنگ شروع تا ورود صدای پس‌زمینه
+const SESSION_FADE_IN_MS = 5000;
+const SESSION_FADE_OUT_MS = 4000;    // fade-out پایانی، درست قبل از زنگ پایان
+const SESSION_STOP_FADE_MS = 1500;   // fade-out وقتی کاربر زودتر «پایان» را می‌زند
+const SESSION_MIN_MINUTES = 1;
+const SESSION_MAX_MINUTES = 600;
+
+const sessionBar = document.getElementById('sessionBar');
+const sessionTimeEl = document.getElementById('sessionTime');
+const sessionEndBtn = document.getElementById('sessionEndBtn');
+const sessionDoneEl = document.getElementById('sessionDone');
+const sessionCustomRow = document.getElementById('sessionCustomRow');
+const sessionCustomInput = document.getElementById('sessionCustomMinutes');
+const durationChips = document.querySelectorAll('#sessionDurations .session-chip');
+const soundChips = document.querySelectorAll('#sessionSounds .session-chip');
+
+const session = {
+    state: 'idle',        // idle | running | ending
+    timed: false,
+    periodic: false,      // کاربر زنگ‌های دوره‌ای را داخل جلسه روشن کرده؟
+    endAt: 0,
+    startedAt: 0,
+    minutes: 0,
+    tickId: null,
+    bgTimeoutId: null,
+    wakeLock: null,
+    fades: new Map()
+};
+let sessionBell = null;
+let selectedDuration = '10';  // '10' | '15' | '30' | '60' | 'custom' | 'free'
+let selectedSessionBg = 'River'; // نام صدا یا 'none'
+
+// زنگ‌های دوره‌ای در جلسه‌ی زمان‌دار پیش‌فرض خاموش‌اند، مگر کاربر از پنل بازه روشنشان کند
+function periodicChimesBlocked() {
+    return session.state !== 'idle' && session.timed && !session.periodic;
+}
+
+function allowPeriodicChimes() {
+    if (session.state !== 'idle' && session.timed) {
+        session.periodic = true;
+    }
+}
+
+// ---------- تنظیمات ذخیره‌شده و رابط انتخاب ----------
+
+function loadSessionSettings() {
+    try {
+        const d = localStorage.getItem('calm-session-duration');
+        if (['10', '15', '30', '60', 'custom', 'free'].includes(d)) selectedDuration = d;
+        const c = parseInt(localStorage.getItem('calm-session-custom'));
+        if (c >= SESSION_MIN_MINUTES && c <= SESSION_MAX_MINUTES) sessionCustomInput.value = c;
+        const b = localStorage.getItem('calm-session-bg');
+        if (b === 'none' || (b && bgSounds[b])) selectedSessionBg = b;
+    } catch (err) {
+        console.warn('Could not load session settings:', err);
+    }
+}
+
+function saveSessionSetting(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (err) { /* ذخیره‌سازی در دسترس نیست؛ مهم نیست */ }
+}
+
+function clampCustomMinutes() {
+    let m = parseInt(sessionCustomInput.value);
+    if (isNaN(m)) m = 20;
+    m = Math.min(SESSION_MAX_MINUTES, Math.max(SESSION_MIN_MINUTES, m));
+    sessionCustomInput.value = m;
+    return m;
+}
+
+function renderSessionSetup() {
+    durationChips.forEach(chip => {
+        const on = chip.dataset.duration === selectedDuration;
+        chip.classList.toggle('active', on);
+        chip.setAttribute('aria-pressed', String(on));
+    });
+    soundChips.forEach(chip => {
+        const on = chip.dataset.bg === selectedSessionBg;
+        chip.classList.toggle('active', on);
+        chip.setAttribute('aria-pressed', String(on));
+    });
+    sessionCustomRow.hidden = selectedDuration !== 'custom';
+}
+
+durationChips.forEach(chip => chip.addEventListener('click', () => {
+    selectedDuration = chip.dataset.duration;
+    saveSessionSetting('calm-session-duration', selectedDuration);
+    renderSessionSetup();
+    if (selectedDuration === 'custom') sessionCustomInput.focus();
+}));
+
+soundChips.forEach(chip => chip.addEventListener('click', () => {
+    selectedSessionBg = chip.dataset.bg;
+    saveSessionSetting('calm-session-bg', selectedSessionBg);
+    renderSessionSetup();
+}));
+
+sessionCustomInput.addEventListener('change', () => {
+    saveSessionSetting('calm-session-custom', clampCustomMinutes());
+});
+
+// مدت انتخاب‌شده به دقیقه (۰ یعنی آزاد)
+function getSessionMinutes() {
+    if (selectedDuration === 'free') return 0;
+    if (selectedDuration === 'custom') return clampCustomMinutes();
+    return parseInt(selectedDuration);
+}
+
+// ---------- ابزارهای صدا ----------
+
+function playSessionBell() {
+    if (!sessionBell) sessionBell = new Audio();
+    sessionBell.src = sounds[currentSound];
+    sessionBell.volume = audio.volume; // همان «میزان صدای زنگ» تنظیم‌شده در پنل بازه
+    sessionBell.currentTime = 0;
+    return sessionBell.play().catch(err => console.error('خطا در پخش زنگ جلسه:', err));
+}
+
+function setBgCardState(name, playing) {
+    bgSounds[name].playing = playing;
+    const card = document.querySelector(`.sound-card[data-sound="${name}"]`);
+    if (card) {
+        card.classList.toggle('playing', playing);
+        card.setAttribute('aria-pressed', String(playing));
+    }
+}
+
+function cancelBgFade(name) {
+    clearInterval(session.fades.get(name));
+    session.fades.delete(name);
+}
+
+// تغییر تدریجی حجم؛ ضریب نسبت به حجم ذخیره‌شده‌ی کاربر است تا اسلایدر حجم هم کار کند
+// (روی iOS تغییر حجم با کد ممکن نیست و صدا بدون fade می‌آید و می‌رود)
+function fadeBgSound(name, from, to, ms, onDone) {
+    cancelBgFade(name);
+    const el = loadBgSound(name);
+    const t0 = Date.now();
+    let finished = false;
+    const step = () => {
+        const p = ms > 0 ? Math.min(1, (Date.now() - t0) / ms) : 1;
+        el.volume = Math.min(1, Math.max(0, getSavedVolume(name) * (from + (to - from) * p)));
+        if (p >= 1) {
+            finished = true;
+            cancelBgFade(name);
+            if (onDone) onDone();
+        }
+    };
+    step();
+    if (!finished) session.fades.set(name, setInterval(step, 100));
+}
+
+function stopBgSounds(ms) {
+    Object.keys(bgSounds).forEach(name => {
+        if (!bgSounds[name].playing) return;
+        const el = loadBgSound(name);
+        const saved = getSavedVolume(name);
+        const factor = saved > 0 ? Math.min(1, el.volume / saved) : 1;
+        fadeBgSound(name, factor, 0, ms, () => {
+            el.pause();
+            el.volume = getSavedVolume(name);
+            setBgCardState(name, false);
+        });
+    });
+}
+
+function startSessionBg(name) {
+    if (name === 'none' || !bgSounds[name] || bgSounds[name].playing) return;
+    const el = loadBgSound(name);
+    el.volume = 0; // از داخل کلیک شروع می‌کنیم (قفل autoplay) ولی بی‌صدا؛ با تأخیر fade-in می‌شود
+    el.play().catch(err => console.error(`Error playing ${name}:`, err));
+    setBgCardState(name, true);
+    track('bg_sound_play', { sound: name });
+    session.bgTimeoutId = setTimeout(() => {
+        session.bgTimeoutId = null;
+        if (session.state !== 'idle') fadeBgSound(name, 0, 1, SESSION_FADE_IN_MS);
+    }, SESSION_BG_DELAY_MS);
+}
+
+// ---------- Wake Lock و Media Session ----------
+
+async function requestSessionWakeLock() {
+    try {
+        if ('wakeLock' in navigator && !session.wakeLock) {
+            session.wakeLock = await navigator.wakeLock.request('screen');
+            session.wakeLock.addEventListener('release', () => { session.wakeLock = null; });
+        }
+    } catch (err) { /* ممکن است رد شود (مثلاً باتری کم)؛ جلسه ادامه می‌یابد */ }
+}
+
+function releaseSessionWakeLock() {
+    if (session.wakeLock) {
+        session.wakeLock.release().catch(() => {});
+        session.wakeLock = null;
+    }
+}
+
+// ---------- نمایش زمان ----------
+
+function localizeDigits(str) {
+    return currentLang === 'fa' ? str.replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]) : str;
+}
+
+function formatClock(ms) {
+    const total = Math.max(0, Math.ceil(ms / 1000));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    const sec = total % 60;
+    const mm = String(m).padStart(2, '0');
+    const ss = String(sec).padStart(2, '0');
+    return localizeDigits(h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`);
+}
+
+// ---------- چرخه‌ی جلسه ----------
+
+function beginSession() {
+    const minutes = getSessionMinutes();
+    session.minutes = minutes;
+    session.timed = minutes > 0;
+    session.periodic = false;
+    session.state = 'running';
+    session.startedAt = Date.now();
+    sessionDoneEl.hidden = true;
+
+    if (session.timed) {
+        // زنگ شروع همیشه پخش می‌شود (حتی اگر پیش‌فرض بازه «بدون صدا» باشد)
+        playSessionBell();
+        session.endAt = session.startedAt + minutes * 60000;
+        sessionTimeEl.textContent = formatClock(minutes * 60000);
+        sessionBar.hidden = false;
+        session.tickId = setInterval(tickSession, 500);
+        requestSessionWakeLock();
+        if ('mediaSession' in navigator && typeof MediaMetadata === 'function') {
+            navigator.mediaSession.metadata = new MediaMetadata({ title: document.title });
+        }
+    } else {
+        startTimer(); // حالت آزاد: همان رفتار قبلی (زنگ فوری و زنگ‌های دوره‌ای)
+    }
+
+    startSessionBg(selectedSessionBg);
+    track('session_start', { minutes, sound: selectedSessionBg });
+}
+
+function tickSession() {
+    if (session.state === 'idle' || !session.timed) return;
+    const remaining = session.endAt - Date.now();
+    if (remaining <= 0) {
+        finishSession(true);
+        return;
+    }
+    if (session.state === 'running' && remaining <= SESSION_FADE_OUT_MS) {
+        session.state = 'ending';
+        if (session.bgTimeoutId) {
+            clearTimeout(session.bgTimeoutId);
+            session.bgTimeoutId = null;
+        }
+        stopBgSounds(remaining);
+    }
+    sessionTimeEl.textContent = formatClock(remaining);
+}
+
+function finishSession(completed) {
+    if (session.state === 'idle') return;
+    const elapsedMin = Math.round((Date.now() - session.startedAt) / 60000);
+
+    clearInterval(session.tickId);
+    session.tickId = null;
+    if (session.bgTimeoutId) {
+        clearTimeout(session.bgTimeoutId);
+        session.bgTimeoutId = null;
+    }
+    session.state = 'idle';
+    session.periodic = false;
+
+    // اگر در fade-out پایانی هستیم همه را همین الان ببند؛ در پایان زودهنگام نرم‌تر ببند
+    stopBgSounds(completed ? 0 : SESSION_STOP_FADE_MS);
+
+    // زنگ‌های دوره‌ای متوقف شوند و با شروع بعدی از نو ساخته شوند
+    if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+    audio.pause();
+
+    if (completed) {
+        playSessionBell();
+    } else if (sessionBell) {
+        sessionBell.pause();
+    }
+
+    releaseSessionWakeLock();
+    sessionBar.hidden = true;
+    sessionDoneEl.hidden = !completed;
+    startOverlay.classList.remove('hidden');
+    startBtn.focus();
+    track(completed ? 'session_complete' : 'session_stopped', { minutes: session.minutes, elapsed_minutes: elapsedMin });
+}
+
+sessionEndBtn.addEventListener('click', () => finishSession(false));
+
+// با بازگشت به تب: دوباره با ساعت واقعی هماهنگ شو و wake lock (که با مخفی شدن تب آزاد می‌شود) را بگیر
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && session.state !== 'idle' && session.timed) {
+        requestSessionWakeLock();
+        tickSession();
+    }
+});
+
+loadSessionSettings();
+renderSessionSetup();
 
 // ============================================
 // PWA: ثبت Service Worker (نیازمند HTTPS یا localhost)
