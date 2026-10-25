@@ -337,12 +337,13 @@ Object.assign(translations.en, {
     meditationTitle: 'Meditation',
     sessionStart: 'Start meditation',
     sessionHint: 'A bell rings at the start and another at the end. Periodic chimes are off during the session.',
-    sessionActiveNote: 'A meditation is in progress. Use the “End” button at the top to stop it.',
+    sessionActiveNote: 'A meditation is in progress. Use the “End” button in the middle of the screen to stop it.',
     ariaMeditation: 'Timed meditation',
     sessionMinutesUnit: 'minutes',
     sessionCustomAria: 'Length in minutes',
     sessionNoSound: 'No sound',
     sessionEnd: 'End',
+    sessionStatus: 'Meditating…',
     sessionDone: 'Your meditation is complete. Be well.'
 });
 Object.assign(translations.fa, {
@@ -356,12 +357,13 @@ Object.assign(translations.fa, {
     meditationTitle: 'مدیتیشن',
     sessionStart: 'شروع مدیتیشن',
     sessionHint: 'با شروع، یک زنگ پخش می‌شود و در پایان هم زنگ دیگری. زنگ‌های دوره‌ای در این مدت خاموش‌اند.',
-    sessionActiveNote: 'یک مدیتیشن در جریان است. برای پایان، از دکمه‌ی «پایان» بالای صفحه استفاده کنید.',
+    sessionActiveNote: 'یک مدیتیشن در جریان است. برای پایان، از دکمه‌ی «پایان» وسط صفحه استفاده کنید.',
     ariaMeditation: 'مدیتیشن زمان‌دار',
     sessionMinutesUnit: 'دقیقه',
     sessionCustomAria: 'مدت به دقیقه',
     sessionNoSound: 'بدون صدا',
     sessionEnd: 'پایان',
+    sessionStatus: 'در حال مدیتیشن…',
     sessionDone: 'مدیتیشن به پایان رسید. آرامش با شما.'
 });
 
@@ -2060,6 +2062,21 @@ function formatClock(ms) {
 
 // ---------- چرخه‌ی جلسه ----------
 
+// ---------- قفل صفحه‌ی مدیتیشن ----------
+// در طول جلسه بقیه‌ی صفحه (دکمه‌ها و منوها) با inert از دسترس ماوس، لمس و صفحه‌کلید خارج می‌شود
+let sessionInertEls = [];
+
+function lockPageForSession() {
+    sessionInertEls = [...document.body.children].filter(el =>
+        el !== sessionBar && !el.hasAttribute('inert') && !['SCRIPT', 'AUDIO'].includes(el.tagName));
+    sessionInertEls.forEach(el => el.setAttribute('inert', ''));
+}
+
+function unlockPageAfterSession() {
+    sessionInertEls.forEach(el => el.removeAttribute('inert'));
+    sessionInertEls = [];
+}
+
 function beginSession() {
     const minutes = getSessionMinutes();
     session.minutes = minutes;
@@ -2079,6 +2096,8 @@ function beginSession() {
     session.endAt = session.startedAt + minutes * 60000;
     sessionTimeEl.textContent = formatClock(minutes * 60000);
     sessionBar.hidden = false;
+    lockPageForSession();
+    sessionEndBtn.focus({ preventScroll: true });
     session.tickId = setInterval(tickSession, 500);
     requestSessionWakeLock();
     if ('mediaSession' in navigator && typeof MediaMetadata === 'function') {
@@ -2143,6 +2162,7 @@ function finishSession(completed) {
 
     releaseSessionWakeLock();
     sessionBar.hidden = true;
+    unlockPageAfterSession();
     renderSessionPanelState();
     if (completed) showSessionDone();
     track(completed ? 'session_complete' : 'session_stopped', { minutes: session.minutes, elapsed_minutes: elapsedMin });

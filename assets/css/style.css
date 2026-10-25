@@ -1793,29 +1793,58 @@ body:has(#breathStage:not([hidden])) .donate-fab {
     box-shadow: none;
 }
 
+/* صفحه‌ی مدیتیشن: لایه‌ی تمام‌صفحه‌ی کم‌رنگ روی همه‌چیز */
 .session-bar {
     position: fixed;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
+    inset: 0;
+    z-index: 2000;
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 8px 10px 8px 20px;
+    justify-content: center;
+    padding: 24px;
     color: white;
-    background: rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border-radius: 30px;
-    direction: ltr;
+    background: rgba(8, 12, 28, 0.32);
+    overflow: hidden;
+    animation: session-bar-in 1.2s ease both;
+}
+
+@keyframes session-bar-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.session-center {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+}
+
+.session-status {
+    margin: 0;
+    font-size: clamp(16px, 3.2vw, 22px);
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+    animation: session-breathe 6s ease-in-out infinite;
+}
+
+@keyframes session-breathe {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 0.95; }
 }
 
 .session-time {
-    font-size: 22px;
-    font-weight: 600;
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-size: clamp(56px, 16vw, 120px);
+    font-weight: 300;
+    line-height: 1;
     font-variant-numeric: tabular-nums;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 
 .session-end-btn {
@@ -1832,6 +1861,94 @@ body:has(#breathStage:not([hidden])) .donate-fab {
 
 .session-end-btn:hover {
     background: rgba(255, 255, 255, 0.3);
+}
+
+.session-bar .session-end-btn {
+    margin-top: 12px;
+    padding: 10px 28px;
+    font-size: 15px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    text-shadow: none;
+}
+
+.session-bar .session-end-btn:hover {
+    background: rgba(255, 255, 255, 0.32);
+}
+
+/* ابرها و باد: بسیار محو، فقط با transform/opacity برای روان بودن */
+.session-sky {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.sky-cloud {
+    position: absolute;
+    left: -45vw;
+    width: 40vw;
+    min-width: 260px;
+    height: 16vh;
+    min-height: 90px;
+    border-radius: 50%;
+    background:
+        radial-gradient(ellipse 50% 60% at 30% 55%, rgba(255, 255, 255, 0.9), transparent 70%),
+        radial-gradient(ellipse 45% 70% at 60% 45%, rgba(255, 255, 255, 0.85), transparent 70%),
+        radial-gradient(ellipse 40% 55% at 80% 60%, rgba(255, 255, 255, 0.8), transparent 70%);
+    filter: blur(22px);
+    opacity: 0.16;
+    will-change: transform;
+    animation: sky-drift 70s linear infinite;
+}
+
+.sky-cloud-1 { top: 8%;  animation-duration: 90s;  animation-delay: -20s; }
+.sky-cloud-2 { top: 30%; animation-duration: 70s;  animation-delay: -55s; opacity: 0.12; transform: scale(1.3); }
+.sky-cloud-3 { top: 58%; animation-duration: 110s; animation-delay: -10s; opacity: 0.14; }
+.sky-cloud-4 { top: 78%; animation-duration: 80s;  animation-delay: -45s; opacity: 0.1;  }
+
+@keyframes sky-drift {
+    from { transform: translateX(0); }
+    to { transform: translateX(190vw); }
+}
+
+.sky-wind {
+    position: absolute;
+    left: -30vw;
+    width: 28vw;
+    min-width: 180px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    opacity: 0;
+    will-change: transform, opacity;
+    animation: sky-wind 14s ease-in-out infinite;
+}
+
+.sky-wind-1 { top: 18%; animation-delay: 0s; }
+.sky-wind-2 { top: 34%; animation-delay: -4s;  width: 20vw; animation-duration: 17s; }
+.sky-wind-3 { top: 52%; animation-delay: -8s; }
+.sky-wind-4 { top: 68%; animation-delay: -2s;  width: 22vw; animation-duration: 16s; }
+.sky-wind-5 { top: 84%; animation-delay: -11s; }
+
+@keyframes sky-wind {
+    0%   { transform: translate(0, 0) rotate(-2deg); opacity: 0; }
+    15%  { opacity: 0.35; }
+    50%  { transform: translate(75vw, -14px) rotate(1deg); opacity: 0.25; }
+    85%  { opacity: 0.3; }
+    100% { transform: translate(145vw, 8px) rotate(-1deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .session-bar,
+    .session-status,
+    .sky-wind {
+        animation: none;
+    }
+    .sky-wind { display: none; }
+    .sky-cloud {
+        animation: none;
+        left: 10vw;
+    }
 }
 
 .session-toast {

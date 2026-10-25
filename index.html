@@ -44,7 +44,7 @@
     <link rel="preload" href="assets/fonts/Inter-latin-VF.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="assets/css/style.css?v=9">
+    <link rel="stylesheet" href="assets/css/style.css?v=11">
     
  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "54a5c1f34bde403fb376d604168b982e"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -71,10 +71,24 @@
     <!-- پیام پایان مدیتیشن -->
     <div class="session-toast" id="sessionDone" role="status" hidden data-i18n="sessionDone">مدیتیشن به پایان رسید. آرامش با شما.</div>
 
-    <!-- نوار جلسه‌ی مدیتیشن: زمان باقی‌مانده و دکمه‌ی پایان -->
-    <div class="session-bar" id="sessionBar" hidden>
-        <span class="session-time" id="sessionTime" role="timer" aria-live="off">00:00</span>
-        <button type="button" class="session-end-btn" id="sessionEndBtn" data-i18n="sessionEnd">پایان</button>
+    <!-- صفحه‌ی مدیتیشن: لایه‌ی تمام‌صفحه با زمان باقی‌مانده، متن وضعیت و دکمه‌ی پایان (بقیه‌ی صفحه غیرفعال است) -->
+    <div class="session-bar" id="sessionBar" hidden role="dialog" aria-modal="true" aria-labelledby="sessionStatus">
+        <div class="session-sky" aria-hidden="true">
+            <span class="sky-cloud sky-cloud-1"></span>
+            <span class="sky-cloud sky-cloud-2"></span>
+            <span class="sky-cloud sky-cloud-3"></span>
+            <span class="sky-cloud sky-cloud-4"></span>
+            <span class="sky-wind sky-wind-1"></span>
+            <span class="sky-wind sky-wind-2"></span>
+            <span class="sky-wind sky-wind-3"></span>
+            <span class="sky-wind sky-wind-4"></span>
+            <span class="sky-wind sky-wind-5"></span>
+        </div>
+        <div class="session-center">
+            <p class="session-status" id="sessionStatus" data-i18n="sessionStatus">در حال مدیتیشن…</p>
+            <span class="session-time" id="sessionTime" role="timer" aria-live="off">00:00</span>
+            <button type="button" class="session-end-btn" id="sessionEndBtn" data-i18n="sessionEnd">پایان</button>
+        </div>
     </div>
     
     <!-- Overlay و پنل تنظیمات بازه پخش صدا -->
@@ -170,7 +184,7 @@
             </div>
 
             <p class="session-hint" data-i18n="sessionHint">با شروع، یک زنگ پخش می‌شود و در پایان هم زنگ دیگری. زنگ‌های دوره‌ای در این مدت خاموش‌اند.</p>
-            <p class="session-hint session-active-note" id="sessionActiveNote" hidden data-i18n="sessionActiveNote">یک مدیتیشن در جریان است. برای پایان، از دکمه‌ی «پایان» بالای صفحه استفاده کنید.</p>
+            <p class="session-hint session-active-note" id="sessionActiveNote" hidden data-i18n="sessionActiveNote">یک مدیتیشن در جریان است. برای پایان، از دکمه‌ی «پایان» وسط صفحه استفاده کنید.</p>
 
             <div class="session-start-row">
                 <button type="button" class="session-start-btn" id="sessionStartBtn" data-i18n="sessionStart">شروع مدیتیشن</button>
@@ -645,7 +659,7 @@
     </audio>
 
     <script src="assets/js/analytics.js?v=9"></script>
-    <script src="assets/js/script.js?v=10"></script>
+    <script src="assets/js/script.js?v=11"></script>
     <script src="assets/js/bale.js?v=9"></script>
 </body>
 </html>
