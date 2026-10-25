@@ -1595,6 +1595,59 @@ body.install-available .controls {
 }
 
 /* ============================================
+   Donate (faded, bottom right)
+   ============================================ */
+.donate-fab {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    color: #e0568a;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    opacity: 0.35;
+    transition: opacity 0.3s ease, transform 0.2s ease;
+}
+
+.donate-fab:hover,
+.donate-fab:focus-visible {
+    opacity: 1;
+}
+
+.donate-fab:active {
+    transform: scale(0.94);
+}
+
+/* Hidden while a meditation or breathing session is running */
+body:has(#sessionBar:not([hidden])) .donate-fab,
+body:has(#breathStage:not([hidden])) .donate-fab {
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (hover: none) {
+    .donate-fab {
+        opacity: 0.5;
+    }
+}
+
+@media (max-width: 600px) {
+    .donate-fab {
+        bottom: 20px;
+        right: 20px;
+    }
+}
+
+/* ============================================
    Analytics settings
    ============================================ */
 .analytics-section[hidden] {
