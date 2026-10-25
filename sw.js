@@ -9,7 +9,7 @@
  *
  * Bump VERSION whenever a cached, non-versioned file (images, sounds, font) changes.
  */
-const VERSION = 'calm-v8';
+const VERSION = 'calm-v10';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const OFFLINE_CACHE = 'calm-offline-sounds'; // keep in sync with script.js
@@ -18,9 +18,10 @@ const PRECACHE = [
     './',
     'index.html',
     'manifest.webmanifest',
-    'assets/css/style.css',
-    'assets/js/script.js',
-    'assets/js/analytics.js',
+    'assets/css/style.css?v=9',
+    'assets/js/script.js?v=9',
+    'assets/js/analytics.js?v=9',
+    'assets/js/bale.js?v=9',
     'assets/icons/icon-192.png',
     'assets/icons/icon-512.png',
     'assets/icons/apple-touch-icon.png',
@@ -85,7 +86,7 @@ async function offlineSound(req) {
 
 async function networkFirst(req) {
     try {
-        const res = await fetch(req);
+        const res = await fetch(req, { cache: 'no-cache' }); // skip the HTTP cache so new deploys show up at once
         if (res.ok) {
             const cache = await caches.open(SHELL_CACHE);
             cache.put(req, res.clone());
@@ -107,7 +108,7 @@ async function cacheFirst(req) {
     if (hit) {
         return req.headers.has('range') ? rangeResponse(req, hit) : hit;
     }
-    const res = await fetch(req);
+    const res = await fetch(req, { cache: 'no-cache' }); // skip the HTTP cache so new deploys show up at once
     // Only full responses can be cached (media elements send Range requests)
     if (res.status === 200 && !req.headers.has('range')) {
         const cache = await caches.open(RUNTIME_CACHE);

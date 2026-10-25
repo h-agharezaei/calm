@@ -1296,19 +1296,19 @@ const cryptoData = {
         name: 'Dogecoin',
         address: 'DRJ5C5DLDpJL4J1goXs2bqD5LBmeNiqGah',
         network: 'Dogecoin',
-        qr: 'assets/crypto-qr/doge-qr.jpeg'
+        qr: 'assets/crypto-qr/doge-qr-v2.jpeg'
     },
     trx: {
         name: 'Tron',
         address: 'TXaadj5wJPY7tWiBfugxHXQUfRNVoGaKVq',
         network: 'Tron (TRC20)',
-        qr: 'assets/crypto-qr/trx-qr.jpeg'
+        qr: 'assets/crypto-qr/trx-qr-v2.jpeg'
     },
     gram: {
         name: 'Gram',
         address: 'UQC-51N1lRqKkkRr9AjZw7RbqdZew5mKqbZQWcJ7dJF86ykA',
         network: 'TON',
-        qr: 'assets/crypto-qr/gram-qr.jpeg'
+        qr: 'assets/crypto-qr/gram-qr-v2.jpeg'
     }
 };
 

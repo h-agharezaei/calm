@@ -1,3 +1,12 @@
+/* Inter (SIL OFL 1.1) - self-hosted, latin subset */
+@font-face {
+    font-family: 'Inter';
+    src: url('../fonts/Inter-latin-VF.woff2') format('woff2');
+    font-weight: 300 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* Estedad (SIL OFL 1.1) - self-hosted variable font */
 @font-face {
     font-family: 'Estedad';
