@@ -704,7 +704,31 @@ label {
     color: #333;
 }
 
+.crypto-btn.active {
+    outline: 3px solid rgba(255, 255, 255, 0.7);
+    outline-offset: 2px;
+}
+
+.crypto-hint {
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.7;
+    margin: -8px 0 10px;
+}
+
+.crypto-network {
+    text-align: center;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #b26a00;
+    background: rgba(255, 193, 7, 0.15);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 0 0 12px;
+}
+
 .crypto-qr {
+    cursor: pointer;
     max-width: 200px;
     width: 100%;
     height: auto;
@@ -729,6 +753,8 @@ label {
     font-family: 'Courier New', monospace;
     background: white;
     text-align: center;
+    cursor: pointer;
+    direction: ltr;
 }
 
 .copy-btn {

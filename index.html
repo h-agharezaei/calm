@@ -433,9 +433,9 @@
                         <span class="crypto-name" data-i18n="donationTron">Tron</span>
                         <span class="crypto-symbol">TRX</span>
                     </button>
-                    <button class="crypto-btn" data-crypto="ton">
-                        <span class="crypto-name" data-i18n="donationToncoin">Toncoin</span>
-                        <span class="crypto-symbol">TON</span>
+                    <button class="crypto-btn" data-crypto="gram">
+                        <span class="crypto-name" data-i18n="donationGram">Gram</span>
+                        <span class="crypto-symbol">GRAM (TON)</span>
                     </button>
                 </div>
                 
@@ -446,7 +446,9 @@
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>
                     </button>
-                    <img class="crypto-qr" id="cryptoQR" src="" alt="QR Code">
+                    <img class="crypto-qr" id="cryptoQR" src="" alt="QR Code" title="">
+                    <p class="crypto-hint" data-i18n="donationTapQr">برای کپی آدرس روی QR بزنید</p>
+                    <p class="crypto-network" id="cryptoNetwork" role="note"></p>
                     <div class="crypto-address">
                         <input type="text" id="cryptoAddress" readonly>
                         <button class="copy-btn" id="copyBtn" data-i18n="donationCopy">کپی</button>
