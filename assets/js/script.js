@@ -2645,6 +2645,81 @@ loadBreathSettings();
 renderBreathPanel();
 
 // ============================================
+// لینک جلسه‌ی آماده (پارامترهای آدرس)
+// ============================================
+// نمونه‌ها:
+//   ?breath=478&rounds=8&img=2       تنفس ۴-۷-۸، ۸ دور، تصویر شماره‌ی ۲
+//   ?min=10&sound=river              مدیتیشن ۱۰ دقیقه‌ای با صدای رودخانه
+//   ?lang=en                         فقط زبان
+// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|none | img=0..4 | rounds=1..99 | lang=fa|en
+// تنظیمات فقط برای همین بازدید اعمال می‌شود (در localStorage ذخیره نمی‌شود)
+// و جلسه بعد از فشردن «شروع» شروع می‌شود، چون مرورگر بدون کلیک اجازه‌ی پخش صدا نمی‌دهد.
+(function applyUrlParams() {
+    let params;
+    try {
+        params = new URLSearchParams(window.location.search);
+    } catch (err) {
+        return;
+    }
+    if (![...params.keys()].length) return;
+
+    const lang = params.get('lang');
+    if ((lang === 'fa' || lang === 'en') && lang !== currentLang) changeLanguage(lang);
+
+    // تصویر پس‌زمینه: img=شماره؛ bg=شماره هم پذیرفته می‌شود
+    const bg = params.get('bg');
+    const imgRaw = params.get('img') !== null ? params.get('img') : (/^\d+$/.test(bg || '') ? bg : null);
+    const img = parseInt(imgRaw);
+    if (imgRaw !== null && img >= 0 && img < images.length) setBackground(img);
+
+    // صدای طبیعت: sound=نام؛ bg=نام هم پذیرفته می‌شود
+    const soundRaw = (params.get('sound') || (/^\d+$/.test(bg || '') ? '' : bg) || '').toLowerCase();
+    if (soundRaw === 'none') {
+        selectedSessionBg = 'none';
+    } else {
+        const name = Object.keys(bgSounds).find(n => n.toLowerCase() === soundRaw);
+        if (name) selectedSessionBg = name;
+    }
+
+    // تنفس (اولویت بیشتر نسبت به مدیتیشن)
+    const breathParam = params.get('breath');
+    const minutes = parseInt(params.get('min'));
+    let launch = null;
+
+    if (breathParam && BREATH_PATTERNS[breathParam] && breathParam !== 'custom') {
+        breathSettings.pattern = breathParam;
+        const rounds = parseInt(params.get('rounds'));
+        if (rounds >= BREATH_MIN_ROUNDS && rounds <= BREATH_MAX_ROUNDS) {
+            breathSettings.rounds = rounds;
+            breathSettings.infinite = false;
+        }
+        renderBreathPanel();
+        launch = () => {
+            if (breath.state !== 'idle' || session.state !== 'idle') return;
+            beginBreath();
+        };
+    } else if (minutes >= SESSION_MIN_MINUTES && minutes <= SESSION_MAX_MINUTES) {
+        if (['10', '15', '30', '60'].includes(String(minutes))) {
+            selectedDuration = String(minutes);
+        } else {
+            selectedDuration = 'custom';
+            sessionCustomInput.value = minutes;
+        }
+        launch = () => {
+            if (breath.state !== 'idle' || session.state !== 'idle') return;
+            beginSession();
+        };
+    }
+    renderSessionSetup();
+
+    if (launch) {
+        // بعد از شنونده‌ی اصلی دکمه‌ی شروع اجرا می‌شود (overlay بسته و تایمر راه افتاده)
+        startBtn.addEventListener('click', launch, { once: true });
+        track('shared_link_open', { kind: breathParam ? 'breath' : 'session' });
+    }
+})();
+
+// ============================================
 // PWA: ثبت Service Worker (نیازمند HTTPS یا localhost)
 // ============================================
 if ('serviceWorker' in navigator) {
