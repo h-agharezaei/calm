@@ -178,7 +178,121 @@
         </div>
     </div>
 
+    <!-- پیام پایان تمرین تنفس -->
+    <div class="session-toast" id="breathDone" role="status" hidden></div>
+
+    <!-- صفحه‌ی تمرین تنفس -->
+    <div class="breath-stage" id="breathStage" role="dialog" aria-modal="true" aria-label="تمرین تنفس" data-i18n-aria-label="ariaBreathStage" hidden>
+        <div class="breath-round" id="breathRound"></div>
+        <div class="breath-visual">
+            <div class="breath-ring"></div>
+            <div class="breath-circle" id="breathCircle">
+                <svg class="breath-pause-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <rect x="6" y="4.5" width="4" height="15" rx="1.2"></rect>
+                    <rect x="14" y="4.5" width="4" height="15" rx="1.2"></rect>
+                </svg>
+            </div>
+        </div>
+        <div class="breath-phase" id="breathPhase" role="status" aria-live="polite"></div>
+        <div class="breath-count" id="breathCount" aria-hidden="true"></div>
+        <button type="button" class="session-end-btn breath-stop-btn" id="breathStopBtn" data-i18n="sessionEnd">پایان</button>
+    </div>
+
+    <!-- Overlay و پنل تمرین تنفس -->
+    <div class="interval-overlay" id="breathOverlay">
+        <div class="interval-panel" id="breathPanel" role="dialog" aria-modal="true" aria-labelledby="breathPanelTitle">
+            <button class="close-panel" id="closeBreathPanel" aria-label="بستن" data-i18n-aria-label="ariaClose">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <h3 class="panel-title" id="breathPanelTitle" data-i18n="breathTitle">تمرین تنفس</h3>
+
+            <div class="session-label" id="breathPatternLabel" data-i18n="breathPatternLabel">روش تنفس</div>
+            <div class="session-chips" id="breathPatterns" role="group" aria-labelledby="breathPatternLabel">
+                <button type="button" class="session-chip" data-pattern="box" data-i18n="breathBox">باکس</button>
+                <button type="button" class="session-chip" data-pattern="478" data-i18n="breath478">۴-۷-۸</button>
+                <button type="button" class="session-chip" data-pattern="369" data-i18n="breath369">۳-۶-۹</button>
+                <button type="button" class="session-chip" data-pattern="coherent" data-i18n="breathCoherent">منسجم</button>
+                <button type="button" class="session-chip" data-pattern="calm" data-i18n="breathCalm">۴-۶ آرام</button>
+                <button type="button" class="session-chip" data-pattern="exhale" data-i18n="breathExhale">بازدم بلند</button>
+                <button type="button" class="session-chip" data-pattern="sigh" data-i18n="breathSigh">آه فیزیولوژیک</button>
+                <button type="button" class="session-chip" data-pattern="custom" data-i18n="breathCustom">دلخواه</button>
+            </div>
+
+            <p class="session-hint breath-desc" id="breathDesc"></p>
+            <p class="breath-timing" id="breathTiming" dir="auto"></p>
+
+            <div class="breath-custom" id="breathCustomRow" hidden>
+                <div class="session-label" data-i18n="breathCustomLabel">زمان هر مرحله (ثانیه)</div>
+                <div class="breath-steppers">
+                    <div class="breath-stepper" data-field="in" role="group" aria-labelledby="bsLabelIn">
+                        <span class="breath-stepper-label" id="bsLabelIn" data-i18n="breathIn">دم</span>
+                        <div class="breath-stepper-ctl" dir="ltr">
+                            <button type="button" class="breath-step-btn" data-dir="-1" aria-label="کم کردن" data-i18n-aria-label="ariaDecrease">−</button>
+                            <output class="breath-step-val">4</output>
+                            <button type="button" class="breath-step-btn" data-dir="1" aria-label="زیاد کردن" data-i18n-aria-label="ariaIncrease">+</button>
+                        </div>
+                    </div>
+                    <div class="breath-stepper" data-field="hold1" role="group" aria-labelledby="bsLabelHold1">
+                        <span class="breath-stepper-label" id="bsLabelHold1" data-i18n="breathHold1">نگه‌داشت پس از دم</span>
+                        <div class="breath-stepper-ctl" dir="ltr">
+                            <button type="button" class="breath-step-btn" data-dir="-1" aria-label="کم کردن" data-i18n-aria-label="ariaDecrease">−</button>
+                            <output class="breath-step-val">4</output>
+                            <button type="button" class="breath-step-btn" data-dir="1" aria-label="زیاد کردن" data-i18n-aria-label="ariaIncrease">+</button>
+                        </div>
+                    </div>
+                    <div class="breath-stepper" data-field="out" role="group" aria-labelledby="bsLabelOut">
+                        <span class="breath-stepper-label" id="bsLabelOut" data-i18n="breathOut">بازدم</span>
+                        <div class="breath-stepper-ctl" dir="ltr">
+                            <button type="button" class="breath-step-btn" data-dir="-1" aria-label="کم کردن" data-i18n-aria-label="ariaDecrease">−</button>
+                            <output class="breath-step-val">4</output>
+                            <button type="button" class="breath-step-btn" data-dir="1" aria-label="زیاد کردن" data-i18n-aria-label="ariaIncrease">+</button>
+                        </div>
+                    </div>
+                    <div class="breath-stepper" data-field="hold2" role="group" aria-labelledby="bsLabelHold2">
+                        <span class="breath-stepper-label" id="bsLabelHold2" data-i18n="breathHold2">نگه‌داشت پس از بازدم</span>
+                        <div class="breath-stepper-ctl" dir="ltr">
+                            <button type="button" class="breath-step-btn" data-dir="-1" aria-label="کم کردن" data-i18n-aria-label="ariaDecrease">−</button>
+                            <output class="breath-step-val">4</output>
+                            <button type="button" class="breath-step-btn" data-dir="1" aria-label="زیاد کردن" data-i18n-aria-label="ariaIncrease">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="session-label" id="breathRoundsLabel" data-i18n="breathRoundsLabel">تعداد دور</div>
+            <div class="breath-rounds-row">
+                <div class="breath-stepper breath-stepper-inline" data-field="rounds" role="group" aria-labelledby="breathRoundsLabel">
+                    <div class="breath-stepper-ctl" dir="ltr">
+                        <button type="button" class="breath-step-btn" data-dir="-1" aria-label="کم کردن" data-i18n-aria-label="ariaDecrease">−</button>
+                        <output class="breath-step-val" id="breathRoundsVal">10</output>
+                        <button type="button" class="breath-step-btn" data-dir="1" aria-label="زیاد کردن" data-i18n-aria-label="ariaIncrease">+</button>
+                    </div>
+                </div>
+                <button type="button" class="session-chip" id="breathInfinite" aria-pressed="false" data-i18n="breathInfinite">نامحدود</button>
+            </div>
+
+            <p class="breath-total" id="breathTotal"></p>
+            <p class="session-hint" id="breathStats" hidden></p>
+            <p class="session-hint session-active-note" id="breathBlockedNote" hidden data-i18n="breathBlockedNote">یک مدیتیشن در جریان است. پس از پایان آن می‌توانید تمرین تنفس را شروع کنید.</p>
+
+            <div class="session-start-row">
+                <button type="button" class="session-start-btn" id="breathStartBtn" data-i18n="breathStart">شروع تمرین</button>
+            </div>
+        </div>
+    </div>
+
     <div class="controls">
+        <!-- دکمه آیکون تمرین تنفس (باد) -->
+        <button class="breath-icon" id="breathIcon" aria-label="Breathing exercise" data-i18n-aria-label="ariaBreath">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"></path>
+            </svg>
+        </button>
+
         <!-- دکمه آیکون مدیتیشن (نشسته در حالت نیلوفری) -->
         <button class="meditation-icon" id="meditationIcon" aria-label="Meditation" data-i18n-aria-label="ariaMeditation">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">

@@ -355,6 +355,100 @@ Object.assign(translations.fa, {
     sessionDone: 'مدیتیشن به پایان رسید. آرامش با شما.'
 });
 
+// ترجمه‌های تمرین تنفس
+Object.assign(translations.en, {
+    ariaBreath: 'Breathing exercise',
+    ariaBreathStage: 'Breathing exercise',
+    ariaDecrease: 'Decrease',
+    ariaIncrease: 'Increase',
+    breathTitle: 'Breathing exercise',
+    breathPatternLabel: 'Breathing method',
+    breathBox: 'Box',
+    breath478: '4-7-8',
+    breath369: '3-6-9',
+    breathCoherent: 'Coherent',
+    breathCalm: '4-6 Calm',
+    breathExhale: 'Long exhale',
+    breathSigh: 'Physiological sigh',
+    breathCustom: 'Custom',
+    breathDesc_box: 'Four equal phases. Helps you stay focused and steady under pressure.',
+    breathDesc_478: 'A short inhale, a long hold and a slow exhale. Good before sleep and for quick calming.',
+    breathDesc_369: 'Inhale 3, hold 6, exhale 9 seconds. The long exhale signals the body to relax.',
+    breathDesc_coherent: 'About 5.5 seconds in and 5.5 out, with no pauses. A smooth, balanced rhythm.',
+    breathDesc_calm: 'Inhale 4, exhale 6. The simplest way to start and ease tension.',
+    breathDesc_exhale: 'Inhale 4, exhale 8: an exhale twice as long as the inhale. Helps with anxiety.',
+    breathDesc_sigh: 'Two inhales in a row (the second one short) and one long exhale. A fast stress reliever; 3 to 5 rounds are enough.',
+    breathDesc_custom: 'Set the length of every phase yourself.',
+    breathCustomLabel: 'Length of each phase (seconds)',
+    breathIn: 'Inhale',
+    breathHold1: 'Hold after inhale',
+    breathOut: 'Exhale',
+    breathHold2: 'Hold after exhale',
+    breathRoundsLabel: 'Rounds',
+    breathInfinite: 'Unlimited',
+    breathStart: 'Start',
+    breathTotal: 'Total time: {0}',
+    breathTotalOpen: 'No time limit. Stop whenever you like.',
+    breathStats: 'Your practice: {0} sessions · {1} min · {2} rounds',
+    breathBlockedNote: 'A meditation is in progress. You can start a breathing exercise after it ends.',
+    breathPhaseIn: 'Inhale',
+    breathPhaseIn2: 'Inhale again, a little more',
+    breathPhaseHold: 'Hold',
+    breathHoldShort: 'Hold',
+    breathPhaseOut: 'Exhale',
+    breathPrep: 'Get ready',
+    breathRound: 'Round {0} of {1}',
+    breathRoundOpen: 'Round {0}',
+    breathDone: 'Breathing exercise complete: {0} rounds. Well done.',
+    breathDoneStopped: 'Exercise ended after {0} rounds.'
+});
+Object.assign(translations.fa, {
+    ariaBreath: 'تمرین تنفس',
+    ariaBreathStage: 'تمرین تنفس',
+    ariaDecrease: 'کم کردن',
+    ariaIncrease: 'زیاد کردن',
+    breathTitle: 'تمرین تنفس',
+    breathPatternLabel: 'روش تنفس',
+    breathBox: 'باکس',
+    breath478: '۴-۷-۸',
+    breath369: '۳-۶-۹',
+    breathCoherent: 'منسجم',
+    breathCalm: '۴-۶ آرام',
+    breathExhale: 'بازدم بلند',
+    breathSigh: 'آه فیزیولوژیک',
+    breathCustom: 'دلخواه',
+    breathDesc_box: 'چهار مرحله‌ی مساوی. برای تمرکز و آرام ماندن ذهن زیر فشار.',
+    breathDesc_478: 'دم کوتاه، نگه‌داشت بلند و بازدم آهسته. مناسب پیش از خواب و آرام‌شدن سریع.',
+    breathDesc_369: 'دم ۳، نگه‌داشت ۶ و بازدم ۹ ثانیه. بازدمِ بلند به بدن پیام آرامش می‌دهد.',
+    breathDesc_coherent: 'حدود ۵٫۵ ثانیه دم و ۵٫۵ ثانیه بازدم، بدون مکث. ریتمی نرم و متعادل.',
+    breathDesc_calm: 'دم ۴ و بازدم ۶. ساده‌ترین روش برای شروع و کم‌کردن تنش.',
+    breathDesc_exhale: 'دم ۴ و بازدم ۸؛ بازدم دو برابر دم. برای کاهش اضطراب.',
+    breathDesc_sigh: 'دو دم پشت‌سرهم (دم دوم کوتاه) و یک بازدم بلند. راهی سریع برای کم‌کردن استرس؛ ۳ تا ۵ دور کافی است.',
+    breathDesc_custom: 'زمان هر مرحله را خودتان تعیین کنید.',
+    breathCustomLabel: 'زمان هر مرحله (ثانیه)',
+    breathIn: 'دم',
+    breathHold1: 'نگه‌داشت پس از دم',
+    breathOut: 'بازدم',
+    breathHold2: 'نگه‌داشت پس از بازدم',
+    breathRoundsLabel: 'تعداد دور',
+    breathInfinite: 'نامحدود',
+    breathStart: 'شروع تمرین',
+    breathTotal: 'مدت کل: {0}',
+    breathTotalOpen: 'بدون محدودیت زمان. هر وقت خواستید پایان دهید.',
+    breathStats: 'تمرین‌های شما: {0} جلسه · {1} دقیقه · {2} دور',
+    breathBlockedNote: 'یک مدیتیشن در جریان است. پس از پایان آن می‌توانید تمرین تنفس را شروع کنید.',
+    breathPhaseIn: 'دم',
+    breathPhaseIn2: 'کمی دیگر دم بگیرید',
+    breathPhaseHold: 'نگه دارید',
+    breathHoldShort: 'نگه‌داشت',
+    breathPhaseOut: 'بازدم',
+    breathPrep: 'آماده شوید',
+    breathRound: 'دور {0} از {1}',
+    breathRoundOpen: 'دور {0}',
+    breathDone: 'تمرین تنفس تمام شد: {0} دور. آفرین.',
+    breathDoneStopped: 'تمرین پس از {0} دور پایان یافت.'
+});
+
 // متغیرهای مربوط به پخش صدا
 const sounds = {
     'singing-bowl-gong.mp3': 'assets/sounds/singing-bowl-gong.mp3',
@@ -1368,6 +1462,7 @@ document.addEventListener('keydown', (e) => {
         intervalOverlay.classList.remove('show');
         bgSoundsOverlay.classList.remove('show');
         meditationOverlay.classList.remove('show');
+        breathOverlay.classList.remove('show');
     }
 });
 
@@ -1737,7 +1832,8 @@ let selectedSessionBg = 'River'; // نام صدا یا 'none'
 
 // زنگ‌های دوره‌ای در جلسه‌ی زمان‌دار پیش‌فرض خاموش‌اند، مگر کاربر از پنل بازه روشنشان کند
 function periodicChimesBlocked() {
-    return session.state !== 'idle' && session.timed && !session.periodic;
+    // در تمرین تنفس هم زنگ‌های دوره‌ای تا پایان تمرین خاموش‌اند
+    return (session.state !== 'idle' && session.timed && !session.periodic) || breath.state !== 'idle';
 }
 
 function allowPeriodicChimes() {
@@ -2057,6 +2153,451 @@ document.addEventListener('visibilitychange', () => {
 
 loadSessionSettings();
 renderSessionSetup();
+
+// ============================================
+// تمرین تنفس
+// ============================================
+// هر الگو: [دم، نگه‌داشت پس از دم، بازدم، نگه‌داشت پس از بازدم] به ثانیه
+const BREATH_PATTERNS = {
+    box:      { times: [4, 4, 4, 4] },
+    '478':    { times: [4, 7, 8, 0] },
+    '369':    { times: [3, 6, 9, 0] },
+    coherent: { times: [5.5, 0, 5.5, 0] },
+    calm:     { times: [4, 0, 6, 0] },
+    exhale:   { times: [4, 0, 8, 0] },
+    sigh:     { sigh: true },        // دم ۲ + دم کوتاه ۱ + بازدم ۶
+    custom:   { times: [4, 4, 4, 4] }
+};
+const BREATH_FIELDS = ['in', 'hold1', 'out', 'hold2'];
+const BREATH_STEP = 0.5;
+const BREATH_MAX_SECONDS = 15;
+const BREATH_MIN_ROUNDS = 1;
+const BREATH_MAX_ROUNDS = 99;
+const BREATH_PREP_MS = 3000;
+const BREATH_SCALE_MIN = 0.45;
+const BREATH_SCALE_MAX = 1;
+const BREATH_SETTINGS_KEY = 'calm-breath-settings';
+const BREATH_STATS_KEY = 'calm-breath-stats';
+
+const breathIcon = document.getElementById('breathIcon');
+const breathOverlay = document.getElementById('breathOverlay');
+const closeBreathPanel = document.getElementById('closeBreathPanel');
+const breathPatternChips = document.querySelectorAll('#breathPatterns .session-chip');
+const breathDescEl = document.getElementById('breathDesc');
+const breathTimingEl = document.getElementById('breathTiming');
+const breathCustomRow = document.getElementById('breathCustomRow');
+const breathRoundsRow = document.querySelector('.breath-rounds-row');
+const breathInfiniteBtn = document.getElementById('breathInfinite');
+const breathTotalEl = document.getElementById('breathTotal');
+const breathStatsEl = document.getElementById('breathStats');
+const breathBlockedNote = document.getElementById('breathBlockedNote');
+const breathStartBtn = document.getElementById('breathStartBtn');
+const breathStage = document.getElementById('breathStage');
+const breathCircle = document.getElementById('breathCircle');
+const breathPhaseEl = document.getElementById('breathPhase');
+const breathCountEl = document.getElementById('breathCount');
+const breathRoundEl = document.getElementById('breathRound');
+const breathStopBtn = document.getElementById('breathStopBtn');
+const breathDoneEl = document.getElementById('breathDone');
+
+const breathSettings = {
+    pattern: 'box',
+    rounds: 10,
+    infinite: false,
+    custom: { in: 4, hold1: 4, out: 4, hold2: 4 }
+};
+
+const breath = {
+    state: 'idle',       // idle | prep | running
+    phases: [],
+    phaseIdx: 0,
+    phaseEnd: 0,
+    prepEnd: 0,
+    runStart: 0,
+    completedRounds: 0,
+    rounds: 0,           // 0 = نامحدود
+    pattern: 'box',
+    tickId: null
+};
+let breathBell = null;
+let breathDoneTimeoutId = null;
+
+function bt(key) {
+    return translations[currentLang][key] || key;
+}
+
+// ---------- الگو و زمان‌ها ----------
+
+function getBreathTimes() {
+    if (breathSettings.pattern === 'custom') {
+        return BREATH_FIELDS.map(f => breathSettings.custom[f]);
+    }
+    return BREATH_PATTERNS[breathSettings.pattern].times;
+}
+
+// فازهای یک دور؛ to = اندازه‌ی نهایی دایره در پایان فاز
+function buildBreathPhases(pattern, times) {
+    if (BREATH_PATTERNS[pattern].sigh) {
+        return [
+            { kind: 'in', dur: 2, to: 0.85 },
+            { kind: 'in2', dur: 1, to: BREATH_SCALE_MAX },
+            { kind: 'out', dur: 6, to: BREATH_SCALE_MIN }
+        ];
+    }
+    const [inT, h1, outT, h2] = times;
+    const phases = [{ kind: 'in', dur: inT, to: BREATH_SCALE_MAX }];
+    if (h1 > 0) phases.push({ kind: 'hold', dur: h1, to: BREATH_SCALE_MAX });
+    phases.push({ kind: 'out', dur: outT, to: BREATH_SCALE_MIN });
+    if (h2 > 0) phases.push({ kind: 'hold', dur: h2, to: BREATH_SCALE_MIN });
+    return phases;
+}
+
+function breathCycleSeconds() {
+    return buildBreathPhases(breathSettings.pattern, getBreathTimes())
+        .reduce((sum, p) => sum + p.dur, 0);
+}
+
+function fmtNum(n) {
+    return localizeDigits(String(n));
+}
+
+function formatBreathTotal(seconds) {
+    const total = Math.round(seconds);
+    const m = Math.floor(total / 60);
+    const sec = total % 60;
+    return localizeDigits(`${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`);
+}
+
+// ---------- ذخیره‌ی تنظیمات و آمار (localStorage) ----------
+
+function loadBreathSettings() {
+    try {
+        const raw = JSON.parse(localStorage.getItem(BREATH_SETTINGS_KEY) || 'null');
+        if (!raw || typeof raw !== 'object') return;
+        if (BREATH_PATTERNS[raw.pattern]) breathSettings.pattern = raw.pattern;
+        const r = parseInt(raw.rounds);
+        if (r >= BREATH_MIN_ROUNDS && r <= BREATH_MAX_ROUNDS) breathSettings.rounds = r;
+        breathSettings.infinite = raw.infinite === true;
+        if (raw.custom) {
+            BREATH_FIELDS.forEach((f, i) => {
+                const v = Number(raw.custom[f]);
+                const min = (f === 'in' || f === 'out') ? 1 : 0;
+                if (isFinite(v) && v >= min && v <= BREATH_MAX_SECONDS) breathSettings.custom[f] = v;
+            });
+        }
+    } catch (err) {
+        console.warn('Could not load breathing settings:', err);
+    }
+}
+
+function saveBreathSettings() {
+    try {
+        localStorage.setItem(BREATH_SETTINGS_KEY, JSON.stringify(breathSettings));
+    } catch (err) { /* ذخیره‌سازی در دسترس نیست؛ مهم نیست */ }
+}
+
+function loadBreathStats() {
+    try {
+        const raw = JSON.parse(localStorage.getItem(BREATH_STATS_KEY) || 'null');
+        if (raw && raw.sessions > 0) {
+            return { sessions: raw.sessions | 0, seconds: Math.max(0, raw.seconds | 0), rounds: Math.max(0, raw.rounds | 0) };
+        }
+    } catch (err) { /* ignore */ }
+    return { sessions: 0, seconds: 0, rounds: 0 };
+}
+
+function addBreathStats(seconds, rounds) {
+    const stats = loadBreathStats();
+    stats.sessions += 1;
+    stats.seconds += Math.round(seconds);
+    stats.rounds += rounds;
+    try {
+        localStorage.setItem(BREATH_STATS_KEY, JSON.stringify(stats));
+    } catch (err) { /* ignore */ }
+}
+
+// ---------- رابط پنل ----------
+
+function renderBreathPanel() {
+    const pattern = breathSettings.pattern;
+    breathPatternChips.forEach(chip => {
+        const on = chip.dataset.pattern === pattern;
+        chip.classList.toggle('active', on);
+        chip.setAttribute('aria-pressed', String(on));
+    });
+    breathDescEl.textContent = bt('breathDesc_' + pattern);
+    breathCustomRow.hidden = pattern !== 'custom';
+
+    // خلاصه‌ی زمان‌ها
+    if (BREATH_PATTERNS[pattern].sigh) {
+        breathTimingEl.textContent = `${bt('breathIn')} ${fmtNum(2)} + ${fmtNum(1)} · ${bt('breathOut')} ${fmtNum(6)}`;
+    } else {
+        const [a, h1, b, h2] = getBreathTimes();
+        const parts = [`${bt('breathIn')} ${fmtNum(a)}`];
+        if (h1 > 0) parts.push(`${bt('breathHoldShort')} ${fmtNum(h1)}`);
+        parts.push(`${bt('breathOut')} ${fmtNum(b)}`);
+        if (h2 > 0) parts.push(`${bt('breathHoldShort')} ${fmtNum(h2)}`);
+        breathTimingEl.textContent = parts.join('  •  ');
+    }
+
+    // مقدار گام‌شمارها
+    document.querySelectorAll('#breathCustomRow .breath-stepper').forEach(el => {
+        el.querySelector('.breath-step-val').textContent = fmtNum(breathSettings.custom[el.dataset.field]);
+    });
+    document.getElementById('breathRoundsVal').textContent = fmtNum(breathSettings.rounds);
+    breathRoundsRow.classList.toggle('infinite', breathSettings.infinite);
+    breathInfiniteBtn.classList.toggle('active', breathSettings.infinite);
+    breathInfiniteBtn.setAttribute('aria-pressed', String(breathSettings.infinite));
+    document.querySelectorAll('.breath-stepper[data-field="rounds"] .breath-step-btn').forEach(b => {
+        b.disabled = breathSettings.infinite;
+    });
+
+    // مدت کل
+    if (breathSettings.infinite) {
+        breathTotalEl.textContent = bt('breathTotalOpen');
+    } else {
+        breathTotalEl.textContent = bt('breathTotal').replace('{0}', formatBreathTotal(breathCycleSeconds() * breathSettings.rounds));
+    }
+
+    // آمار
+    const stats = loadBreathStats();
+    breathStatsEl.hidden = stats.sessions === 0;
+    if (stats.sessions > 0) {
+        breathStatsEl.textContent = bt('breathStats')
+            .replace('{0}', fmtNum(stats.sessions))
+            .replace('{1}', fmtNum(Math.max(1, Math.round(stats.seconds / 60))))
+            .replace('{2}', fmtNum(stats.rounds));
+    }
+
+    // اگر مدیتیشن در جریان است، شروع تنفس ممکن نیست
+    const blocked = session.state !== 'idle';
+    breathStartBtn.disabled = blocked || breath.state !== 'idle';
+    breathBlockedNote.hidden = !blocked;
+}
+
+breathPatternChips.forEach(chip => chip.addEventListener('click', () => {
+    breathSettings.pattern = chip.dataset.pattern;
+    saveBreathSettings();
+    renderBreathPanel();
+}));
+
+breathInfiniteBtn.addEventListener('click', () => {
+    breathSettings.infinite = !breathSettings.infinite;
+    saveBreathSettings();
+    renderBreathPanel();
+});
+
+document.querySelectorAll('.breath-stepper .breath-step-btn').forEach(btn => btn.addEventListener('click', () => {
+    const field = btn.closest('.breath-stepper').dataset.field;
+    const dir = parseInt(btn.dataset.dir);
+    if (field === 'rounds') {
+        breathSettings.rounds = Math.min(BREATH_MAX_ROUNDS, Math.max(BREATH_MIN_ROUNDS, breathSettings.rounds + dir));
+    } else {
+        const min = (field === 'in' || field === 'out') ? 1 : 0;
+        const v = breathSettings.custom[field] + dir * BREATH_STEP;
+        breathSettings.custom[field] = Math.min(BREATH_MAX_SECONDS, Math.max(min, v));
+    }
+    saveBreathSettings();
+    renderBreathPanel();
+}));
+
+breathIcon.addEventListener('click', () => {
+    renderBreathPanel();
+    breathOverlay.classList.add('show');
+    track('panel_open', { panel: 'breathing' });
+});
+closeBreathPanel.addEventListener('click', () => breathOverlay.classList.remove('show'));
+breathOverlay.addEventListener('click', (e) => {
+    if (e.target === breathOverlay) breathOverlay.classList.remove('show');
+});
+setupDialogFocusTrap(breathOverlay);
+
+// ---------- صدا ----------
+
+function playBreathBell() {
+    if (!breathBell) breathBell = new Audio();
+    breathBell.src = sounds[currentSound];
+    breathBell.volume = audio.volume; // همان «میزان صدای زنگ»
+    breathBell.currentTime = 0;
+    return breathBell.play().catch(err => console.error('خطا در پخش زنگ تنفس:', err));
+}
+
+// ---------- چرخه‌ی تمرین ----------
+
+function setCircle(scale, seconds) {
+    breathCircle.style.transition = seconds > 0 ? `transform ${seconds}s ease-in-out` : 'none';
+    breathCircle.style.transform = `scale(${scale})`;
+}
+
+function renderBreathRound() {
+    const n = breath.completedRounds + 1;
+    breathRoundEl.textContent = (breath.rounds > 0
+        ? bt('breathRound').replace('{0}', fmtNum(n)).replace('{1}', fmtNum(breath.rounds))
+        : bt('breathRoundOpen').replace('{0}', fmtNum(n)));
+}
+
+function enterBreathPhase() {
+    const phase = breath.phases[breath.phaseIdx];
+    const labels = { in: 'breathPhaseIn', in2: 'breathPhaseIn2', hold: 'breathPhaseHold', out: 'breathPhaseOut' };
+    breathPhaseEl.textContent = bt(labels[phase.kind]);
+    const holding = phase.kind === 'hold';
+    breathCircle.classList.toggle('holding', holding);
+    // در نگه‌داشت دایره ثابت می‌ماند؛ در دم و بازدم در طول فاز بزرگ/کوچک می‌شود
+    if (!holding) setCircle(phase.to, phase.dur);
+    renderBreathRound();
+}
+
+function startBreathing() {
+    breath.state = 'running';
+    breath.runStart = performance.now();
+    breath.phaseIdx = 0;
+    breath.phaseEnd = breath.runStart + breath.phases[0].dur * 1000;
+    enterBreathPhase();
+}
+
+function tickBreath() {
+    if (breath.state === 'idle') return;
+    const now = performance.now();
+
+    if (breath.state === 'prep') {
+        const remaining = breath.prepEnd - now;
+        if (remaining <= 0) {
+            startBreathing();
+            tickBreath();
+        } else {
+            breathCountEl.textContent = fmtNum(Math.ceil(remaining / 1000));
+        }
+        return;
+    }
+
+    let changed = false;
+    while (now >= breath.phaseEnd) {
+        breath.phaseIdx++;
+        if (breath.phaseIdx >= breath.phases.length) {
+            breath.phaseIdx = 0;
+            breath.completedRounds++;
+            if (breath.rounds > 0 && breath.completedRounds >= breath.rounds) {
+                finishBreath(true);
+                return;
+            }
+        }
+        breath.phaseEnd += breath.phases[breath.phaseIdx].dur * 1000;
+        changed = true;
+    }
+    if (changed) enterBreathPhase();
+    breathCountEl.textContent = fmtNum(Math.max(1, Math.ceil((breath.phaseEnd - now) / 1000)));
+}
+
+function beginBreath() {
+    const pattern = breathSettings.pattern;
+    breath.pattern = pattern;
+    breath.phases = buildBreathPhases(pattern, getBreathTimes());
+    breath.rounds = breathSettings.infinite ? 0 : breathSettings.rounds;
+    breath.completedRounds = 0;
+    breath.state = 'prep';
+    breath.prepEnd = performance.now() + BREATH_PREP_MS;
+
+    // زنگ‌های دوره‌ای تا پایان تمرین متوقف می‌شوند
+    if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+    audio.pause();
+
+    // زنگ شروع (داخل رویداد کلیک، تا مرورگر اجازه‌ی پخش بدهد)
+    playBreathBell();
+
+    breathDoneEl.hidden = true;
+    breathStage.hidden = false;
+    breathRoundEl.textContent = '';
+    breathPhaseEl.textContent = bt('breathPrep');
+    breathCircle.classList.remove('holding');
+    setCircle(BREATH_SCALE_MIN, 0);
+    breathCircle.getBoundingClientRect(); // اعمال فوری حالت اولیه، قبل از انیمیشن
+    breathCountEl.textContent = fmtNum(Math.ceil(BREATH_PREP_MS / 1000));
+    breath.tickId = setInterval(tickBreath, 100);
+    requestSessionWakeLock();
+    breathStopBtn.focus();
+    track('breath_start', { pattern, rounds: breath.rounds });
+}
+
+function finishBreath(completed) {
+    if (breath.state === 'idle') return;
+    const wasRunning = breath.state === 'running';
+    const rounds = breath.completedRounds;
+    const seconds = wasRunning ? (performance.now() - breath.runStart) / 1000 : 0;
+
+    clearInterval(breath.tickId);
+    breath.tickId = null;
+    breath.state = 'idle';
+
+    breathStage.hidden = true;
+    setCircle(BREATH_SCALE_MIN, 0);
+    if (session.state === 'idle') releaseSessionWakeLock();
+    if (document.contains(breathIcon)) breathIcon.focus();
+
+    // زنگ‌های دوره‌ای (اگر قبل از تمرین فعال بودند) از نو، بدون زنگ فوری، ادامه یابند
+    if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+    audio.pause();
+    if (soundEnabled && intervalTime > 0 && session.state === 'idle') {
+        nextPlayAt = Date.now() + intervalTime;
+        intervalId = setInterval(tick, 1000);
+    }
+
+    if (completed) {
+        playBreathBell();
+    } else if (breathBell) {
+        breathBell.pause();
+    }
+
+    // فقط تمرینی که حداقل یک دور کامل داشته در آمار ثبت می‌شود
+    if (rounds > 0) addBreathStats(seconds, rounds);
+    if (completed || rounds > 0) showBreathDone(completed, rounds);
+    track(completed ? 'breath_complete' : 'breath_stopped', { pattern: breath.pattern, rounds, seconds: Math.round(seconds) });
+}
+
+function showBreathDone(completed, rounds) {
+    breathDoneEl.textContent = bt(completed ? 'breathDone' : 'breathDoneStopped').replace('{0}', fmtNum(rounds));
+    breathDoneEl.hidden = false;
+    clearTimeout(breathDoneTimeoutId);
+    breathDoneTimeoutId = setTimeout(() => { breathDoneEl.hidden = true; }, 10000);
+}
+
+breathStartBtn.addEventListener('click', () => {
+    if (breath.state !== 'idle' || session.state !== 'idle') return;
+    breathOverlay.classList.remove('show');
+    beginBreath();
+});
+
+breathStopBtn.addEventListener('click', () => finishBreath(false));
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && breath.state !== 'idle') finishBreath(false);
+});
+
+// با بازگشت به تب: دوباره با ساعت واقعی هماهنگ شو و wake lock را بگیر
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && breath.state !== 'idle') {
+        requestSessionWakeLock();
+        tickBreath();
+    }
+});
+
+// تغییر زبان: متن‌های پویا را دوباره بساز
+document.addEventListener('calm:languagechange', () => {
+    renderBreathPanel();
+    if (breath.state === 'running') {
+        enterBreathPhase();
+    } else if (breath.state === 'prep') {
+        breathPhaseEl.textContent = bt('breathPrep');
+    }
+});
+
+loadBreathSettings();
+renderBreathPanel();
 
 // ============================================
 // PWA: ثبت Service Worker (نیازمند HTTPS یا localhost)
