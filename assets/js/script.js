@@ -324,7 +324,11 @@ Object.assign(translations.en, {
     session30: '30 min',
     session60: '1 hour',
     sessionCustom: 'Custom',
-    sessionFree: 'Open-ended',
+    meditationTitle: 'Meditation',
+    sessionStart: 'Start meditation',
+    sessionHint: 'A bell rings at the start and another at the end. Periodic chimes are off during the session.',
+    sessionActiveNote: 'A meditation is in progress. Use the “End” button at the top to stop it.',
+    ariaMeditation: 'Timed meditation',
     sessionMinutesUnit: 'minutes',
     sessionCustomAria: 'Length in minutes',
     sessionNoSound: 'No sound',
@@ -339,7 +343,11 @@ Object.assign(translations.fa, {
     session30: '۳۰ دقیقه',
     session60: '۱ ساعت',
     sessionCustom: 'دلخواه',
-    sessionFree: 'آزاد',
+    meditationTitle: 'مدیتیشن',
+    sessionStart: 'شروع مدیتیشن',
+    sessionHint: 'با شروع، یک زنگ پخش می‌شود و در پایان هم زنگ دیگری. زنگ‌های دوره‌ای در این مدت خاموش‌اند.',
+    sessionActiveNote: 'یک مدیتیشن در جریان است. برای پایان، از دکمه‌ی «پایان» بالای صفحه استفاده کنید.',
+    ariaMeditation: 'مدیتیشن زمان‌دار',
     sessionMinutesUnit: 'دقیقه',
     sessionCustomAria: 'مدت به دقیقه',
     sessionNoSound: 'بدون صدا',
@@ -979,11 +987,14 @@ audio.addEventListener('ended', () => {
     console.log('پخش صدا تمام شد');
 });
 
-// رویداد کلیک دکمه شروع (منطق جلسه در بخش «جلسه‌ی مدیتیشن» انتهای فایل)
+// رویداد کلیک دکمه شروع
 startBtn.addEventListener('click', () => {
+    // مخفی کردن overlay
     startOverlay.classList.add('hidden');
     track('app_start', { language: currentLang });
-    beginSession();
+    
+    // شروع تایمر
+    startTimer();
 });
 
 // ============================================
@@ -1356,6 +1367,7 @@ document.addEventListener('keydown', (e) => {
         settingsOverlay.classList.remove('show');
         intervalOverlay.classList.remove('show');
         bgSoundsOverlay.classList.remove('show');
+        meditationOverlay.classList.remove('show');
     }
 });
 
@@ -1682,9 +1694,9 @@ setupOfflineButtons();
 // ============================================
 // جلسه‌ی مدیتیشن زمان‌دار
 // ============================================
+// کاربر از پنل مدیتیشن (آیکون کنار آیکون‌ها) مدت و صدا را انتخاب می‌کند.
 // جریان: زنگ شروع ← (چند ثانیه) ← صدای پس‌زمینه با fade-in ← ... ← fade-out ← زنگ پایان
 // زمان‌بندی بر اساس ساعت واقعی (Date.now) است تا با کند شدن تایمرها در پس‌زمینه جابه‌جا نشود.
-// «آزاد» همان رفتار قدیمی برنامه است (بدون پایان).
 
 const SESSION_BG_DELAY_MS = 4000;    // فاصله‌ی زنگ شروع تا ورود صدای پس‌زمینه
 const SESSION_FADE_IN_MS = 5000;
@@ -1697,6 +1709,11 @@ const sessionBar = document.getElementById('sessionBar');
 const sessionTimeEl = document.getElementById('sessionTime');
 const sessionEndBtn = document.getElementById('sessionEndBtn');
 const sessionDoneEl = document.getElementById('sessionDone');
+const meditationIcon = document.getElementById('meditationIcon');
+const meditationOverlay = document.getElementById('meditationOverlay');
+const closeMeditationPanel = document.getElementById('closeMeditationPanel');
+const sessionStartBtn = document.getElementById('sessionStartBtn');
+const sessionActiveNote = document.getElementById('sessionActiveNote');
 const sessionCustomRow = document.getElementById('sessionCustomRow');
 const sessionCustomInput = document.getElementById('sessionCustomMinutes');
 const durationChips = document.querySelectorAll('#sessionDurations .session-chip');
@@ -1715,7 +1732,7 @@ const session = {
     fades: new Map()
 };
 let sessionBell = null;
-let selectedDuration = '10';  // '10' | '15' | '30' | '60' | 'custom' | 'free'
+let selectedDuration = '10';  // '10' | '15' | '30' | '60' | 'custom'
 let selectedSessionBg = 'River'; // نام صدا یا 'none'
 
 // زنگ‌های دوره‌ای در جلسه‌ی زمان‌دار پیش‌فرض خاموش‌اند، مگر کاربر از پنل بازه روشنشان کند
@@ -1734,7 +1751,7 @@ function allowPeriodicChimes() {
 function loadSessionSettings() {
     try {
         const d = localStorage.getItem('calm-session-duration');
-        if (['10', '15', '30', '60', 'custom', 'free'].includes(d)) selectedDuration = d;
+        if (['10', '15', '30', '60', 'custom'].includes(d)) selectedDuration = d;
         const c = parseInt(localStorage.getItem('calm-session-custom'));
         if (c >= SESSION_MIN_MINUTES && c <= SESSION_MAX_MINUTES) sessionCustomInput.value = c;
         const b = localStorage.getItem('calm-session-bg');
@@ -1789,9 +1806,8 @@ sessionCustomInput.addEventListener('change', () => {
     saveSessionSetting('calm-session-custom', clampCustomMinutes());
 });
 
-// مدت انتخاب‌شده به دقیقه (۰ یعنی آزاد)
+// مدت انتخاب‌شده به دقیقه
 function getSessionMinutes() {
-    if (selectedDuration === 'free') return 0;
     if (selectedDuration === 'custom') return clampCustomMinutes();
     return parseInt(selectedDuration);
 }
@@ -1906,26 +1922,28 @@ function formatClock(ms) {
 function beginSession() {
     const minutes = getSessionMinutes();
     session.minutes = minutes;
-    session.timed = minutes > 0;
+    session.timed = true;
     session.periodic = false;
     session.state = 'running';
     session.startedAt = Date.now();
-    sessionDoneEl.hidden = true;
-
-    if (session.timed) {
-        // زنگ شروع همیشه پخش می‌شود (حتی اگر پیش‌فرض بازه «بدون صدا» باشد)
-        playSessionBell();
-        session.endAt = session.startedAt + minutes * 60000;
-        sessionTimeEl.textContent = formatClock(minutes * 60000);
-        sessionBar.hidden = false;
-        session.tickId = setInterval(tickSession, 500);
-        requestSessionWakeLock();
-        if ('mediaSession' in navigator && typeof MediaMetadata === 'function') {
-            navigator.mediaSession.metadata = new MediaMetadata({ title: document.title });
-        }
-    } else {
-        startTimer(); // حالت آزاد: همان رفتار قبلی (زنگ فوری و زنگ‌های دوره‌ای)
+    // زنگ‌های دوره‌ای تا پایان جلسه متوقف می‌شوند (مگر کاربر دوباره روشنشان کند)
+    if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
     }
+    audio.pause();
+
+    // زنگ شروع همیشه پخش می‌شود (حتی اگر preset بازه «بدون صدا» باشد)
+    playSessionBell();
+    session.endAt = session.startedAt + minutes * 60000;
+    sessionTimeEl.textContent = formatClock(minutes * 60000);
+    sessionBar.hidden = false;
+    session.tickId = setInterval(tickSession, 500);
+    requestSessionWakeLock();
+    if ('mediaSession' in navigator && typeof MediaMetadata === 'function') {
+        navigator.mediaSession.metadata = new MediaMetadata({ title: document.title });
+    }
+    renderSessionPanelState();
 
     startSessionBg(selectedSessionBg);
     track('session_start', { minutes, sound: selectedSessionBg });
@@ -1965,12 +1983,16 @@ function finishSession(completed) {
     // اگر در fade-out پایانی هستیم همه را همین الان ببند؛ در پایان زودهنگام نرم‌تر ببند
     stopBgSounds(completed ? 0 : SESSION_STOP_FADE_MS);
 
-    // زنگ‌های دوره‌ای متوقف شوند و با شروع بعدی از نو ساخته شوند
+    // زنگ‌های دوره‌ای (اگر قبل از جلسه فعال بودند) از نو، بدون زنگ فوری، ادامه یابند
     if (intervalId) {
         clearInterval(intervalId);
         intervalId = null;
     }
     audio.pause();
+    if (soundEnabled && intervalTime > 0) {
+        nextPlayAt = Date.now() + intervalTime;
+        intervalId = setInterval(tick, 1000);
+    }
 
     if (completed) {
         playSessionBell();
@@ -1980,13 +2002,50 @@ function finishSession(completed) {
 
     releaseSessionWakeLock();
     sessionBar.hidden = true;
-    sessionDoneEl.hidden = !completed;
-    startOverlay.classList.remove('hidden');
-    startBtn.focus();
+    renderSessionPanelState();
+    if (completed) showSessionDone();
     track(completed ? 'session_complete' : 'session_stopped', { minutes: session.minutes, elapsed_minutes: elapsedMin });
 }
 
 sessionEndBtn.addEventListener('click', () => finishSession(false));
+
+// پیام کوتاه پایان مدیتیشن
+let sessionDoneTimeoutId = null;
+function showSessionDone() {
+    sessionDoneEl.hidden = false;
+    clearTimeout(sessionDoneTimeoutId);
+    sessionDoneTimeoutId = setTimeout(() => { sessionDoneEl.hidden = true; }, 10000);
+}
+
+// ---------- پنل مدیتیشن ----------
+
+// وقتی جلسه در جریان است، شروع دوباره غیرفعال و توضیح نشان داده می‌شود
+function renderSessionPanelState() {
+    const active = session.state !== 'idle';
+    sessionStartBtn.disabled = active;
+    sessionActiveNote.hidden = !active;
+}
+
+meditationIcon.addEventListener('click', () => {
+    meditationOverlay.classList.add('show');
+    track('panel_open', { panel: 'meditation' });
+});
+
+closeMeditationPanel.addEventListener('click', () => meditationOverlay.classList.remove('show'));
+
+meditationOverlay.addEventListener('click', (e) => {
+    if (e.target === meditationOverlay) meditationOverlay.classList.remove('show');
+});
+
+sessionStartBtn.addEventListener('click', () => {
+    if (session.state !== 'idle') return;
+    clampCustomMinutes();
+    sessionDoneEl.hidden = true;
+    meditationOverlay.classList.remove('show');
+    beginSession();
+});
+
+setupDialogFocusTrap(meditationOverlay);
 
 // با بازگشت به تب: دوباره با ساعت واقعی هماهنگ شو و wake lock (که با مخفی شدن تب آزاد می‌شود) را بگیر
 document.addEventListener('visibilitychange', () => {
