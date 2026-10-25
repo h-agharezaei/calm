@@ -1883,71 +1883,56 @@ body:has(#breathStage:not([hidden])) .donate-fab {
     pointer-events: none;
 }
 
+/* ابرها و باد توسط JS با مشخصات تصادفی ساخته می‌شوند (--x0/--x1 مسیر، --dy جابه‌جایی عمودی) */
 .sky-cloud {
     position: absolute;
-    left: -45vw;
-    width: 40vw;
-    min-width: 260px;
-    height: 16vh;
-    min-height: 90px;
-    border-radius: 50%;
-    background:
-        radial-gradient(ellipse 50% 60% at 30% 55%, rgba(255, 255, 255, 0.9), transparent 70%),
-        radial-gradient(ellipse 45% 70% at 60% 45%, rgba(255, 255, 255, 0.85), transparent 70%),
-        radial-gradient(ellipse 40% 55% at 80% 60%, rgba(255, 255, 255, 0.8), transparent 70%);
-    filter: blur(22px);
-    opacity: 0.16;
+    left: 0;
+    opacity: var(--o, 0.2);
+    filter: blur(7px);
     will-change: transform;
-    animation: sky-drift 70s linear infinite;
+    transform: translate(var(--x0), 0) scale(calc(var(--sx, 1) * var(--s, 1)), var(--s, 1));
+    animation: sky-cloud-move 100s linear forwards;
 }
 
-.sky-cloud-1 { top: 8%;  animation-duration: 90s;  animation-delay: -20s; }
-.sky-cloud-2 { top: 30%; animation-duration: 70s;  animation-delay: -55s; opacity: 0.12; transform: scale(1.3); }
-.sky-cloud-3 { top: 58%; animation-duration: 110s; animation-delay: -10s; opacity: 0.14; }
-.sky-cloud-4 { top: 78%; animation-duration: 80s;  animation-delay: -45s; opacity: 0.1;  }
+.sky-puff {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.55) 60%, rgba(255, 255, 255, 0.15));
+}
 
-@keyframes sky-drift {
-    from { transform: translateX(0); }
-    to { transform: translateX(190vw); }
+@keyframes sky-cloud-move {
+    from { transform: translate(var(--x0), 0) scale(calc(var(--sx, 1) * var(--s, 1)), var(--s, 1)); }
+    to   { transform: translate(var(--x1), var(--dy, 0)) scale(calc(var(--sx, 1) * var(--s, 1)), var(--s, 1)); }
+}
+
+.sky-cloud.still {
+    animation: none;
+    transform: translate(var(--xs, 0), 0) scale(calc(var(--sx, 1) * var(--s, 1)), var(--s, 1));
 }
 
 .sky-wind {
     position: absolute;
-    left: -30vw;
-    width: 28vw;
-    min-width: 180px;
+    left: 0;
     height: 2px;
     border-radius: 2px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
     opacity: 0;
     will-change: transform, opacity;
-    animation: sky-wind 14s ease-in-out infinite;
+    transform: translate(var(--x0), 0) rotate(var(--rot, 0deg));
+    animation: sky-wind-move 10s ease-in-out forwards;
 }
 
-.sky-wind-1 { top: 18%; animation-delay: 0s; }
-.sky-wind-2 { top: 34%; animation-delay: -4s;  width: 20vw; animation-duration: 17s; }
-.sky-wind-3 { top: 52%; animation-delay: -8s; }
-.sky-wind-4 { top: 68%; animation-delay: -2s;  width: 22vw; animation-duration: 16s; }
-.sky-wind-5 { top: 84%; animation-delay: -11s; }
-
-@keyframes sky-wind {
-    0%   { transform: translate(0, 0) rotate(-2deg); opacity: 0; }
-    15%  { opacity: 0.35; }
-    50%  { transform: translate(75vw, -14px) rotate(1deg); opacity: 0.25; }
-    85%  { opacity: 0.3; }
-    100% { transform: translate(145vw, 8px) rotate(-1deg); opacity: 0; }
+@keyframes sky-wind-move {
+    0%   { transform: translate(var(--x0), 0) rotate(var(--rot, 0deg)); opacity: 0; }
+    20%  { opacity: 0.35; }
+    80%  { opacity: 0.3; }
+    100% { transform: translate(var(--x1), var(--dy, 0)) rotate(var(--rot, 0deg)); opacity: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .session-bar,
-    .session-status,
-    .sky-wind {
+    .session-status {
         animation: none;
-    }
-    .sky-wind { display: none; }
-    .sky-cloud {
-        animation: none;
-        left: 10vw;
     }
 }
 
