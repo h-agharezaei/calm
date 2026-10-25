@@ -1801,6 +1801,7 @@ function getSessionMinutes() {
 function playSessionBell() {
     if (!sessionBell) sessionBell = new Audio();
     sessionBell.src = sounds[currentSound];
+    sessionBell.volume = audio.volume; // همان «میزان صدای زنگ» تنظیم‌شده در پنل بازه
     sessionBell.currentTime = 0;
     return sessionBell.play().catch(err => console.error('خطا در پخش زنگ جلسه:', err));
 }
