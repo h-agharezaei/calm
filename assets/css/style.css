@@ -114,6 +114,7 @@ html[lang="fa"] body {
     gap: 15px;
 }
 
+.meditation-icon,
 .interval-icon,
 .bg-sounds-icon {
     width: 60px;
@@ -130,12 +131,14 @@ html[lang="fa"] body {
     color: #667eea;
 }
 
+.meditation-icon:hover,
 .interval-icon:hover,
 .bg-sounds-icon:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
 }
 
+.meditation-icon:active,
 .interval-icon:active,
 .bg-sounds-icon:active {
     transform: scale(0.95);
@@ -914,14 +917,18 @@ label {
         gap: 12px;
     }
     
+    .meditation-icon,
     .interval-icon,
+    .meditation-icon,
     .bg-sounds-icon,
     .settings-icon {
         width: 50px;
         height: 50px;
     }
     
+    .meditation-icon svg,
     .interval-icon svg,
+    .meditation-icon svg,
     .bg-sounds-icon svg,
     .settings-icon svg {
         width: 24px;
@@ -1578,16 +1585,13 @@ body.install-available .controls {
 
 
 /* ============================================
-   جلسه‌ی مدیتیشن زمان‌دار
+   مدیتیشن زمان‌دار (پنل انتخاب + نوار زمان)
    ============================================ */
-.session-setup {
-    margin: 0 auto 28px;
-    max-width: 440px;
-}
-
 .session-label {
     font-size: 14px;
-    opacity: 0.75;
+    font-weight: 600;
+    color: #555;
+    text-align: center;
     margin: 18px 0 10px;
 }
 
@@ -1603,29 +1607,31 @@ body.install-available .controls {
     font-size: 14px;
     font-weight: 500;
     font-family: inherit;
-    color: white;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    color: #555;
+    background: white;
+    border: 2px solid #ddd;
     border-radius: 20px;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: all 0.3s ease;
     white-space: nowrap;
 }
 
 .session-chip:hover {
     border-color: #667eea;
-    background: rgba(102, 126, 234, 0.2);
+    background: rgba(102, 126, 234, 0.05);
 }
 
 .session-chip.active {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
     border-color: transparent;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .session-chip:focus-visible,
-.session-end-btn:focus-visible {
-    outline: 2px solid white;
+.session-end-btn:focus-visible,
+.session-start-btn:focus-visible {
+    outline: 2px solid #667eea;
     outline-offset: 2px;
 }
 
@@ -1636,11 +1642,13 @@ body.install-available .controls {
     gap: 8px;
     margin-top: 12px;
     font-size: 14px;
+    color: #555;
 }
 
 .session-custom[hidden],
 .session-bar[hidden],
-.session-done[hidden] {
+.session-toast[hidden],
+.session-hint[hidden] {
     display: none;
 }
 
@@ -1650,16 +1658,48 @@ body.install-available .controls {
     font-size: 16px;
     font-family: inherit;
     text-align: center;
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    color: #333;
+    background: white;
+    border: 2px solid #ddd;
     border-radius: 10px;
 }
 
-.start-content p.session-done {
-    font-size: 16px;
-    color: #c9d3ff;
-    margin-bottom: 20px;
+.session-hint {
+    margin: 20px 0 0;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #777;
+    text-align: center;
+}
+
+.session-start-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 22px;
+}
+
+.session-start-btn {
+    padding: 12px 40px;
+    font-size: 17px;
+    font-weight: 600;
+    font-family: inherit;
+    color: white;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(102, 126, 234, 0.35);
+    transition: transform 0.3s, box-shadow 0.3s, opacity 0.3s;
+}
+
+.session-start-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.session-start-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .session-bar {
@@ -1703,6 +1743,23 @@ body.install-available .controls {
     background: rgba(255, 255, 255, 0.3);
 }
 
+.session-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    max-width: 90%;
+    padding: 12px 24px;
+    font-size: 15px;
+    text-align: center;
+    color: white;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 30px;
+}
+
 @media (max-width: 480px) {
     .session-chip {
         padding: 7px 13px;
@@ -1712,19 +1769,10 @@ body.install-available .controls {
 
 @media (prefers-reduced-motion: reduce) {
     .session-chip,
-    .session-end-btn {
+    .session-end-btn,
+    .session-start-btn {
         transition: none;
     }
-}
-
-/* صفحه‌ی شروع روی صفحه‌های کوتاه اسکرول شود */
-.start-overlay {
-    overflow-y: auto;
-}
-
-.start-content {
-    margin: auto;
-    padding: 24px 16px;
 }
 
 /* Chime volume (interval panel) */

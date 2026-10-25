@@ -64,36 +64,12 @@
         <div class="start-content">
             <h1 data-i18n="startTitle">آرامش</h1>
             <p data-i18n="startSubtitle">برای شروع پخش خودکار صدا، دکمه زیر را فشار دهید</p>
-            <p class="session-done" id="sessionDone" role="status" hidden data-i18n="sessionDone">مدیتیشن به پایان رسید. آرامش با شما.</p>
-
-            <div class="session-setup">
-                <div class="session-label" id="sessionDurationLabel" data-i18n="sessionDurationLabel">مدت مدیتیشن</div>
-                <div class="session-chips" id="sessionDurations" role="group" aria-labelledby="sessionDurationLabel">
-                    <button type="button" class="session-chip" data-duration="10" data-i18n="session10">۱۰ دقیقه</button>
-                    <button type="button" class="session-chip" data-duration="15" data-i18n="session15">۱۵ دقیقه</button>
-                    <button type="button" class="session-chip" data-duration="30" data-i18n="session30">۳۰ دقیقه</button>
-                    <button type="button" class="session-chip" data-duration="60" data-i18n="session60">۱ ساعت</button>
-                    <button type="button" class="session-chip" data-duration="custom" data-i18n="sessionCustom">دلخواه</button>
-                    <button type="button" class="session-chip" data-duration="free" data-i18n="sessionFree">آزاد</button>
-                </div>
-                <div class="session-custom" id="sessionCustomRow" hidden>
-                    <input type="number" id="sessionCustomMinutes" min="1" max="600" value="20" inputmode="numeric" aria-label="مدت به دقیقه" data-i18n-aria-label="sessionCustomAria">
-                    <span data-i18n="sessionMinutesUnit">دقیقه</span>
-                </div>
-
-                <div class="session-label" id="sessionSoundLabel" data-i18n="sessionSoundLabel">صدای مدیتیشن</div>
-                <div class="session-chips" id="sessionSounds" role="group" aria-labelledby="sessionSoundLabel">
-                    <button type="button" class="session-chip" data-bg="Fire" data-i18n="soundFire">آتش</button>
-                    <button type="button" class="session-chip" data-bg="Jungle" data-i18n="soundJungle">جنگل</button>
-                    <button type="button" class="session-chip" data-bg="River" data-i18n="soundRiver">رودخانه</button>
-                    <button type="button" class="session-chip" data-bg="Sea" data-i18n="soundSea">دریا</button>
-                    <button type="button" class="session-chip" data-bg="none" data-i18n="sessionNoSound">بدون صدا</button>
-                </div>
-            </div>
-
             <button id="startBtn" class="start-button" data-i18n="startButton">شروع</button>
         </div>
     </div>
+
+    <!-- پیام پایان مدیتیشن -->
+    <div class="session-toast" id="sessionDone" role="status" hidden data-i18n="sessionDone">مدیتیشن به پایان رسید. آرامش با شما.</div>
 
     <!-- نوار جلسه‌ی مدیتیشن: زمان باقی‌مانده و دکمه‌ی پایان -->
     <div class="session-bar" id="sessionBar" hidden>
@@ -159,7 +135,60 @@
         </div>
     </div>
     
+    <!-- Overlay و پنل مدیتیشن زمان‌دار -->
+    <div class="interval-overlay" id="meditationOverlay">
+        <div class="interval-panel" id="meditationPanel" role="dialog" aria-modal="true" aria-labelledby="meditationPanelTitle">
+            <button class="close-panel" id="closeMeditationPanel" aria-label="بستن" data-i18n-aria-label="ariaClose">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <h3 class="panel-title" id="meditationPanelTitle" data-i18n="meditationTitle">مدیتیشن</h3>
+
+            <div class="session-label" id="sessionDurationLabel" data-i18n="sessionDurationLabel">مدت مدیتیشن</div>
+            <div class="session-chips" id="sessionDurations" role="group" aria-labelledby="sessionDurationLabel">
+                <button type="button" class="session-chip" data-duration="10" data-i18n="session10">۱۰ دقیقه</button>
+                <button type="button" class="session-chip" data-duration="15" data-i18n="session15">۱۵ دقیقه</button>
+                <button type="button" class="session-chip" data-duration="30" data-i18n="session30">۳۰ دقیقه</button>
+                <button type="button" class="session-chip" data-duration="60" data-i18n="session60">۱ ساعت</button>
+                <button type="button" class="session-chip" data-duration="custom" data-i18n="sessionCustom">دلخواه</button>
+            </div>
+            <div class="session-custom" id="sessionCustomRow" hidden>
+                <input type="number" id="sessionCustomMinutes" min="1" max="600" value="20" inputmode="numeric" aria-label="مدت به دقیقه" data-i18n-aria-label="sessionCustomAria">
+                <span data-i18n="sessionMinutesUnit">دقیقه</span>
+            </div>
+
+            <div class="session-label" id="sessionSoundLabel" data-i18n="sessionSoundLabel">صدای مدیتیشن</div>
+            <div class="session-chips" id="sessionSounds" role="group" aria-labelledby="sessionSoundLabel">
+                <button type="button" class="session-chip" data-bg="Fire" data-i18n="soundFire">آتش</button>
+                <button type="button" class="session-chip" data-bg="Jungle" data-i18n="soundJungle">جنگل</button>
+                <button type="button" class="session-chip" data-bg="River" data-i18n="soundRiver">رودخانه</button>
+                <button type="button" class="session-chip" data-bg="Sea" data-i18n="soundSea">دریا</button>
+                <button type="button" class="session-chip" data-bg="none" data-i18n="sessionNoSound">بدون صدا</button>
+            </div>
+
+            <p class="session-hint" data-i18n="sessionHint">با شروع، یک زنگ پخش می‌شود و در پایان هم زنگ دیگری. زنگ‌های دوره‌ای در این مدت خاموش‌اند.</p>
+            <p class="session-hint session-active-note" id="sessionActiveNote" hidden data-i18n="sessionActiveNote">یک مدیتیشن در جریان است. برای پایان، از دکمه‌ی «پایان» بالای صفحه استفاده کنید.</p>
+
+            <div class="session-start-row">
+                <button type="button" class="session-start-btn" id="sessionStartBtn" data-i18n="sessionStart">شروع مدیتیشن</button>
+            </div>
+        </div>
+    </div>
+
     <div class="controls">
+        <!-- دکمه آیکون مدیتیشن (نشسته در حالت نیلوفری) -->
+        <button class="meditation-icon" id="meditationIcon" aria-label="Meditation" data-i18n-aria-label="ariaMeditation">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="4.6" r="2.1" stroke="none"></circle>
+                <path d="M9.4 8.6h5.2c1 0 1.7.7 1.9 1.6l.6 4.4H6.9l.6-4.4c.2-.9.9-1.6 1.9-1.6z" stroke-width="1"></path>
+                <path d="M8.3 10.2C6.6 12 5.6 14 5.2 16.2M15.7 10.2c1.7 1.8 2.7 3.8 3.1 6" fill="none" stroke-width="2"></path>
+                <path d="M2.6 18.2c0-1.1 1.3-1.9 3.2-2.1l6.2 1.5 6.2-1.5c1.9.2 3.2 1 3.2 2.1 0 1.9-4 3.1-9.4 3.1s-9.4-1.2-9.4-3.1z" stroke-width="1"></path>
+            </svg>
+        </button>
+
         <!-- دکمه آیکون بازه پخش صدا (کاسه ژاپنی) -->
         <button class="interval-icon" id="intervalIcon" aria-label="Sound Interval" data-i18n-aria-label="ariaSoundInterval">
             <svg width="32" height="32" viewBox="0 0 512 512" fill="currentColor">
