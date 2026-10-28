@@ -1030,7 +1030,8 @@ const galaxyCanvas = document.getElementById('galaxyCanvas');
 const GALAXY_BASE = '#03040c';
 const GALAXY_FRAME_MS = 1000 / 30;
 const GALAXY_ARMS = 3;
-const GALAXY_TWIST = 3.1;      // میزان پیچش بازوها
+const GALAXY_R0 = 0.1;         // شعاعی که بازوها از آنجا شروع می‌شوند
+const GALAXY_PITCH = 0.42;     // زاویه‌ی باز شدن بازوها (tan)
 const GALAXY_TILT = 0.5;       // نسبت کشیدگی (نمای مورب)
 const GALAXY_ANGLE = -0.45;    // چرخش کل کهکشان روی صفحه
 const GALAXY_SPEED = 0.05;     // رادیان بر ثانیه در لبه‌ی داخلی
@@ -1063,42 +1064,63 @@ function galaxyBuildSprite(rgb) {
     return s;
 }
 
+function galaxyArmAngle(r, arm) {
+    // مارپیچ لگاریتمی: از لبه‌ی هسته شروع می‌شود و آرام‌آرام باز می‌شود
+    return arm * (Math.PI * 2 / GALAXY_ARMS) + Math.log(Math.max(r, GALAXY_R0) / GALAXY_R0) / GALAXY_PITCH;
+}
+
+function galaxyGauss() {
+    return Math.random() + Math.random() + Math.random() - 1.5; // تقریباً نرمال، ±1.5
+}
+
 function galaxyBuild() {
     galaxyStars = [];
     galaxyDust = [];
     galaxyBg = [];
     const big = galaxyW * galaxyH > 600000;
-    const N = big ? 5200 : 3400;
+    const N = big ? 6500 : 4200;
     for (let i = 0; i < N; i++) {
-        // شعاع نرمال‌شده (۰..۱): بیشتر ستاره‌ها نزدیک مرکز
-        const r = (Math.random() < 0.28 ? Math.pow(Math.random(), 2) * 0.55 : Math.pow(Math.random(), 1.35)) * 0.98 + 0.02;
-        const arm = Math.floor(Math.random() * GALAXY_ARMS);
-        const spread = 0.03 + 0.17 * Math.min(1, r * 1.3);
-        let th = arm * (Math.PI * 2 / GALAXY_ARMS) + GALAXY_TWIST * Math.log(1 + r * 4) +
-            (Math.random() + Math.random() + Math.random() - 1.5) * spread * 2.2;
-        if (Math.random() < 0.28) th = Math.random() * Math.PI * 2; // دیسک و برآمدگی‌ی پراکنده بین بازوها
+        const kind = Math.random();
+        let r, th, bright = 1;
+        if (kind < 0.2) {
+            // برآمدگی‌ی مرکزی: متراکم و گرد
+            r = Math.pow(Math.random(), 2.2) * 0.3 + 0.01;
+            th = Math.random() * Math.PI * 2;
+        } else if (kind < 0.45) {
+            // دیسک پراکنده بین بازوها (چگالی نمایی)
+            do { r = 0.05 - Math.log(1 - Math.random()) * 0.38; } while (r > 1);
+            th = Math.random() * Math.PI * 2;
+            bright = 0.6;
+        } else {
+            // ستاره‌های بازوها: چگالی نمایی، عرض بازو با شعاع بیشتر می‌شود
+            do { r = GALAXY_R0 * 0.8 - Math.log(1 - Math.random()) * 0.5; } while (r > 1);
+            const arm = Math.floor(Math.random() * GALAXY_ARMS);
+            const width = 0.12 + 0.22 * r;               // پراکندگی زاویه‌ای
+            th = galaxyArmAngle(r, arm) + galaxyGauss() * width * 2;
+            r *= 1 + galaxyGauss() * 0.06;               // کمی پراکندگی شعاعی
+        }
         // کلاس رنگ: نزدیک مرکز گرم، دورتر آبی
-        const warm = Math.max(0, 1 - r * 2.2);
+        const warm = Math.max(0, 1 - r * 2.6);
         let cls;
         if (Math.random() < warm) cls = Math.random() < 0.6 ? 0 : 1;
-        else if (Math.random() < 0.06 && r > 0.3) cls = 5;
-        else cls = r > 0.45 ? (Math.random() < 0.6 ? 4 : 3) : (Math.random() < 0.5 ? 2 : 3);
+        else if (kind >= 0.45 && Math.random() < 0.07 && r > 0.25) cls = 5;
+        else cls = r > 0.4 ? (Math.random() < 0.6 ? 4 : 3) : (Math.random() < 0.5 ? 2 : 3);
         galaxyStars.push({
             r, th, cls,
-            om: GALAXY_SPEED / Math.sqrt(r + 0.12),
-            a: 0.3 + Math.random() * 0.7,
-            z: Math.random() < 0.1 ? 2 : 1,
+            om: GALAXY_SPEED / Math.pow(r + 0.45, 0.6),
+            a: (0.3 + Math.random() * 0.7) * bright,
+            z: Math.random() < 0.1 + r * 0.12 ? 2 : 1,
             jy: (Math.random() - 0.5) * 0.03 * (1 - r)
         });
     }
     // ابرهای غبار/گاز درخشان روی بازوها
     for (let i = 0; i < 90; i++) {
-        const r = 0.12 + Math.random() * 0.8;
+        const r = 0.15 + Math.pow(Math.random(), 0.8) * 0.8;
         const arm = i % GALAXY_ARMS;
         galaxyDust.push({
-            r, arm,
-            th: arm * (Math.PI * 2 / GALAXY_ARMS) + GALAXY_TWIST * Math.log(1 + r * 4) + (Math.random() - 0.5) * 0.35,
-            om: GALAXY_SPEED / Math.sqrt(r + 0.12),
+            r,
+            th: galaxyArmAngle(r, arm) + galaxyGauss() * 0.25,
+            om: GALAXY_SPEED / Math.pow(r + 0.45, 0.6),
             s: 0.05 + Math.random() * 0.1,
             a: 0.07 + Math.random() * 0.08,
             hue: Math.random() < 0.25 ? 'pink' : 'blue'
