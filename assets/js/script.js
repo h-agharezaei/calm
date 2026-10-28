@@ -2766,6 +2766,8 @@ function spawnWind() {
 
 function startSky() {
     stopSky();
+    // روی پس‌زمینه‌ی زیبابین و کهکشان ابر و باد نمی‌خواهیم (خود پس‌زمینه متحرک است)
+    if (CANVAS_MODES.includes(bgMode)) return;
     skyActive = true;
     for (let i = 0; i < SKY_CLOUDS; i++) spawnCloud(true);
     for (let i = 0; i < SKY_WINDS; i++) {
