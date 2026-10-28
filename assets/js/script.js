@@ -365,6 +365,7 @@ translations.en.soundJungle = 'Jungle';
 translations.en.soundRiver = 'River';
 translations.en.soundSea = 'Sea';
 translations.en.sound432 = '432 Hz';
+translations.en.soundWhale = 'Whale 52 Hz';
 
 // ترجمه‌های جلسه‌ی مدیتیشن زمان‌دار
 Object.assign(translations.en, {
@@ -1960,7 +1961,8 @@ const bgSounds = {
     Jungle: { audio: null, playing: false },
     River: { audio: null, playing: false },
     Sea: { audio: null, playing: false },
-    '432Hz': { audio: null, playing: false }
+    '432Hz': { audio: null, playing: false },
+    Whale52Hz: { audio: null, playing: false }
 };
 
 
@@ -1971,6 +1973,7 @@ translations.fa.soundJungle = 'جنگل';
 translations.fa.soundRiver = 'رودخانه';
 translations.fa.soundSea = 'دریا';
 translations.fa.sound432 = '۴۳۲ هرتز';
+translations.fa.soundWhale = 'نهنگ ۵۲ هرتز';
 
 // حجم ذخیره‌شده هر صدا (۰ تا ۱)
 function getSavedVolume(soundName) {
@@ -3410,7 +3413,7 @@ renderBreathPanel();
 //   ?min=10&sound=river              مدیتیشن ۱۰ دقیقه‌ای با صدای رودخانه
 //   ?lang=en                         فقط زبان
 //   ?min=15&bg=kaleidoscope          مدیتیشن ۱۵ دقیقه‌ای با پس‌زمینه‌ی زیبابین
-// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|432Hz|none | img=0..4 یا kaleidoscope یا kaleidoscope-soft (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
+// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|432Hz|Whale52Hz|none | img=0..4 یا kaleidoscope یا kaleidoscope-soft (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
 // تنظیمات فقط برای همین بازدید اعمال می‌شود (در localStorage ذخیره نمی‌شود)
 // و جلسه بعد از فشردن «شروع» شروع می‌شود، چون مرورگر بدون کلیک اجازه‌ی پخش صدا نمی‌دهد.
 (function applyUrlParams() {
