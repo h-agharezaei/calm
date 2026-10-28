@@ -145,8 +145,9 @@ const translations = {
         aboutFeatureBreath: '<strong>Breathing exercises:</strong> eight methods including Box, 4-7-8 and the physiological sigh, with a guided inhale/exhale circle, your choice of rounds and your practice stats',
         aboutFeatureMeditation: '<strong>Timed meditation:</strong> from 10 minutes to several hours, with a bell at the start and end and a background sound of your choice',
         aboutFeature1: '<strong>Beautiful images:</strong> a collection of calming images, fixed or rotating automatically',
+        aboutFeatureKaleido: '<strong>Kaleidoscope:</strong> a slow, moving kaleidoscope as your background instead of an image',
         aboutFeature2: '<strong>Singing bowl:</strong> a gentle chime at intervals you choose, or silence',
-        aboutFeature3: '<strong>Nature sounds:</strong> fire, jungle, river and sea, each with its own volume',
+        aboutFeature3: '<strong>Nature sounds and music:</strong> fire, jungle, river and sea, plus calm 432 Hz music, each with its own volume',
         aboutFeature4: '<strong>Your settings, remembered:</strong> language, background, sounds and volumes',
         aboutFeature5: '<strong>Simple interface:</strong> no distractions, full focus',
         aboutFeature6: '<strong>Installable:</strong> add it to your home screen; the interface and images work offline',
@@ -154,7 +155,7 @@ const translations = {
         aboutUsage1: 'Click "Start" to begin',
         aboutUsage2: 'For quick calm, open "Breathing exercise" from the corner buttons, pick a method and follow the circle',
         aboutUsage3: 'To sit in silence, open "Meditation" and choose a length and a sound',
-        aboutUsage4: 'Adjust the background image, nature sounds and chime interval to your taste',
+        aboutUsage4: 'Adjust the background (image or kaleidoscope), nature sounds and chime interval to your taste',
         aboutVersion: 'Version',
         aboutDeveloper: 'Developed by Calm Team',
         
@@ -185,6 +186,8 @@ const translations = {
         // What's new + updates
         whatsNewTitle: "What's new",
         whatsNewTag: 'New',
+        wnKaleidoTitle: 'Kaleidoscope background',
+        wnKaleidoBody: 'You can now use a slow, moving kaleidoscope as your background instead of an image. In Settings, set Background Mode to Kaleidoscope.',
         wn432Title: '432 Hz music',
         wn432Body: 'A calm 432 Hz track is now in the background sounds. Open the music icon to try it.',
         wnMeditationTitle: 'New meditation screen',
@@ -276,8 +279,9 @@ const translations = {
         aboutFeatureBreath: '<strong>تمرین تنفس:</strong> هشت روش از جمله باکس، ۴-۷-۸ و آه فیزیولوژیک، با راهنمای دم و بازدم، تعداد دور دلخواه و آمار تمرین شما',
         aboutFeatureMeditation: '<strong>مدیتیشن زمان‌دار:</strong> از ۱۰ دقیقه تا چند ساعت، با زنگ آغاز و پایان و صدای پس‌زمینه‌ی دلخواه',
         aboutFeature1: '<strong>تصاویر زیبا:</strong> مجموعه‌ای از تصاویر آرامش‌بخش، ثابت یا با چرخش خودکار',
+        aboutFeatureKaleido: '<strong>زیبابین:</strong> یک زیبابین (کالیدوسکوپ) آرام و متحرک به‌جای تصویر، به‌عنوان پس‌زمینه',
         aboutFeature2: '<strong>کاسه آواز:</strong> صدای ملایم کاسه در بازه‌های دلخواه شما، یا سکوت',
-        aboutFeature3: '<strong>صداهای طبیعت:</strong> آتش، جنگل، رودخانه و دریا، هرکدام با میزان صدای جداگانه',
+        aboutFeature3: '<strong>صداهای طبیعت و موسیقی:</strong> آتش، جنگل، رودخانه و دریا، و موسیقی آرام ۴۳۲ هرتز، هرکدام با میزان صدای جداگانه',
         aboutFeature4: '<strong>تنظیمات شخصی:</strong> زبان، پس‌زمینه، صداها و میزان صدا به خاطر سپرده می‌شوند',
         aboutFeature5: '<strong>رابط ساده:</strong> بدون حواس‌پرتی، تمرکز کامل',
         aboutFeature6: '<strong>قابل نصب:</strong> به صفحه‌ی اصلی اضافه کنید؛ ظاهر و تصاویر آفلاین هم کار می‌کنند',
@@ -285,7 +289,7 @@ const translations = {
         aboutUsage1: 'روی دکمه «شروع» کلیک کنید',
         aboutUsage2: 'برای آرام شدن سریع، از دکمه‌های گوشه‌ی صفحه «تمرین تنفس» را باز کنید، یک روش انتخاب کنید و دایره را دنبال کنید',
         aboutUsage3: 'برای نشستن در سکوت، «مدیتیشن» را باز کنید و مدت و صدای دلخواه را انتخاب کنید',
-        aboutUsage4: 'تصویر پس‌زمینه، صداهای طبیعت و بازه‌ی زنگ را به سلیقه‌ی خود تنظیم کنید',
+        aboutUsage4: 'پس‌زمینه (تصویر یا زیبابین)، صداهای طبیعت و بازه‌ی زنگ را به سلیقه‌ی خود تنظیم کنید',
         aboutVersion: 'نسخه',
         aboutDeveloper: 'ساخته شده توسط تیم Calm',
         
@@ -316,6 +320,8 @@ const translations = {
         // تازه‌ها و به‌روزرسانی
         whatsNewTitle: 'تازه‌ها',
         whatsNewTag: 'جدید',
+        wnKaleidoTitle: 'پس‌زمینه‌ی زیبابین',
+        wnKaleidoBody: 'حالا می‌توانید به‌جای تصویر، یک زیبابین (کالیدوسکوپ) آرام و متحرک را پس‌زمینه کنید. در تنظیمات، «حالت پس‌زمینه» را روی «زیبابین» بگذارید.',
         wn432Title: 'موسیقی ۴۳۲ هرتز',
         wn432Body: 'یک موسیقی آرام ۴۳۲ هرتز به صداهای پس‌زمینه اضافه شد. آیکون موسیقی را باز کنید و امتحانش کنید.',
         wnMeditationTitle: 'صفحه‌ی تازه‌ی مدیتیشن',
@@ -3185,6 +3191,7 @@ renderBreathPanel();
 // بازدیدکننده‌ی تازه‌وارد همه‌چیز را «تازه» می‌بیند، پس برایش هیچ نشانی گذاشته نمی‌شود.
 
 const WHATS_NEW = [
+    { id: 3, titleKey: 'wnKaleidoTitle', bodyKey: 'wnKaleidoBody', badge: 'settingsIcon', until: '2027-01-31' },
     { id: 2, titleKey: 'wn432Title', bodyKey: 'wn432Body', badge: 'bgSoundsIcon', until: '2026-12-31' },
     { id: 1, titleKey: 'wnMeditationTitle', bodyKey: 'wnMeditationBody', badge: 'meditationIcon', until: '2026-12-31' }
 ];
