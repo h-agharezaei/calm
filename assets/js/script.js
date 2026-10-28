@@ -1971,7 +1971,26 @@ soundChips.forEach(chip => chip.addEventListener('click', () => {
     selectedSessionBg = chip.dataset.bg;
     saveSessionSetting('calm-session-bg', selectedSessionBg);
     renderSessionSetup();
+    prefetchSessionBg(selectedSessionBg);
 }));
+
+// فقط صدای انتخاب‌شده در تنظیمات جلسه شروع به بافر شدن می‌کند؛ بقیه‌ی صداهای در حال دانلود
+// (که پخش نمی‌شوند) رها می‌شوند تا پهنای باند صرف همان یک فایل شود
+function prefetchSessionBg(name) {
+    const conn = navigator.connection || {};
+    if (conn.saveData) return;
+    Object.keys(bgSounds).forEach(other => {
+        const s = bgSounds[other];
+        if (other === name || s.playing || !s.audio) return;
+        s.audio.removeAttribute('src');
+        s.audio.load();
+        s.audio = null;
+    });
+    if (name === 'none' || !bgSounds[name]) return;
+    const el = loadBgSound(name);
+    el.preload = 'auto';
+    if (el.readyState === 0) el.load();
+}
 
 sessionCustomInput.addEventListener('change', () => {
     saveSessionSetting('calm-session-custom', clampCustomMinutes());
