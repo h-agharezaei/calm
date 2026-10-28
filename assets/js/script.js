@@ -180,6 +180,16 @@ const translations = {
         
         // Install
         installApp: 'Install app',
+        
+        // What's new + updates
+        whatsNewTitle: "What's new",
+        whatsNewTag: 'New',
+        wn432Title: '432 Hz music',
+        wn432Body: 'A calm 432 Hz track is now in the background sounds. Open the music icon to try it.',
+        wnMeditationTitle: 'New meditation screen',
+        wnMeditationBody: 'Meditation now opens a focused full-screen view with a 5-second get-ready countdown before the timer starts.',
+        updateReady: 'A new version is ready.',
+        updateAction: 'Update',
         installIosHint: 'To install: tap the Share button in Safari, then choose "Add to Home Screen".',
         
         // Analytics
@@ -300,6 +310,16 @@ const translations = {
         
         // نصب برنامه
         installApp: 'نصب برنامه',
+        
+        // تازه‌ها و به‌روزرسانی
+        whatsNewTitle: 'تازه‌ها',
+        whatsNewTag: 'جدید',
+        wn432Title: 'موسیقی ۴۳۲ هرتز',
+        wn432Body: 'یک موسیقی آرام ۴۳۲ هرتز به صداهای پس‌زمینه اضافه شد. آیکون موسیقی را باز کنید و امتحانش کنید.',
+        wnMeditationTitle: 'صفحه‌ی تازه‌ی مدیتیشن',
+        wnMeditationBody: 'مدیتیشن حالا در یک صفحه‌ی تمام‌صفحه و بدون حواس‌پرتی باز می‌شود و قبل از شروع تایمر، ۵ ثانیه برای آماده‌شدن وقت دارید.',
+        updateReady: 'نسخه‌ی جدید آماده است.',
+        updateAction: 'به‌روزرسانی',
         installIosHint: 'برای نصب: دکمه‌ی اشتراک‌گذاری (Share) را در Safari بزنید و «Add to Home Screen» را انتخاب کنید.',
         
         // آمار استفاده
@@ -2881,12 +2901,212 @@ renderBreathPanel();
 })();
 
 // ============================================
-// PWA: ثبت Service Worker (نیازمند HTTPS یا localhost)
+// تازه‌ها: نشان «جدید» روی آیکون‌ها + پنجره‌ی تازه‌ها
 // ============================================
+// برای معرفی قابلیت جدید فقط یک مورد به WHATS_NEW اضافه کنید (id بزرگ‌تر از همه‌ی قبلی‌ها):
+// - id: عدد صعودی | titleKey/bodyKey: کلیدهای translations
+// - badge: (اختیاری) id دکمه‌ای که نقطه‌ی «جدید» می‌گیرد؛ با اولین کلیک کاربر برداشته می‌شود
+// - until: (اختیاری) تاریخ YYYY-MM-DD؛ بعد از آن نقطه‌ی روی آیکون دیگر نشان داده نمی‌شود
+// بازدیدکننده‌ی تازه‌وارد همه‌چیز را «تازه» می‌بیند، پس برایش هیچ نشانی گذاشته نمی‌شود.
+
+const WHATS_NEW = [
+    { id: 2, titleKey: 'wn432Title', bodyKey: 'wn432Body', badge: 'bgSoundsIcon', until: '2026-12-31' },
+    { id: 1, titleKey: 'wnMeditationTitle', bodyKey: 'wnMeditationBody', badge: 'meditationIcon', until: '2026-12-31' }
+];
+
+const WN_SEEN_KEY = 'calm-whatsnew-seen';       // بزرگ‌ترین id که کاربر در پنجره دیده
+const WN_BADGES_KEY = 'calm-whatsnew-badges';   // idهایی که نقطه‌ی آیکونشان برداشته شده
+
+const whatsNew = (function setupWhatsNew() {
+    const btn = document.getElementById('whatsNewBtn');
+    const dot = document.getElementById('whatsNewDot');
+    const overlay = document.getElementById('whatsNewOverlay');
+    const list = document.getElementById('whatsNewList');
+    const closeBtn = document.getElementById('closeWhatsNewPanel');
+    if (!btn || !dot || !overlay || !list || !closeBtn) return { unseenCount: () => 0, open() {} };
+    
+    const latestId = Math.max(0, ...WHATS_NEW.map(item => item.id));
+    const readNum = (key) => {
+        try {
+            const raw = localStorage.getItem(key);
+            return raw === null ? null : Number(raw);
+        } catch (e) { return null; }
+    };
+    const writeStr = (key, value) => {
+        try { localStorage.setItem(key, value); } catch (e) { /* حالت خصوصی/ذخیره‌سازی بسته */ }
+    };
+    const readBadges = () => {
+        try {
+            const arr = JSON.parse(localStorage.getItem(WN_BADGES_KEY) || '[]');
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) { return []; }
+    };
+    
+    // اولین بازدید: همه‌چیز را دیده‌شده حساب کن (بدون هیچ نشانی)
+    if (readNum(WN_SEEN_KEY) === null) {
+        writeStr(WN_SEEN_KEY, String(latestId));
+        writeStr(WN_BADGES_KEY, JSON.stringify(WHATS_NEW.map(item => item.id)));
+    }
+    
+    const seenId = () => readNum(WN_SEEN_KEY) || 0;
+    const unseenItems = () => WHATS_NEW.filter(item => item.id > seenId());
+    
+    function renderDot() {
+        const has = unseenItems().length > 0;
+        dot.hidden = !has;
+        btn.classList.toggle('has-unseen', has);
+    }
+    
+    function renderBadges() {
+        const dismissed = readBadges();
+        const today = new Date().toISOString().slice(0, 10);
+        WHATS_NEW.forEach(item => {
+            const el = item.badge && document.getElementById(item.badge);
+            if (!el) return;
+            const active = !dismissed.includes(item.id) && (!item.until || today <= item.until);
+            el.classList.toggle('has-new-badge', active);
+            if (active && !el.dataset.wnBound) {
+                el.dataset.wnBound = '1';
+                el.addEventListener('click', () => {
+                    const next = readBadges();
+                    if (!next.includes(item.id)) next.push(item.id);
+                    writeStr(WN_BADGES_KEY, JSON.stringify(next));
+                    el.classList.remove('has-new-badge');
+                });
+            }
+        });
+    }
+    
+    function renderList() {
+        const t = translations[currentLang];
+        const unseen = new Set(unseenItems().map(item => item.id));
+        list.textContent = '';
+        WHATS_NEW.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'whatsnew-item' + (unseen.has(item.id) ? ' is-unseen' : '');
+            const h = document.createElement('h3');
+            h.className = 'whatsnew-item-title';
+            h.textContent = t[item.titleKey];
+            if (unseen.has(item.id)) {
+                const tag = document.createElement('span');
+                tag.className = 'whatsnew-tag';
+                tag.textContent = t.whatsNewTag;
+                h.appendChild(tag);
+            }
+            const p = document.createElement('p');
+            p.className = 'whatsnew-item-body';
+            p.textContent = t[item.bodyKey];
+            li.append(h, p);
+            list.appendChild(li);
+        });
+    }
+    
+    function open() {
+        const unseenCount = unseenItems().length;
+        renderList(); // قبل از ثبت «دیده‌شد»، تا برچسب «جدید» هنوز نشان داده شود
+        overlay.classList.add('show');
+        writeStr(WN_SEEN_KEY, String(latestId));
+        renderDot();
+        track('whats_new_open', { unseen: unseenCount });
+    }
+    
+    const close = () => overlay.classList.remove('show');
+    btn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) close();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+    });
+    document.addEventListener('calm:languagechange', () => {
+        // متن‌ها با زبان عوض می‌شوند؛ برچسب «جدید» تا بسته شدن پنجره می‌ماند
+        if (overlay.classList.contains('show')) renderList();
+    });
+    
+    setupDialogFocusTrap(overlay);
+    renderDot();
+    renderBadges();
+    
+    return { unseenCount: () => unseenItems().length, open };
+})();
+
+// ============================================
+// PWA: ثبت Service Worker + اعلان «نسخه‌ی جدید آماده است»
+// ============================================
+// SW جدید خودش فعال می‌شود (skipWaiting) ولی صفحه‌ی باز تا رفرش همان نسخه‌ی قبلی را نشان می‌دهد.
+// پس یک نوار کوچک می‌آید؛ رفرش خودکار نمی‌کنیم تا جلسه‌ی مدیتیشن/تنفس قطع نشود.
+const UPDATED_FLAG = 'calm-just-updated';
+
+function setupUpdateNotice(registration) {
+    const toast = document.getElementById('updateToast');
+    const reloadBtn = document.getElementById('updateReloadBtn');
+    const dismissBtn = document.getElementById('updateDismissBtn');
+    if (!toast || !reloadBtn || !dismissBtn) return;
+    let announced = false;
+    
+    const busy = () => session.state !== 'idle' || breath.state !== 'idle';
+    
+    function announce() {
+        if (announced) return;
+        announced = true;
+        // وسط مدیتیشن یا تنفس مزاحم نمی‌شویم؛ بعد از پایان نشان می‌دهیم
+        const tryShow = () => {
+            if (busy()) { setTimeout(tryShow, 5000); return; }
+            toast.hidden = false;
+            track('update_notice_shown');
+        };
+        tryShow();
+    }
+    
+    reloadBtn.addEventListener('click', () => {
+        try { sessionStorage.setItem(UPDATED_FLAG, '1'); } catch (e) { /* ignore */ }
+        track('update_notice_reload');
+        window.location.reload();
+    });
+    dismissBtn.addEventListener('click', () => { toast.hidden = true; });
+    
+    // فقط وقتی قبلاً SW فعالی بوده (نصب اول، «به‌روزرسانی» نیست)
+    const watch = (worker) => worker.addEventListener('statechange', () => {
+        if (worker.state === 'installed' && navigator.serviceWorker.controller) announce();
+    });
+    if (registration.waiting && navigator.serviceWorker.controller) announce();
+    if (registration.installing) watch(registration.installing);
+    registration.addEventListener('updatefound', () => {
+        if (registration.installing) watch(registration.installing);
+    });
+    
+    // اپ نصب‌شده ممکن است ساعت‌ها باز بماند: با برگشتن به برنامه دنبال نسخه‌ی تازه بگرد
+    let lastCheck = Date.now();
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden || Date.now() - lastCheck < 30 * 60 * 1000) return;
+        lastCheck = Date.now();
+        registration.update().catch(() => {});
+    });
+}
+
+// بعد از «به‌روزرسانی»: وقتی کاربر «شروع» را زد، یک‌بار پنجره‌ی تازه‌ها را نشان بده (اگر چیز دیده‌نشده‌ای هست)
+(function showWhatsNewAfterUpdate() {
+    let flagged = false;
+    try {
+        flagged = sessionStorage.getItem(UPDATED_FLAG) === '1';
+        sessionStorage.removeItem(UPDATED_FLAG);
+    } catch (e) { /* ignore */ }
+    if (!flagged || whatsNew.unseenCount() === 0) return;
+    startBtn.addEventListener('click', () => {
+        setTimeout(() => {
+            // اگر لینک اشتراکی جلسه را شروع کرده، مزاحمش نمی‌شویم
+            if (session.state === 'idle' && breath.state === 'idle') whatsNew.open();
+        }, 800);
+    }, { once: true });
+})();
+
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => {
-            console.warn('Service worker registration failed:', err);
-        });
+        navigator.serviceWorker.register('sw.js')
+            .then(setupUpdateNotice)
+            .catch(err => {
+                console.warn('Service worker registration failed:', err);
+            });
     });
 }
