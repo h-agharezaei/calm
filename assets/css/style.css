@@ -1883,6 +1883,48 @@ body:has(#breathStage:not([hidden])) .donate-fab {
     pointer-events: none;
 }
 
+/* بلندی صدا: پایین صفحه، محو؛ با هاور، فوکوس یا لمس واضح‌تر می‌شود */
+.session-volume {
+    position: absolute;
+    left: 50%;
+    bottom: max(28px, calc(env(safe-area-inset-bottom) + 20px));
+    transform: translateX(-50%);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: min(260px, 62vw);
+    direction: ltr;
+    opacity: 0.35;
+    transition: opacity 0.4s;
+}
+
+.session-volume:hover,
+.session-volume:focus-within,
+.session-volume:active {
+    opacity: 0.95;
+}
+
+.session-volume[hidden] {
+    display: none;
+}
+
+.session-volume input[type="range"] {
+    flex: 1;
+    min-width: 0;
+    height: 28px;
+    margin: 0;
+    background: transparent;
+    accent-color: #fff;
+    cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .session-volume {
+        transition: none;
+    }
+}
+
 /* ابرها و باد توسط JS با مشخصات تصادفی ساخته می‌شوند (--x0/--x1 مسیر، --dy جابه‌جایی عمودی) */
 .sky-cloud {
     position: absolute;
