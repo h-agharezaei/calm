@@ -324,6 +324,7 @@ translations.en.soundFire = 'Fire';
 translations.en.soundJungle = 'Jungle';
 translations.en.soundRiver = 'River';
 translations.en.soundSea = 'Sea';
+translations.en.sound432 = '432 Hz';
 
 // ترجمه‌های جلسه‌ی مدیتیشن زمان‌دار
 Object.assign(translations.en, {
@@ -1410,7 +1411,8 @@ const bgSounds = {
     Fire: { audio: null, playing: false },
     Jungle: { audio: null, playing: false },
     River: { audio: null, playing: false },
-    Sea: { audio: null, playing: false }
+    Sea: { audio: null, playing: false },
+    '432Hz': { audio: null, playing: false }
 };
 
 
@@ -1420,6 +1422,7 @@ translations.fa.soundFire = 'آتش';
 translations.fa.soundJungle = 'جنگل';
 translations.fa.soundRiver = 'رودخانه';
 translations.fa.soundSea = 'دریا';
+translations.fa.sound432 = '۴۳۲ هرتز';
 
 // حجم ذخیره‌شده هر صدا (۰ تا ۱)
 function getSavedVolume(soundName) {
@@ -2805,7 +2808,7 @@ renderBreathPanel();
 //   ?breath=478&rounds=8&img=2       تنفس ۴-۷-۸، ۸ دور، تصویر شماره‌ی ۲
 //   ?min=10&sound=river              مدیتیشن ۱۰ دقیقه‌ای با صدای رودخانه
 //   ?lang=en                         فقط زبان
-// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|none | img=0..4 (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
+// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|432Hz|none | img=0..4 (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
 // تنظیمات فقط برای همین بازدید اعمال می‌شود (در localStorage ذخیره نمی‌شود)
 // و جلسه بعد از فشردن «شروع» شروع می‌شود، چون مرورگر بدون کلیک اجازه‌ی پخش صدا نمی‌دهد.
 (function applyUrlParams() {
