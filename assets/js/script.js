@@ -101,6 +101,7 @@ const translations = {
         bgModeSingle: 'Static Image',
         bgModeRotation: 'Rotation',
         bgModeKaleidoscope: 'Kaleidoscope',
+        bgModeKaleidoscopeSoft: 'Soft kaleidoscope',
         selectImage: 'Select Image:',
         imageChangeInterval: 'Image Change Interval (seconds):',
         updateBgInterval: 'Update',
@@ -235,6 +236,7 @@ const translations = {
         bgModeSingle: 'تصویر ثابت',
         bgModeRotation: 'چرخشی',
         bgModeKaleidoscope: 'زیبابین',
+        bgModeKaleidoscopeSoft: 'زیبابین نرم',
         selectImage: 'انتخاب تصویر:',
         imageChangeInterval: 'زمان تغییر تصویر (ثانیه):',
         updateBgInterval: 'تغییر زمان',
@@ -527,7 +529,8 @@ function imageUrl(name) {
 let currentImageIndex = Math.floor(Math.random() * images.length); // شروع با عکس تصادفی
 let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
-let bgMode = 'single'; // 'single' یا 'rotation' یا 'kaleidoscope'
+let bgMode = 'single'; // 'single' یا 'rotation' یا 'kaleidoscope' یا 'kaleidoscope-soft'
+const KALEIDO_MODES = ['kaleidoscope', 'kaleidoscope-soft']; // زیبابین نرم = همان، بدون مثلث‌ها
 let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
 
 // ============================================
@@ -632,6 +635,7 @@ function updateAllTexts() {
         bgModeSelect.options[0].text = t.bgModeSingle;
         bgModeSelect.options[1].text = t.bgModeRotation;
         bgModeSelect.options[2].text = t.bgModeKaleidoscope;
+        bgModeSelect.options[3].text = t.bgModeKaleidoscopeSoft;
     }
 }
 
@@ -841,6 +845,7 @@ let kaleidoRaf = 0;
 let kaleidoLastTs = 0;
 let kaleidoElapsed = 0;
 let kaleidoActive = false;
+let kaleidoShards = true; // در «زیبابین نرم» خاموش است
 
 function kaleidoResize() {
     if (!kaleidoCanvas) return;
@@ -885,7 +890,7 @@ function kaleidoDraw() {
             sc.fillRect(x - r, y - r, r * 2, r * 2);
         });
 
-        KALEIDO_SHARDS.forEach(d => {
+        if (kaleidoShards) KALEIDO_SHARDS.forEach(d => {
             const x = w * (0.2 + 0.8 * (0.5 + 0.5 * Math.sin(t * d.fx + d.px)));
             const y = wedgeH * (0.5 + 0.5 * Math.sin(t * d.fy + d.py));
             const r = w * d.size;
@@ -1220,11 +1225,12 @@ function applyBgMode(mode) {
         startBackgroundRotation();
     } else {
         bgIntervalRow.style.display = 'none';
-        imageSelectRow.style.display = bgMode === 'kaleidoscope' ? 'none' : 'flex';
+        imageSelectRow.style.display = KALEIDO_MODES.includes(bgMode) ? 'none' : 'flex';
         stopBackgroundRotation();
     }
 
-    if (bgMode === 'kaleidoscope') {
+    if (KALEIDO_MODES.includes(bgMode)) {
+        kaleidoShards = bgMode === 'kaleidoscope';
         startKaleidoscope();
     } else {
         stopKaleidoscope();
@@ -1433,7 +1439,7 @@ function loadSavedSettings() {
         }
 
         const savedMode = localStorage.getItem('calm-bg-mode');
-        if (savedMode === 'rotation' || savedMode === 'single' || savedMode === 'kaleidoscope') {
+        if (savedMode === 'rotation' || savedMode === 'single' || KALEIDO_MODES.includes(savedMode)) {
             applyBgMode(savedMode);
         }
     } catch (err) {
@@ -3110,7 +3116,7 @@ renderBreathPanel();
 //   ?min=10&sound=river              مدیتیشن ۱۰ دقیقه‌ای با صدای رودخانه
 //   ?lang=en                         فقط زبان
 //   ?min=15&bg=kaleidoscope          مدیتیشن ۱۵ دقیقه‌ای با پس‌زمینه‌ی زیبابین
-// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|432Hz|none | img=0..4 یا kaleidoscope (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
+// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|432Hz|none | img=0..4 یا kaleidoscope یا kaleidoscope-soft (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
 // تنظیمات فقط برای همین بازدید اعمال می‌شود (در localStorage ذخیره نمی‌شود)
 // و جلسه بعد از فشردن «شروع» شروع می‌شود، چون مرورگر بدون کلیک اجازه‌ی پخش صدا نمی‌دهد.
 (function applyUrlParams() {
@@ -3127,12 +3133,13 @@ renderBreathPanel();
 
     // تصویر پس‌زمینه: img=شماره یا kaleidoscope؛ bg=شماره یا bg=kaleidoscope هم پذیرفته می‌شود
     const bg = params.get('bg');
-    const isKaleido = (v) => (v || '').toLowerCase() === 'kaleidoscope';
+    const isKaleido = (v) => KALEIDO_MODES.includes((v || '').toLowerCase());
     const imgRaw = params.get('img') !== null ? params.get('img') : (/^\d+$/.test(bg || '') || isKaleido(bg) ? bg : null);
     const img = parseInt(imgRaw);
     if (isKaleido(imgRaw)) {
         // فقط برای همین بازدید (ذخیره نمی‌شود)
-        if (bgMode !== 'kaleidoscope') applyBgMode('kaleidoscope');
+        const mode = imgRaw.toLowerCase();
+        if (bgMode !== mode) applyBgMode(mode);
     } else if (imgRaw !== null && img >= 0 && img < images.length) {
         // اگر کاربر حالت چرخشی را ذخیره کرده بود، تصویر انتخاب‌شده با لینک ثابت بماند (ذخیره نمی‌شود)
         if (bgMode !== 'single') applyBgMode('single');
