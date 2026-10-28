@@ -44,7 +44,7 @@
     <link rel="preload" href="assets/fonts/Inter-latin-VF.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="assets/css/style.css?v=17">
+    <link rel="stylesheet" href="assets/css/style.css?v=20">
     
  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "54a5c1f34bde403fb376d604168b982e"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -381,9 +381,31 @@
             
             <!-- محتوای تب تنظیمات -->
             <div class="tab-content active" id="settings-tab">
-            <div class="control-row">
-                <label for="bgMode" data-i18n="bgMode">حالت پس‌زمینه:</label>
-                <select id="bgMode">
+            <div class="control-row bg-mode-row">
+                <label id="bgModeLabel" data-i18n="bgMode">حالت پس‌زمینه:</label>
+                <div class="bg-mode-grid" role="group" aria-labelledby="bgModeLabel">
+                    <button type="button" class="bg-mode-tile" data-mode="single" aria-pressed="true">
+                        <span class="bg-mode-preview preview-single" aria-hidden="true"></span>
+                        <span class="bg-mode-name" data-i18n="bgModeSingle">تصویر ثابت</span>
+                    </button>
+                    <button type="button" class="bg-mode-tile" data-mode="rotation" aria-pressed="false">
+                        <span class="bg-mode-preview preview-rotation" aria-hidden="true"></span>
+                        <span class="bg-mode-name" data-i18n="bgModeRotation">چرخشی</span>
+                    </button>
+                    <button type="button" class="bg-mode-tile" data-mode="kaleidoscope" aria-pressed="false">
+                        <span class="bg-mode-preview preview-kaleido" aria-hidden="true"></span>
+                        <span class="bg-mode-name" data-i18n="bgModeKaleidoscope">زیبابین</span>
+                    </button>
+                    <button type="button" class="bg-mode-tile" data-mode="kaleidoscope-soft" aria-pressed="false">
+                        <span class="bg-mode-preview preview-kaleido-soft" aria-hidden="true"></span>
+                        <span class="bg-mode-name" data-i18n="bgModeKaleidoscopeSoft">زیبابین نرم</span>
+                    </button>
+                    <button type="button" class="bg-mode-tile" data-mode="galaxy" aria-pressed="false">
+                        <span class="bg-mode-preview preview-galaxy" aria-hidden="true"></span>
+                        <span class="bg-mode-name" data-i18n="bgModeGalaxy">کهکشان</span>
+                    </button>
+                </div>
+                <select id="bgMode" hidden>
                     <option value="single" data-i18n="bgModeSingle">تصویر ثابت</option>
                     <option value="rotation" data-i18n="bgModeRotation">چرخشی</option>
                     <option value="kaleidoscope" data-i18n="bgModeKaleidoscope">زیبابین</option>
@@ -718,7 +740,7 @@
     </audio>
 
     <script src="assets/js/analytics.js?v=9"></script>
-    <script src="assets/js/script.js?v=25"></script>
+    <script src="assets/js/script.js?v=26"></script>
     <script src="assets/js/bale.js?v=9"></script>
 </body>
 </html>
