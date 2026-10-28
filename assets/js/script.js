@@ -1467,35 +1467,6 @@ function loadBgSound(soundName) {
     return bgSounds[soundName].audio;
 }
 
-// گرم‌کردن صداها پشت صحنه: بعد از لود کامل صفحه و وقتی مرورگر بیکار است، صداها یکی‌یکی بافر می‌شوند
-// تا پخش اولیه فوری باشد. روی حالت صرفه‌جویی داده یا اتصال کند انجام نمی‌شود.
-function warmUpBgSounds() {
-    const conn = navigator.connection || {};
-    if (conn.saveData || /(^|-)(2g|3g)$/.test(conn.effectiveType || '')) return;
-    const names = Object.keys(bgSounds);
-    const next = () => {
-        const name = names.shift();
-        if (!name) return;
-        let done = false;
-        const finish = () => { if (done) return; done = true; setTimeout(next, 500); };
-        try {
-            const el = loadBgSound(name);
-            if (el.readyState >= 3) return finish();
-            el.preload = 'auto';
-            el.addEventListener('canplaythrough', finish, { once: true });
-            el.addEventListener('error', finish, { once: true });
-            el.load();
-            setTimeout(finish, 20000); // اگر طول کشید، نوبت صدای بعدی
-        } catch (err) { finish(); }
-    };
-    next();
-}
-window.addEventListener('load', () => {
-    const start = () => warmUpBgSounds();
-    if ('requestIdleCallback' in window) requestIdleCallback(start, { timeout: 5000 });
-    else setTimeout(start, 3000);
-});
-
 // باز کردن overlay
 bgSoundsIcon.addEventListener('click', () => {
     bgSoundsOverlay.classList.add('show');
@@ -2000,7 +1971,26 @@ soundChips.forEach(chip => chip.addEventListener('click', () => {
     selectedSessionBg = chip.dataset.bg;
     saveSessionSetting('calm-session-bg', selectedSessionBg);
     renderSessionSetup();
+    prefetchSessionBg(selectedSessionBg);
 }));
+
+// فقط صدای انتخاب‌شده در تنظیمات جلسه شروع به بافر شدن می‌کند؛ بقیه‌ی صداهای در حال دانلود
+// (که پخش نمی‌شوند) رها می‌شوند تا پهنای باند صرف همان یک فایل شود
+function prefetchSessionBg(name) {
+    const conn = navigator.connection || {};
+    if (conn.saveData) return;
+    Object.keys(bgSounds).forEach(other => {
+        const s = bgSounds[other];
+        if (other === name || s.playing || !s.audio) return;
+        s.audio.removeAttribute('src');
+        s.audio.load();
+        s.audio = null;
+    });
+    if (name === 'none' || !bgSounds[name]) return;
+    const el = loadBgSound(name);
+    el.preload = 'auto';
+    if (el.readyState === 0) el.load();
+}
 
 sessionCustomInput.addEventListener('change', () => {
     saveSessionSetting('calm-session-custom', clampCustomMinutes());
