@@ -100,6 +100,7 @@ const translations = {
         bgMode: 'Background Mode:',
         bgModeSingle: 'Static Image',
         bgModeRotation: 'Rotation',
+        bgModeKaleidoscope: 'Kaleidoscope',
         selectImage: 'Select Image:',
         imageChangeInterval: 'Image Change Interval (seconds):',
         updateBgInterval: 'Update',
@@ -230,6 +231,7 @@ const translations = {
         bgMode: 'حالت پس‌زمینه:',
         bgModeSingle: 'تصویر ثابت',
         bgModeRotation: 'چرخشی',
+        bgModeKaleidoscope: 'زیبابین',
         selectImage: 'انتخاب تصویر:',
         imageChangeInterval: 'زمان تغییر تصویر (ثانیه):',
         updateBgInterval: 'تغییر زمان',
@@ -519,7 +521,7 @@ function imageUrl(name) {
 let currentImageIndex = Math.floor(Math.random() * images.length); // شروع با عکس تصادفی
 let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
-let bgMode = 'single'; // 'single' یا 'rotation'
+let bgMode = 'single'; // 'single' یا 'rotation' یا 'kaleidoscope'
 let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
 
 // ============================================
@@ -623,6 +625,7 @@ function updateAllTexts() {
     if (bgModeSelect) {
         bgModeSelect.options[0].text = t.bgModeSingle;
         bgModeSelect.options[1].text = t.bgModeRotation;
+        bgModeSelect.options[2].text = t.bgModeKaleidoscope;
     }
 }
 
@@ -789,6 +792,183 @@ function stopBackgroundRotation() {
         bgIntervalId = null;
     }
 }
+
+// ============================================
+// زیبابین (کالیدوسکوپ) به‌عنوان والپیپر
+// ============================================
+// چند لکه‌ی نرم و رنگی به‌آرامی در یک گوه‌ی کوچک حرکت می‌کنند و آن گوه
+// با آینه‌کاری دور مرکز تکرار می‌شود. تعداد قطعه‌ها باید زوج باشد تا لبه‌ها پیوسته بمانند.
+const kaleidoCanvas = document.getElementById('kaleidoscopeCanvas');
+const KALEIDO_SEGMENTS = 12;
+const KALEIDO_BASE = '#0b1226';
+const KALEIDO_PALETTE = [
+    [64, 196, 190], [245, 180, 90], [236, 112, 140],
+    [150, 120, 235], [110, 200, 130], [90, 150, 240]
+];
+const KALEIDO_EDGE = 0.04;
+const KALEIDO_FRAME_MS = 1000 / 30;
+const KALEIDO_BLOBS = KALEIDO_PALETTE.concat(KALEIDO_PALETTE.slice(0, 3)).map((color, i) => ({
+    color,
+    fx: 0.07 + ((i * 37) % 11) * 0.012,
+    fy: 0.06 + ((i * 53) % 13) * 0.010,
+    px: i * 1.7,
+    py: i * 2.3,
+    size: 0.22 + ((i * 29) % 7) * 0.035
+}));
+// تکه‌های شیشه‌ای: مثلث‌های نیمه‌شفاف که آرام می‌چرخند
+const KALEIDO_SHARDS = KALEIDO_PALETTE.slice(0, 5).map((color, i) => ({
+    color,
+    fx: 0.05 + i * 0.011,
+    fy: 0.045 + i * 0.013,
+    px: i * 2.1 + 0.5,
+    py: i * 1.3 + 1.1,
+    rot: 0.06 + i * 0.02,
+    size: 0.10 + i * 0.02
+}));
+
+let kaleidoCtx = null;
+let kaleidoSrc = null;
+let kaleidoSrcCtx = null;
+let kaleidoRadius = 0;
+let kaleidoMargin = 0;
+let kaleidoRaf = 0;
+let kaleidoLastTs = 0;
+let kaleidoElapsed = 0;
+let kaleidoActive = false;
+
+function kaleidoResize() {
+    if (!kaleidoCanvas) return;
+    const scale = 0.6; // وضوح کمتر = سبک‌تر؛ لکه‌ها نرم‌اند و تفاوتی دیده نمی‌شود
+    kaleidoCanvas.width = Math.max(2, Math.round(window.innerWidth * scale));
+    kaleidoCanvas.height = Math.max(2, Math.round(window.innerHeight * scale));
+    kaleidoRadius = Math.hypot(kaleidoCanvas.width, kaleidoCanvas.height) / 2 + 2;
+    const wedge = (Math.PI * 2) / KALEIDO_SEGMENTS;
+    kaleidoSrc = document.createElement('canvas');
+    kaleidoSrc.width = Math.ceil(kaleidoRadius);
+    // حاشیه‌ی کوچک دو طرف گوه، تا لبه‌ی قطعه‌ها هم‌پوشانی داشته باشند و درزی دیده نشود
+    kaleidoMargin = Math.ceil(kaleidoRadius * Math.sin(KALEIDO_EDGE));
+    kaleidoSrc.height = Math.ceil(kaleidoRadius * Math.sin(wedge + KALEIDO_EDGE)) + kaleidoMargin + 2;
+    kaleidoSrcCtx = kaleidoSrc.getContext('2d');
+    kaleidoCtx = kaleidoCanvas.getContext('2d');
+}
+
+function kaleidoDraw() {
+    if (!kaleidoCtx || !kaleidoSrcCtx) return;
+    const t = kaleidoElapsed;
+    const w = kaleidoSrc.width;
+    const h = kaleidoSrc.height;
+    const sc = kaleidoSrcCtx;
+
+    // ۱) گوه‌ی منبع: لکه‌های نرم روی زمینه‌ی تیره
+    sc.globalCompositeOperation = 'source-over';
+    sc.fillStyle = KALEIDO_BASE;
+    sc.fillRect(0, 0, w, h);
+    sc.globalCompositeOperation = 'lighter';
+    KALEIDO_BLOBS.forEach(b => {
+        const x = w * (0.5 + 0.5 * Math.sin(t * b.fx + b.px));
+        const y = h * (0.5 + 0.5 * Math.sin(t * b.fy + b.py));
+        const r = w * b.size;
+        const g = sc.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, `rgba(${b.color[0]},${b.color[1]},${b.color[2]},0.42)`);
+        g.addColorStop(1, `rgba(${b.color[0]},${b.color[1]},${b.color[2]},0)`);
+        sc.fillStyle = g;
+        sc.fillRect(x - r, y - r, r * 2, r * 2);
+    });
+
+    KALEIDO_SHARDS.forEach(d => {
+        const x = w * (0.2 + 0.8 * (0.5 + 0.5 * Math.sin(t * d.fx + d.px)));
+        const y = h * (0.5 + 0.5 * Math.sin(t * d.fy + d.py));
+        const r = w * d.size;
+        const col = d.color.join(',');
+        sc.save();
+        sc.translate(x, y);
+        sc.rotate(t * d.rot + d.px);
+        sc.beginPath();
+        sc.moveTo(0, -r);
+        sc.lineTo(r * 0.87, r * 0.5);
+        sc.lineTo(-r * 0.87, r * 0.5);
+        sc.closePath();
+        sc.fillStyle = `rgba(${col},0.16)`;
+        sc.fill();
+        sc.lineWidth = 1.5;
+        sc.strokeStyle = `rgba(255,255,255,0.22)`;
+        sc.stroke();
+        sc.restore();
+    });
+
+    // ۲) تکرار آینه‌ای دور مرکز
+    const c = kaleidoCtx;
+    const wedge = (Math.PI * 2) / KALEIDO_SEGMENTS;
+    c.globalCompositeOperation = 'source-over';
+    c.fillStyle = KALEIDO_BASE;
+    c.fillRect(0, 0, kaleidoCanvas.width, kaleidoCanvas.height);
+    const spin = t * 0.025;
+    for (let i = 0; i < KALEIDO_SEGMENTS; i++) {
+        c.save();
+        c.translate(kaleidoCanvas.width / 2, kaleidoCanvas.height / 2);
+        if (i % 2 === 0) {
+            c.rotate(spin + i * wedge);
+        } else {
+            c.rotate(spin + (i + 1) * wedge);
+            c.scale(1, -1);
+        }
+        c.beginPath();
+        c.moveTo(0, 0);
+        c.arc(0, 0, kaleidoRadius, -KALEIDO_EDGE, wedge + KALEIDO_EDGE);
+        c.closePath();
+        c.clip();
+        c.drawImage(kaleidoSrc, 0, -kaleidoMargin);
+        c.restore();
+    }
+}
+
+function kaleidoFrame(ts) {
+    if (!kaleidoActive) return;
+    kaleidoRaf = requestAnimationFrame(kaleidoFrame);
+    if (!kaleidoLastTs) kaleidoLastTs = ts;
+    const dt = ts - kaleidoLastTs;
+    if (dt < KALEIDO_FRAME_MS) return;
+    kaleidoLastTs = ts;
+    kaleidoElapsed += Math.min(dt, 100) / 1000;
+    kaleidoDraw();
+}
+
+function startKaleidoscope() {
+    if (!kaleidoCanvas) return;
+    kaleidoActive = true;
+    kaleidoCanvas.hidden = false;
+    backgroundImage.style.visibility = 'hidden';
+    kaleidoResize();
+    kaleidoDraw();
+    cancelAnimationFrame(kaleidoRaf);
+    kaleidoLastTs = 0;
+    // با «کاهش حرکت» فقط یک فریم ثابت رسم می‌شود
+    if (!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) && !document.hidden) {
+        kaleidoRaf = requestAnimationFrame(kaleidoFrame);
+    }
+}
+
+function stopKaleidoscope() {
+    kaleidoActive = false;
+    cancelAnimationFrame(kaleidoRaf);
+    if (kaleidoCanvas) kaleidoCanvas.hidden = true;
+    backgroundImage.style.visibility = '';
+}
+
+window.addEventListener('resize', () => {
+    if (!kaleidoActive) return;
+    kaleidoResize();
+    kaleidoDraw();
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (!kaleidoActive) return;
+    cancelAnimationFrame(kaleidoRaf);
+    if (!document.hidden && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+        kaleidoLastTs = 0;
+        kaleidoRaf = requestAnimationFrame(kaleidoFrame);
+    }
+});
 
 // ============================================
 // توابع مدیریت پخش صدا
@@ -996,8 +1176,14 @@ function applyBgMode(mode) {
         startBackgroundRotation();
     } else {
         bgIntervalRow.style.display = 'none';
-        imageSelectRow.style.display = 'flex';
+        imageSelectRow.style.display = bgMode === 'kaleidoscope' ? 'none' : 'flex';
         stopBackgroundRotation();
+    }
+
+    if (bgMode === 'kaleidoscope') {
+        startKaleidoscope();
+    } else {
+        stopKaleidoscope();
     }
 }
 
@@ -1203,7 +1389,7 @@ function loadSavedSettings() {
         }
 
         const savedMode = localStorage.getItem('calm-bg-mode');
-        if (savedMode === 'rotation' || savedMode === 'single') {
+        if (savedMode === 'rotation' || savedMode === 'single' || savedMode === 'kaleidoscope') {
             applyBgMode(savedMode);
         }
     } catch (err) {
