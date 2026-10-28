@@ -965,6 +965,40 @@ label {
     text-align: center;
 }
 
+/* Side buttons: dimmed at rest so they don't compete with the animated
+   wallpapers, fully visible on hover / keyboard focus */
+.breath-icon,
+.meditation-icon,
+.interval-icon,
+.bg-sounds-icon,
+.settings-icon {
+    opacity: 0.4;
+}
+
+.breath-icon:hover,
+.meditation-icon:hover,
+.interval-icon:hover,
+.bg-sounds-icon:hover,
+.settings-icon:hover,
+.breath-icon:focus-visible,
+.meditation-icon:focus-visible,
+.interval-icon:focus-visible,
+.bg-sounds-icon:focus-visible,
+.settings-icon:focus-visible {
+    opacity: 1;
+}
+
+/* Touch devices have no hover: keep them clearly visible and tappable */
+@media (hover: none) {
+    .breath-icon,
+    .meditation-icon,
+    .interval-icon,
+    .bg-sounds-icon,
+    .settings-icon {
+        opacity: 0.7;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 600px) {
     .controls {
