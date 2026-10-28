@@ -1483,9 +1483,22 @@ bgModeSelect.addEventListener('change', (e) => {
     track('background_mode', { mode: bgMode });
 });
 
+// کاشی‌های انتخاب حالت پس‌زمینه
+document.querySelectorAll('.bg-mode-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+        if (tile.dataset.mode === bgMode) return;
+        applyBgMode(tile.dataset.mode);
+        localStorage.setItem('calm-bg-mode', bgMode);
+        track('background_mode', { mode: bgMode });
+    });
+});
+
 function applyBgMode(mode) {
     bgMode = mode;
     bgModeSelect.value = mode;
+    document.querySelectorAll('.bg-mode-tile').forEach(tile => {
+        tile.setAttribute('aria-pressed', tile.dataset.mode === mode ? 'true' : 'false');
+    });
 
     if (bgMode === 'rotation') {
         bgIntervalRow.style.display = 'flex';
