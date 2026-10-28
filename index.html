@@ -44,7 +44,7 @@
     <link rel="preload" href="assets/fonts/Inter-latin-VF.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="assets/css/style.css?v=21">
+    <link rel="stylesheet" href="assets/css/style.css?v=22">
     
  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "54a5c1f34bde403fb376d604168b982e"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -381,8 +381,9 @@
             
             <!-- محتوای تب تنظیمات -->
             <div class="tab-content active" id="settings-tab">
+            <section class="settings-section">
+            <h3 class="settings-section-title" id="bgModeLabel" data-i18n="settingsSectionBackground">پس‌زمینه</h3>
             <div class="control-row bg-mode-row">
-                <label id="bgModeLabel" data-i18n="bgMode">حالت پس‌زمینه:</label>
                 <div class="bg-mode-grid" role="group" aria-labelledby="bgModeLabel">
                     <button type="button" class="bg-mode-tile" data-mode="single" aria-pressed="true">
                         <span class="bg-mode-preview preview-single" aria-hidden="true"></span>
@@ -414,7 +415,7 @@
                 </select>
             </div>
             
-            <div class="control-row" id="imageSelectRow">
+            <div class="control-row settings-subpanel" id="imageSelectRow">
                 <label data-i18n="selectImage">انتخاب تصویر:</label>
                 <div class="thumbnails-container">
                     <div class="thumbnail" data-index="0">
@@ -435,35 +436,44 @@
                 </div>
             </div>
             
-            <div class="control-row" id="bgIntervalRow" style="display: none;">
+            <div class="control-row settings-subpanel" id="bgIntervalRow" style="display: none;">
                 <label for="bgInterval" data-i18n="imageChangeInterval">زمان تغییر تصویر (ثانیه):</label>
                 <input type="number" id="bgInterval" min="5" max="600" value="60">
                 <button id="updateBgBtn" data-i18n="updateBgInterval">تغییر زمان</button>
             </div>
             
+            </section>
+            
+            <!-- بخش «برنامه و حریم خصوصی»: وقتی هیچ‌کدام از دو ردیف نمایش داده نشود، کل بخش پنهان می‌شود (CSS) -->
+            <section class="settings-section settings-section-app">
+            <h3 class="settings-section-title" data-i18n="settingsSectionApp">برنامه و حریم خصوصی</h3>
+
             <!-- نصب برنامه (فقط وقتی نصب ممکن و هنوز انجام نشده باشد نمایش داده می‌شود) -->
-            <div class="install-section" id="installSection" hidden>
-                <div class="separator"></div>
-                <div class="control-row">
+            <div class="install-section settings-card" id="installSection" hidden>
+                <div class="settings-row">
+                    <div class="settings-row-text">
+                        <span class="settings-row-title" data-i18n="installTitle">نصب روی دستگاه</span>
+                        <span class="settings-row-desc" data-i18n="installDesc">دسترسی سریع‌تر از صفحه‌ی اصلی و استفاده‌ی آفلاین</span>
+                    </div>
                     <button id="installBtn" data-i18n="installApp" hidden>نصب برنامه</button>
                 </div>
                 <p class="install-hint" id="installIosHint" data-i18n="installIosHint" hidden>برای نصب: دکمه‌ی اشتراک‌گذاری (Share) را در Safari بزنید و «Add to Home Screen» را انتخاب کنید.</p>
             </div>
-            
+
             <!-- آمار ناشناس استفاده: به‌صورت پیش‌فرض روشن است و کاربر می‌تواند خاموشش کند -->
-            <div class="analytics-section" id="analyticsSection" hidden>
-                <div class="separator"></div>
-                <div class="control-row">
-                    <div class="sound-toggle">
-                        <label class="switch">
-                            <input type="checkbox" id="analyticsToggle">
-                            <span class="slider"></span>
-                        </label>
-                        <span class="toggle-label" data-i18n="analyticsToggleLabel">آمار ناشناس استفاده</span>
+            <div class="analytics-section settings-card" id="analyticsSection" hidden>
+                <div class="settings-row">
+                    <div class="settings-row-text">
+                        <span class="settings-row-title" data-i18n="analyticsToggleLabel">آمار ناشناس استفاده</span>
+                        <span class="settings-row-desc" data-i18n="analyticsNote">برای بهبود برنامه، بازدیدها و استفاده از بخش‌ها (بدون نام، ایمیل یا موقعیت دقیق) با Google Analytics ثبت می‌شود. هر زمان می‌توانید آن را خاموش کنید.</span>
                     </div>
+                    <label class="switch">
+                        <input type="checkbox" id="analyticsToggle">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-                <p class="settings-note" data-i18n="analyticsNote">برای بهبود برنامه، بازدیدها و استفاده از بخش‌ها (بدون نام، ایمیل یا موقعیت دقیق) با Google Analytics ثبت می‌شود. هر زمان می‌توانید آن را خاموش کنید.</p>
             </div>
+            </section>
             </div>
             
             <!-- محتوای تب حمایت مالی -->
@@ -740,7 +750,7 @@
     </audio>
 
     <script src="assets/js/analytics.js?v=9"></script>
-    <script src="assets/js/script.js?v=26"></script>
+    <script src="assets/js/script.js?v=27"></script>
     <script src="assets/js/bale.js?v=9"></script>
 </body>
 </html>
