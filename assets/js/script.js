@@ -102,6 +102,7 @@ const translations = {
         bgModeRotation: 'Rotation',
         bgModeKaleidoscope: 'Kaleidoscope',
         bgModeKaleidoscopeSoft: 'Soft kaleidoscope',
+        bgModeGalaxy: 'Galaxy',
         selectImage: 'Select Image:',
         imageChangeInterval: 'Image Change Interval (seconds):',
         updateBgInterval: 'Update',
@@ -237,6 +238,7 @@ const translations = {
         bgModeRotation: 'چرخشی',
         bgModeKaleidoscope: 'زیبابین',
         bgModeKaleidoscopeSoft: 'زیبابین نرم',
+        bgModeGalaxy: 'کهکشان',
         selectImage: 'انتخاب تصویر:',
         imageChangeInterval: 'زمان تغییر تصویر (ثانیه):',
         updateBgInterval: 'تغییر زمان',
@@ -529,8 +531,9 @@ function imageUrl(name) {
 let currentImageIndex = Math.floor(Math.random() * images.length); // شروع با عکس تصادفی
 let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
-let bgMode = 'single'; // 'single' یا 'rotation' یا 'kaleidoscope' یا 'kaleidoscope-soft'
+let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope-soft' | 'galaxy'
 const KALEIDO_MODES = ['kaleidoscope', 'kaleidoscope-soft']; // زیبابین نرم = همان، بدون مثلث‌ها
+const CANVAS_MODES = KALEIDO_MODES.concat('galaxy'); // حالت‌هایی که تصویر ندارند
 let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
 
 // ============================================
@@ -636,6 +639,7 @@ function updateAllTexts() {
         bgModeSelect.options[1].text = t.bgModeRotation;
         bgModeSelect.options[2].text = t.bgModeKaleidoscope;
         bgModeSelect.options[3].text = t.bgModeKaleidoscopeSoft;
+        bgModeSelect.options[4].text = t.bgModeGalaxy;
     }
 }
 
@@ -1020,6 +1024,248 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ============================================
+// پس‌زمینه‌ی کهکشان: یک کهکشان مارپیچی که آرام می‌چرخد
+// ============================================
+const galaxyCanvas = document.getElementById('galaxyCanvas');
+const GALAXY_BASE = '#03040c';
+const GALAXY_FRAME_MS = 1000 / 30;
+const GALAXY_ARMS = 3;
+const GALAXY_TWIST = 3.1;      // میزان پیچش بازوها
+const GALAXY_TILT = 0.5;       // نسبت کشیدگی (نمای مورب)
+const GALAXY_ANGLE = -0.45;    // چرخش کل کهکشان روی صفحه
+const GALAXY_SPEED = 0.05;     // رادیان بر ثانیه در لبه‌ی داخلی
+// رنگ‌ها: هسته‌ی گرم → بازوهای آبی؛ کلاس‌ها برای کم‌کردن تعویض fillStyle
+const GALAXY_COLORS = ['#ffe9c4', '#fff4e0', '#ffffff', '#cfe0ff', '#9fbcff', '#ffb7d5'];
+let galaxyCtx = null;
+let galaxyStars = [];
+let galaxyBg = [];
+let galaxyDust = [];
+let galaxySprites = null;
+let galaxyW = 0;
+let galaxyH = 0;
+let galaxyScale = 1;
+let galaxyRaf = 0;
+let galaxyLastTs = 0;
+let galaxyElapsed = 0;
+let galaxyActive = false;
+
+function galaxyBuildSprite(rgb) {
+    // نقطه‌ی نرم و درخشان رنگی برای هسته و ابرهای غبار
+    const s = document.createElement('canvas');
+    s.width = s.height = 64;
+    const c = s.getContext('2d');
+    const g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, `rgba(${rgb},1)`);
+    g.addColorStop(0.3, `rgba(${rgb},0.3)`);
+    g.addColorStop(1, `rgba(${rgb},0)`);
+    c.fillStyle = g;
+    c.fillRect(0, 0, 64, 64);
+    return s;
+}
+
+function galaxyBuild() {
+    galaxyStars = [];
+    galaxyDust = [];
+    galaxyBg = [];
+    const big = galaxyW * galaxyH > 600000;
+    const N = big ? 5200 : 3400;
+    for (let i = 0; i < N; i++) {
+        // شعاع نرمال‌شده (۰..۱): بیشتر ستاره‌ها نزدیک مرکز
+        const r = (Math.random() < 0.28 ? Math.pow(Math.random(), 2) * 0.55 : Math.pow(Math.random(), 1.35)) * 0.98 + 0.02;
+        const arm = Math.floor(Math.random() * GALAXY_ARMS);
+        const spread = 0.03 + 0.17 * Math.min(1, r * 1.3);
+        let th = arm * (Math.PI * 2 / GALAXY_ARMS) + GALAXY_TWIST * Math.log(1 + r * 4) +
+            (Math.random() + Math.random() + Math.random() - 1.5) * spread * 2.2;
+        if (Math.random() < 0.28) th = Math.random() * Math.PI * 2; // دیسک و برآمدگی‌ی پراکنده بین بازوها
+        // کلاس رنگ: نزدیک مرکز گرم، دورتر آبی
+        const warm = Math.max(0, 1 - r * 2.2);
+        let cls;
+        if (Math.random() < warm) cls = Math.random() < 0.6 ? 0 : 1;
+        else if (Math.random() < 0.06 && r > 0.3) cls = 5;
+        else cls = r > 0.45 ? (Math.random() < 0.6 ? 4 : 3) : (Math.random() < 0.5 ? 2 : 3);
+        galaxyStars.push({
+            r, th, cls,
+            om: GALAXY_SPEED / Math.sqrt(r + 0.12),
+            a: 0.3 + Math.random() * 0.7,
+            z: Math.random() < 0.1 ? 2 : 1,
+            jy: (Math.random() - 0.5) * 0.03 * (1 - r)
+        });
+    }
+    // ابرهای غبار/گاز درخشان روی بازوها
+    for (let i = 0; i < 90; i++) {
+        const r = 0.12 + Math.random() * 0.8;
+        const arm = i % GALAXY_ARMS;
+        galaxyDust.push({
+            r, arm,
+            th: arm * (Math.PI * 2 / GALAXY_ARMS) + GALAXY_TWIST * Math.log(1 + r * 4) + (Math.random() - 0.5) * 0.35,
+            om: GALAXY_SPEED / Math.sqrt(r + 0.12),
+            s: 0.05 + Math.random() * 0.1,
+            a: 0.07 + Math.random() * 0.08,
+            hue: Math.random() < 0.25 ? 'pink' : 'blue'
+        });
+    }
+    // ستاره‌های پس‌زمینه (ثابت، چشمک‌زن)
+    const B = big ? 260 : 170;
+    for (let i = 0; i < B; i++) {
+        galaxyBg.push({
+            x: Math.random(), y: Math.random(),
+            a: 0.2 + Math.random() * 0.6,
+            f: 0.5 + Math.random() * 1.5,
+            p: Math.random() * 6.28
+        });
+    }
+}
+
+function galaxyResize() {
+    if (!galaxyCanvas) return;
+    const scale = 0.7;
+    galaxyW = Math.max(2, Math.round(window.innerWidth * scale));
+    galaxyH = Math.max(2, Math.round(window.innerHeight * scale));
+    galaxyCanvas.width = galaxyW;
+    galaxyCanvas.height = galaxyH;
+    galaxyScale = Math.max(galaxyW, galaxyH) * 0.52; // شعاع کهکشان
+    galaxyCtx = galaxyCanvas.getContext('2d');
+    if (!galaxySprites) galaxySprites = {
+        warm: galaxyBuildSprite('255,205,140'),
+        blue: galaxyBuildSprite('120,155,255'),
+        pink: galaxyBuildSprite('255,140,200')
+    };
+    galaxyBuild();
+}
+
+function galaxyDraw() {
+    if (!galaxyCtx) return;
+    const c = galaxyCtx;
+    const t = galaxyElapsed;
+    const cx = galaxyW / 2;
+    const cy = galaxyH / 2;
+    const R = galaxyScale;
+    const ca = Math.cos(GALAXY_ANGLE);
+    const sa = Math.sin(GALAXY_ANGLE);
+
+    c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = 1;
+    c.fillStyle = GALAXY_BASE;
+    c.fillRect(0, 0, galaxyW, galaxyH);
+
+    // ستاره‌های پس‌زمینه
+    c.fillStyle = '#ffffff';
+    for (let i = 0; i < galaxyBg.length; i++) {
+        const s = galaxyBg[i];
+        c.globalAlpha = s.a * (0.65 + 0.35 * Math.sin(t * s.f + s.p));
+        c.fillRect(Math.floor(s.x * galaxyW), Math.floor(s.y * galaxyH), 1, 1);
+    }
+
+    c.globalCompositeOperation = 'lighter';
+    const project = (r, th, jy) => {
+        const x = Math.cos(th) * r * R;
+        const y = (Math.sin(th) * r + (jy || 0)) * R * GALAXY_TILT;
+        return [cx + x * ca - y * sa, cy + x * sa + y * ca];
+    };
+
+    // هاله‌ی کلی دیسک
+    let p = project(0, 0);
+    const halo = R * 1.15;
+    c.globalAlpha = 0.16;
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(GALAXY_ANGLE);
+    c.scale(1, GALAXY_TILT);
+    c.drawImage(galaxySprites.blue, -halo, -halo, halo * 2, halo * 2);
+    c.globalAlpha = 0.3;
+    c.drawImage(galaxySprites.warm, -halo * 0.45, -halo * 0.45, halo * 0.9, halo * 0.9);
+    c.restore();
+
+    // ابرهای غبار درخشان
+    for (let i = 0; i < galaxyDust.length; i++) {
+        const d = galaxyDust[i];
+        p = project(d.r, d.th + d.om * t);
+        const size = d.s * R * 2;
+        c.save();
+        c.globalAlpha = d.a;
+        c.drawImage(d.hue === 'pink' ? galaxySprites.pink : galaxySprites.blue, p[0] - size / 2, p[1] - size / 2, size, size);
+        c.restore();
+    }
+
+    // ستاره‌ها (دسته‌بندی‌شده بر اساس رنگ)
+    for (let k = 0; k < GALAXY_COLORS.length; k++) {
+        c.fillStyle = GALAXY_COLORS[k];
+        for (let i = 0; i < galaxyStars.length; i++) {
+            const s = galaxyStars[i];
+            if (s.cls !== k) continue;
+            p = project(s.r, s.th + s.om * t, s.jy);
+            c.globalAlpha = s.a;
+            c.fillRect(p[0], p[1], s.z, s.z);
+        }
+    }
+
+    // هسته‌ی درخشان
+    c.globalAlpha = 0.55;
+    const core = R * 0.3;
+    c.save();
+    c.translate(cx, cy);
+    c.rotate(GALAXY_ANGLE);
+    c.scale(1, 0.8);
+    c.drawImage(galaxySprites.warm, -core, -core, core * 2, core * 2);
+    c.restore();
+    c.globalAlpha = 0.7;
+    const core2 = R * 0.08;
+    c.drawImage(galaxySprites.warm, cx - core2, cy - core2, core2 * 2, core2 * 2);
+    c.globalAlpha = 1;
+    c.globalCompositeOperation = 'source-over';
+}
+
+function galaxyFrame(ts) {
+    if (!galaxyActive) return;
+    galaxyRaf = requestAnimationFrame(galaxyFrame);
+    if (!galaxyLastTs) galaxyLastTs = ts;
+    const dt = ts - galaxyLastTs;
+    if (dt < GALAXY_FRAME_MS) return;
+    galaxyLastTs = ts;
+    galaxyElapsed += Math.min(dt, 100) / 1000;
+    galaxyDraw();
+}
+
+function galaxyReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function startGalaxy() {
+    if (!galaxyCanvas) return;
+    galaxyActive = true;
+    galaxyCanvas.hidden = false;
+    backgroundImage.style.visibility = 'hidden';
+    galaxyResize();
+    galaxyDraw();
+    cancelAnimationFrame(galaxyRaf);
+    galaxyLastTs = 0;
+    if (!galaxyReducedMotion() && !document.hidden) {
+        galaxyRaf = requestAnimationFrame(galaxyFrame);
+    }
+}
+
+function stopGalaxy() {
+    galaxyActive = false;
+    cancelAnimationFrame(galaxyRaf);
+    if (galaxyCanvas) galaxyCanvas.hidden = true;
+}
+
+window.addEventListener('resize', () => {
+    if (!galaxyActive) return;
+    galaxyResize();
+    galaxyDraw();
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (!galaxyActive) return;
+    cancelAnimationFrame(galaxyRaf);
+    if (!document.hidden && !galaxyReducedMotion()) {
+        galaxyLastTs = 0;
+        galaxyRaf = requestAnimationFrame(galaxyFrame);
+    }
+});
+
+// ============================================
 // توابع مدیریت پخش صدا
 // ============================================
 
@@ -1225,15 +1471,18 @@ function applyBgMode(mode) {
         startBackgroundRotation();
     } else {
         bgIntervalRow.style.display = 'none';
-        imageSelectRow.style.display = KALEIDO_MODES.includes(bgMode) ? 'none' : 'flex';
+        imageSelectRow.style.display = CANVAS_MODES.includes(bgMode) ? 'none' : 'flex';
         stopBackgroundRotation();
     }
 
+    // اول هر دو را متوقف می‌کنیم، بعد فقط حالت انتخاب‌شده را روشن می‌کنیم
+    stopKaleidoscope();
+    stopGalaxy();
     if (KALEIDO_MODES.includes(bgMode)) {
         kaleidoShards = bgMode === 'kaleidoscope';
         startKaleidoscope();
-    } else {
-        stopKaleidoscope();
+    } else if (bgMode === 'galaxy') {
+        startGalaxy();
     }
 }
 
@@ -1439,7 +1688,7 @@ function loadSavedSettings() {
         }
 
         const savedMode = localStorage.getItem('calm-bg-mode');
-        if (savedMode === 'rotation' || savedMode === 'single' || KALEIDO_MODES.includes(savedMode)) {
+        if (savedMode === 'rotation' || savedMode === 'single' || CANVAS_MODES.includes(savedMode)) {
             applyBgMode(savedMode);
         }
     } catch (err) {
@@ -3133,7 +3382,7 @@ renderBreathPanel();
 
     // تصویر پس‌زمینه: img=شماره یا kaleidoscope؛ bg=شماره یا bg=kaleidoscope هم پذیرفته می‌شود
     const bg = params.get('bg');
-    const isKaleido = (v) => KALEIDO_MODES.includes((v || '').toLowerCase());
+    const isKaleido = (v) => CANVAS_MODES.includes((v || '').toLowerCase());
     const imgRaw = params.get('img') !== null ? params.get('img') : (/^\d+$/.test(bg || '') || isKaleido(bg) ? bg : null);
     const img = parseInt(imgRaw);
     if (isKaleido(imgRaw)) {

@@ -123,6 +123,10 @@ html[lang="fa"] body {
     background: #0b1226;
 }
 
+.galaxy-canvas {
+    background: #03040c;
+}
+
 .kaleidoscope-canvas[hidden] {
     display: none;
 }
