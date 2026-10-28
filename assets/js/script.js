@@ -184,6 +184,10 @@ const translations = {
         
         // Install
         installApp: 'Install app',
+        installTitle: 'Install on your device',
+        installDesc: 'Quicker access from your home screen, and offline use',
+        settingsSectionBackground: 'Background',
+        settingsSectionApp: 'App & privacy',
         
         // What's new + updates
         whatsNewTitle: "What's new",
@@ -320,6 +324,10 @@ const translations = {
         
         // نصب برنامه
         installApp: 'نصب برنامه',
+        installTitle: 'نصب روی دستگاه',
+        installDesc: 'دسترسی سریع‌تر از صفحه‌ی اصلی و استفاده‌ی آفلاین',
+        settingsSectionBackground: 'پس‌زمینه',
+        settingsSectionApp: 'برنامه و حریم خصوصی',
         
         // تازه‌ها و به‌روزرسانی
         whatsNewTitle: 'تازه‌ها',
