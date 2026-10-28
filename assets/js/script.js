@@ -796,90 +796,52 @@ function stopBackgroundRotation() {
 // ============================================
 // زیبابین (کالیدوسکوپ) به‌عنوان والپیپر
 // ============================================
-// مثل یک زیبابین واقعی: تکه‌شیشه‌های رنگی نامنظم، مهره و میله‌ی شیشه‌ای در یک محفظه
-// که آرام می‌چرخد؛ نور از پشت می‌تابد و رنگ‌ها جایی که روی هم می‌افتند ترکیب می‌شوند (multiply).
-// یک گوه از این محفظه با آینه‌کاری دور مرکز تکرار می‌شود. تعداد قطعه‌ها باید زوج باشد تا لبه‌ها پیوسته بمانند.
+// چند لکه‌ی نرم و رنگی به‌آرامی در یک گوه‌ی کوچک حرکت می‌کنند و آن گوه
+// با آینه‌کاری دور مرکز تکرار می‌شود. تعداد قطعه‌ها باید زوج باشد تا لبه‌ها پیوسته بمانند.
 const kaleidoCanvas = document.getElementById('kaleidoscopeCanvas');
 const KALEIDO_SEGMENTS = 12;
+const KALEIDO_BASE = '#0b1226';
+const KALEIDO_PALETTE = [
+    [64, 196, 190], [245, 180, 90], [236, 112, 140],
+    [150, 120, 235], [110, 200, 130], [90, 150, 240]
+];
 const KALEIDO_EDGE = 0.04;
 const KALEIDO_FRAME_MS = 1000 / 30;
-const KALEIDO_CHAMBER_SPEED = 0.035; // رادیان بر ثانیه، یک دور کامل حدود ۳ دقیقه
-// رنگ شیشه‌های رنگی
-const KALEIDO_GLASS = [
-    [190, 58, 70],   // یاقوتی
-    [226, 142, 38],  // کهربایی
-    [232, 196, 72],  // عسلی
-    [46, 138, 104],  // زمردی
-    [38, 118, 168],  // فیروزه‌ای
-    [62, 74, 166],   // لاجوردی
-    [136, 66, 148]   // بنفش
-];
+const KALEIDO_BLOBS = KALEIDO_PALETTE.concat(KALEIDO_PALETTE.slice(0, 3)).map((color, i) => ({
+    color,
+    fx: 0.07 + ((i * 37) % 11) * 0.012,
+    fy: 0.06 + ((i * 53) % 13) * 0.010,
+    px: i * 1.7,
+    py: i * 2.3,
+    size: 0.22 + ((i * 29) % 7) * 0.035
+}));
+// تکه‌های شیشه‌ای: مثلث‌های نیمه‌شفاف که آرام می‌چرخند
+const KALEIDO_SHARDS = KALEIDO_PALETTE.slice(0, 5).map((color, i) => ({
+    color,
+    fx: 0.05 + i * 0.011,
+    fy: 0.045 + i * 0.013,
+    px: i * 2.1 + 0.5,
+    py: i * 1.3 + 1.1,
+    rot: 0.06 + i * 0.02,
+    size: 0.10 + i * 0.02
+}));
 
-let kaleidoPieces = [];
 let kaleidoCtx = null;
 let kaleidoSrc = null;
 let kaleidoSrcCtx = null;
 let kaleidoRadius = 0;
 let kaleidoMargin = 0;
-let kaleidoVignette = null;
-let kaleidoGrain = null;
 let kaleidoRaf = 0;
 let kaleidoLastTs = 0;
 let kaleidoElapsed = 0;
 let kaleidoActive = false;
 
-function kaleidoMakePieces() {
-    const rnd = Math.random;
-    const pick = () => KALEIDO_GLASS[Math.floor(rnd() * KALEIDO_GLASS.length)];
-    const pieces = [];
-    const base = (kind) => ({
-        kind,
-        color: pick(),
-        dist: Math.sqrt(rnd()),          // پخش یکنواخت در محفظه
-        ang: rnd() * Math.PI * 2,
-        rot: rnd() * Math.PI * 2,
-        spin: (rnd() - 0.5) * 0.2,
-        wob: rnd() * Math.PI * 2,
-        wobSpeed: 0.04 + rnd() * 0.07,
-        lag: 0.55 + rnd() * 0.45         // تکه‌ها با سرعت‌های کمی متفاوت همراه محفظه می‌چرخند و روی هم سُر می‌خورند
-    });
-    for (let i = 0; i < 64; i++) {
-        const p = base('shard');
-        p.size = 0.07 + rnd() * 0.12;
-        p.alpha = 0.4 + rnd() * 0.3;
-        const n = 3 + Math.floor(rnd() * 3);
-        p.verts = [];
-        for (let k = 0; k < n; k++) {
-            const a = (k / n) * Math.PI * 2 + (rnd() - 0.5) * 0.9;
-            const r = 0.5 + rnd() * 0.5;
-            p.verts.push([Math.cos(a) * r, Math.sin(a) * r]);
-        }
-        pieces.push(p);
-    }
-    for (let i = 0; i < 14; i++) {
-        const p = base('rod');
-        p.size = 0.08 + rnd() * 0.09;
-        p.width = 0.010 + rnd() * 0.010;
-        p.alpha = 0.7;
-        pieces.push(p);
-    }
-    for (let i = 0; i < 30; i++) {
-        const p = base('bead');
-        p.size = 0.014 + rnd() * 0.026;
-        p.alpha = 0.85;
-        pieces.push(p);
-    }
-    return pieces;
-}
-
 function kaleidoResize() {
     if (!kaleidoCanvas) return;
-    const scale = 0.6; // وضوح کمتر = سبک‌تر
-    const cw = Math.max(2, Math.round(window.innerWidth * scale));
-    const ch = Math.max(2, Math.round(window.innerHeight * scale));
-    kaleidoCanvas.width = cw;
-    kaleidoCanvas.height = ch;
-    kaleidoRadius = Math.hypot(cw, ch) / 2 + 2;
+    const scale = 0.6; // وضوح کمتر = سبک‌تر؛ لکه‌ها نرم‌اند و تفاوتی دیده نمی‌شود
+    kaleidoCanvas.width = Math.max(2, Math.round(window.innerWidth * scale));
+    kaleidoCanvas.height = Math.max(2, Math.round(window.innerHeight * scale));
+    kaleidoRadius = Math.hypot(kaleidoCanvas.width, kaleidoCanvas.height) / 2 + 2;
     const wedge = (Math.PI * 2) / KALEIDO_SEGMENTS;
     kaleidoSrc = document.createElement('canvas');
     kaleidoSrc.width = Math.ceil(kaleidoRadius);
@@ -888,133 +850,100 @@ function kaleidoResize() {
     kaleidoSrc.height = Math.ceil(kaleidoRadius * Math.sin(wedge + KALEIDO_EDGE)) + kaleidoMargin + 2;
     kaleidoSrcCtx = kaleidoSrc.getContext('2d');
     kaleidoCtx = kaleidoCanvas.getContext('2d');
-
-    // تاریک‌شدن لبه‌ها، مثل نگاه کردن از چشمی
-    const near = Math.min(cw, ch) * 0.18;
-    kaleidoVignette = kaleidoCtx.createRadialGradient(cw / 2, ch / 2, near, cw / 2, ch / 2, kaleidoRadius);
-    kaleidoVignette.addColorStop(0, 'rgba(6,9,20,0)');
-    kaleidoVignette.addColorStop(0.55, 'rgba(6,9,20,0.35)');
-    kaleidoVignette.addColorStop(1, 'rgba(6,9,20,0.85)');
-
-    // دانه‌ی ریز، تا سطح صاف و دیجیتالی به نظر نرسد (یک بار ساخته می‌شود)
-    if (!kaleidoGrain) {
-        const g = document.createElement('canvas');
-        g.width = g.height = 96;
-        const gc = g.getContext('2d');
-        const img = gc.createImageData(96, 96);
-        for (let i = 0; i < img.data.length; i += 4) {
-            const v = Math.random() * 255;
-            img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
-            img.data[i + 3] = 255;
-        }
-        gc.putImageData(img, 0, 0);
-        kaleidoGrain = kaleidoCtx.createPattern(g, 'repeat');
-    }
-}
-
-function kaleidoDrawPiece(sc, p, x, y, unit, rot) {
-    const col = p.color.join(',');
-    sc.save();
-    sc.translate(x, y);
-    sc.rotate(rot);
-    if (p.kind === 'shard') {
-        const r = p.size * unit;
-        sc.beginPath();
-        p.verts.forEach(([vx, vy], k) => (k ? sc.lineTo(vx * r, vy * r) : sc.moveTo(vx * r, vy * r)));
-        sc.closePath();
-        // شیشه یکدست نیست: یک طرف کمی کم‌رنگ‌تر، طرف دیگر پررنگ‌تر
-        const g = sc.createLinearGradient(-r, -r, r, r);
-        g.addColorStop(0, `rgba(${col},${p.alpha * 0.55})`);
-        g.addColorStop(1, `rgba(${col},${Math.min(1, p.alpha * 1.15)})`);
-        sc.globalCompositeOperation = 'multiply';
-        sc.fillStyle = g;
-        sc.fill();
-        sc.lineWidth = 1.2;
-        sc.strokeStyle = 'rgba(40,28,20,0.35)';  // لبه‌ی شیشه کمی تیره‌تر است
-        sc.stroke();
-        sc.globalCompositeOperation = 'screen';
-        sc.lineWidth = 0.8;
-        sc.strokeStyle = 'rgba(255,255,255,0.18)'; // و یک برق باریک
-        sc.stroke();
-    } else if (p.kind === 'rod') {
-        const len = p.size * unit;
-        sc.lineCap = 'round';
-        sc.globalCompositeOperation = 'multiply';
-        sc.lineWidth = p.width * unit;
-        sc.strokeStyle = `rgba(${col},${p.alpha})`;
-        sc.beginPath();
-        sc.moveTo(-len / 2, 0);
-        sc.lineTo(len / 2, 0);
-        sc.stroke();
-        sc.globalCompositeOperation = 'screen';
-        sc.lineWidth = Math.max(1, p.width * unit * 0.25);
-        sc.strokeStyle = 'rgba(255,255,255,0.35)';
-        sc.beginPath();
-        sc.moveTo(-len / 2, -p.width * unit * 0.2);
-        sc.lineTo(len / 2, -p.width * unit * 0.2);
-        sc.stroke();
-    } else {
-        const r = p.size * unit;
-        const g = sc.createRadialGradient(-r * 0.3, -r * 0.3, 0, 0, 0, r);
-        g.addColorStop(0, `rgba(${col},0.35)`);
-        g.addColorStop(1, `rgba(${col},${p.alpha})`);
-        sc.globalCompositeOperation = 'multiply';
-        sc.fillStyle = g;
-        sc.beginPath();
-        sc.arc(0, 0, r, 0, Math.PI * 2);
-        sc.fill();
-        sc.globalCompositeOperation = 'screen';
-        sc.fillStyle = 'rgba(255,255,255,0.55)';
-        sc.beginPath();
-        sc.arc(-r * 0.35, -r * 0.35, r * 0.28, 0, Math.PI * 2);
-        sc.fill();
-    }
-    sc.restore();
 }
 
 function kaleidoDraw() {
     if (!kaleidoCtx || !kaleidoSrcCtx) return;
-    if (!kaleidoPieces.length) kaleidoPieces = kaleidoMakePieces();
     const t = kaleidoElapsed;
     const w = kaleidoSrc.width;
     const h = kaleidoSrc.height;
-    const m = kaleidoMargin;
     const sc = kaleidoSrcCtx;
 
-    // ۱) نور پشت شیشه‌ها: وسط روشن‌تر
-    sc.globalCompositeOperation = 'source-over';
-    const light = sc.createRadialGradient(0, m, 0, 0, m, w);
-    light.addColorStop(0, '#f3e6c8');
-    light.addColorStop(1, '#9a8f7c');
-    sc.fillStyle = light;
-    sc.fillRect(0, 0, w, h);
-
-    // ۲) تکه‌ها داخل محفظه‌ی گردی که آرام می‌چرخد
-    const cx = w * 0.5;
-    const cy = m + w * 0.12;
-    const cr = w * 0.6;
-    const chamber = t * KALEIDO_CHAMBER_SPEED;
-    kaleidoPieces.forEach(p => {
-        const wob = Math.sin(t * p.wobSpeed + p.wob);
-        const a = p.ang + chamber * p.lag + wob * 0.12;
-        const d = p.dist * cr * (1 + wob * 0.04);
-        const x = cx + Math.cos(a) * d;
-        const y = cy + Math.sin(a) * d;
-        kaleidoDrawPiece(sc, p, x, y, w, p.rot + t * p.spin + a);
-    });
-
-    // ۳) تکرار آینه‌ای دور مرکز
-    const c = kaleidoCtx;
-    const cw = kaleidoCanvas.width;
-    const ch = kaleidoCanvas.height;
+    // ۱) گوه‌ی منبع. مختصات از مرکز ماندالا است (مبدأ = (0, kaleidoMargin) در بوم منبع).
+    // نوارهای حاشیه‌ی دو طرف گوه، دقیقاً آینه‌ی محتوای داخل گوه نسبت به همان مرز رسم می‌شوند؛
+    // پس جایی که دو قطعه‌ی کنار هم روی هم می‌افتند هر دو پیکسل یکسان می‌کشند: نه درز دیده می‌شود
+    // و نه لبه‌ی مثلث‌ها کنار مرز جابه‌جا می‌شود.
+    const m = kaleidoMargin;
     const wedge = (Math.PI * 2) / KALEIDO_SEGMENTS;
+    const wedgeH = w * Math.sin(wedge);
+    const drawContent = () => {
+        sc.globalCompositeOperation = 'lighter';
+        KALEIDO_BLOBS.forEach(b => {
+            const x = w * (0.5 + 0.5 * Math.sin(t * b.fx + b.px));
+            const y = wedgeH * (0.5 + 0.5 * Math.sin(t * b.fy + b.py));
+            const r = w * b.size;
+            const g = sc.createRadialGradient(x, y, 0, x, y, r);
+            g.addColorStop(0, `rgba(${b.color[0]},${b.color[1]},${b.color[2]},0.42)`);
+            g.addColorStop(1, `rgba(${b.color[0]},${b.color[1]},${b.color[2]},0)`);
+            sc.fillStyle = g;
+            sc.fillRect(x - r, y - r, r * 2, r * 2);
+        });
+
+        KALEIDO_SHARDS.forEach(d => {
+            const x = w * (0.2 + 0.8 * (0.5 + 0.5 * Math.sin(t * d.fx + d.px)));
+            const y = wedgeH * (0.5 + 0.5 * Math.sin(t * d.fy + d.py));
+            const r = w * d.size;
+            const col = d.color.join(',');
+            sc.save();
+            sc.translate(x, y);
+            sc.rotate(t * d.rot + d.px);
+            sc.beginPath();
+            sc.moveTo(0, -r);
+            sc.lineTo(r * 0.87, r * 0.5);
+            sc.lineTo(-r * 0.87, r * 0.5);
+            sc.closePath();
+            sc.fillStyle = `rgba(${col},0.16)`;
+            sc.fill();
+            sc.lineWidth = 1.5;
+            sc.strokeStyle = `rgba(255,255,255,0.22)`;
+            sc.stroke();
+            sc.restore();
+        });
+        sc.globalCompositeOperation = 'source-over';
+    };
+
+    sc.setTransform(1, 0, 0, 1, 0, m);
+    sc.globalCompositeOperation = 'source-over';
+    sc.fillStyle = KALEIDO_BASE;
+    sc.fillRect(0, -m, w, h);
+    drawContent();
+
+    // نوار زیر مرز زاویه‌ی صفر: آینه نسبت به محور افقی
+    sc.save();
+    sc.beginPath();
+    sc.rect(0, -m - 1, w, m + 1);
+    sc.clip();
+    sc.fillStyle = KALEIDO_BASE;
+    sc.fillRect(0, -m - 1, w, m + 1);
+    sc.transform(1, 0, 0, -1, 0, 0);
+    drawContent();
+    sc.restore();
+
+    // نوار بعد از مرز دوم گوه: آینه نسبت به خط با زاویه‌ی wedge
+    sc.save();
+    sc.beginPath();
+    sc.moveTo(0, 0);
+    sc.arc(0, 0, w * 1.5, wedge, wedge + KALEIDO_EDGE * 2);
+    sc.closePath();
+    sc.clip();
+    sc.fillStyle = KALEIDO_BASE;
+    sc.fillRect(0, -m, w, h);
+    const c2 = Math.cos(2 * wedge);
+    const s2 = Math.sin(2 * wedge);
+    sc.transform(c2, s2, s2, -c2, 0, 0);
+    drawContent();
+    sc.restore();
+    sc.setTransform(1, 0, 0, 1, 0, 0);
+
+    // ۲) تکرار آینه‌ای دور مرکز
+    const c = kaleidoCtx;
     c.globalCompositeOperation = 'source-over';
-    c.fillStyle = '#0b1226';
-    c.fillRect(0, 0, cw, ch);
-    const spin = t * 0.008;
+    c.fillStyle = KALEIDO_BASE;
+    c.fillRect(0, 0, kaleidoCanvas.width, kaleidoCanvas.height);
+    const spin = t * 0.025;
     for (let i = 0; i < KALEIDO_SEGMENTS; i++) {
         c.save();
-        c.translate(cw / 2, ch / 2);
+        c.translate(kaleidoCanvas.width / 2, kaleidoCanvas.height / 2);
         if (i % 2 === 0) {
             c.rotate(spin + i * wedge);
         } else {
@@ -1028,20 +957,6 @@ function kaleidoDraw() {
         c.clip();
         c.drawImage(kaleidoSrc, 0, -m);
         c.restore();
-    }
-
-    // ۴) کم کردن روشنایی تا با حال‌وهوای آرام برنامه بخواند، بعد چشمی و دانه
-    c.fillStyle = 'rgba(10,14,30,0.28)';
-    c.fillRect(0, 0, cw, ch);
-    c.fillStyle = kaleidoVignette;
-    c.fillRect(0, 0, cw, ch);
-    if (kaleidoGrain) {
-        c.globalAlpha = 0.045;
-        c.globalCompositeOperation = 'overlay';
-        c.fillStyle = kaleidoGrain;
-        c.fillRect(0, 0, cw, ch);
-        c.globalAlpha = 1;
-        c.globalCompositeOperation = 'source-over';
     }
 }
 
