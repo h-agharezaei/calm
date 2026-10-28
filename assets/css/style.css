@@ -972,7 +972,7 @@ label {
 .interval-icon,
 .bg-sounds-icon,
 .settings-icon {
-    opacity: 0.4;
+    opacity: 0.2;
 }
 
 .breath-icon:hover,
@@ -995,7 +995,7 @@ label {
     .interval-icon,
     .bg-sounds-icon,
     .settings-icon {
-        opacity: 0.7;
+        opacity: 0.5;
     }
 }
 
