@@ -1879,6 +1879,8 @@ const sessionEndBtn = document.getElementById('sessionEndBtn');
 const sessionDoneEl = document.getElementById('sessionDone');
 const sessionStatusEl = document.getElementById('sessionStatus');
 const sessionSky = document.getElementById('sessionSky');
+const sessionVolumeWrap = document.getElementById('sessionVolume');
+const sessionVolumeInput = document.getElementById('sessionVolumeInput');
 const meditationIcon = document.getElementById('meditationIcon');
 const meditationOverlay = document.getElementById('meditationOverlay');
 const closeMeditationPanel = document.getElementById('closeMeditationPanel');
@@ -2117,6 +2119,35 @@ function setSessionPrepping(on) {
     sessionStatusEl.textContent = bt(key);
 }
 
+// ---------- بلندی صدای طبیعت در طول جلسه ----------
+// همان مقدار ذخیره‌شده‌ی پنل «صداهای پس‌زمینه» را تغییر می‌دهد؛ اگر صدای طبیعت انتخاب نشده باشد مخفی است
+function renderSessionVolume() {
+    const name = selectedSessionBg;
+    const has = name !== 'none' && !!bgSounds[name];
+    sessionVolumeWrap.hidden = !has;
+    if (!has) return;
+    sessionVolumeInput.value = Math.round(getSavedVolume(name) * 100);
+    const label = translations[currentLang]['sound' + name] || name;
+    sessionVolumeInput.setAttribute('aria-label', translations[currentLang].ariaVolume.replace('{0}', label));
+}
+
+sessionVolumeInput.addEventListener('input', () => {
+    const name = selectedSessionBg;
+    if (!bgSounds[name]) return;
+    const value = sessionVolumeInput.value;
+    saveSessionSetting(`calm-volume-${name}`, value / 100);
+    // اسلایدر پنل صداها هم هم‌گام بماند
+    const panelSlider = document.querySelector(`.volume-slider[data-sound="${name}"]`);
+    if (panelSlider) panelSlider.value = value;
+    // در fade-in/out یا قبل از ورود صدا، مقدار جدید خودکار در گام بعدی اعمال می‌شود؛ در حالت عادی همین الان
+    const el = bgSounds[name].audio;
+    if (el && !session.fades.has(name) && !session.bgTimeoutId) el.volume = value / 100;
+});
+
+document.addEventListener('calm:languagechange', () => {
+    if (session.state !== 'idle') renderSessionVolume();
+});
+
 // ---------- آسمان: ابر و باد تصادفی ----------
 // هر ابر با اندازه، ارتفاع، جهت، سرعت و شفافیت تصادفی ساخته می‌شود و بعد از خروج از صفحه
 // با مشخصات تازه دوباره ظاهر می‌شود؛ پس حرکت‌ها تکراری و همه در یک جهت نیستند.
@@ -2259,6 +2290,7 @@ function beginSession() {
     playSessionBell();
     session.endAt = session.prepEnd + minutes * 60000;
     setSessionPrepping(true);
+    renderSessionVolume();
     sessionTimeEl.textContent = localizeDigits(String(Math.ceil(SESSION_PREP_MS / 1000)));
     sessionBar.hidden = false;
     startSky();
