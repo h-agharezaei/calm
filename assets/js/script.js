@@ -3109,7 +3109,8 @@ renderBreathPanel();
 //   ?breath=478&rounds=8&img=2       تنفس ۴-۷-۸، ۸ دور، تصویر شماره‌ی ۲
 //   ?min=10&sound=river              مدیتیشن ۱۰ دقیقه‌ای با صدای رودخانه
 //   ?lang=en                         فقط زبان
-// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|432Hz|none | img=0..4 (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
+//   ?min=15&bg=kaleidoscope          مدیتیشن ۱۵ دقیقه‌ای با پس‌زمینه‌ی زیبابین
+// breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|432Hz|none | img=0..4 یا kaleidoscope (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
 // تنظیمات فقط برای همین بازدید اعمال می‌شود (در localStorage ذخیره نمی‌شود)
 // و جلسه بعد از فشردن «شروع» شروع می‌شود، چون مرورگر بدون کلیک اجازه‌ی پخش صدا نمی‌دهد.
 (function applyUrlParams() {
@@ -3124,18 +3125,22 @@ renderBreathPanel();
     const lang = params.get('lang');
     if ((lang === 'fa' || lang === 'en') && lang !== currentLang) changeLanguage(lang);
 
-    // تصویر پس‌زمینه: img=شماره؛ bg=شماره هم پذیرفته می‌شود
+    // تصویر پس‌زمینه: img=شماره یا kaleidoscope؛ bg=شماره یا bg=kaleidoscope هم پذیرفته می‌شود
     const bg = params.get('bg');
-    const imgRaw = params.get('img') !== null ? params.get('img') : (/^\d+$/.test(bg || '') ? bg : null);
+    const isKaleido = (v) => (v || '').toLowerCase() === 'kaleidoscope';
+    const imgRaw = params.get('img') !== null ? params.get('img') : (/^\d+$/.test(bg || '') || isKaleido(bg) ? bg : null);
     const img = parseInt(imgRaw);
-    if (imgRaw !== null && img >= 0 && img < images.length) {
+    if (isKaleido(imgRaw)) {
+        // فقط برای همین بازدید (ذخیره نمی‌شود)
+        if (bgMode !== 'kaleidoscope') applyBgMode('kaleidoscope');
+    } else if (imgRaw !== null && img >= 0 && img < images.length) {
         // اگر کاربر حالت چرخشی را ذخیره کرده بود، تصویر انتخاب‌شده با لینک ثابت بماند (ذخیره نمی‌شود)
         if (bgMode !== 'single') applyBgMode('single');
         setBackground(img);
     }
 
     // صدای طبیعت: sound=نام؛ bg=نام هم پذیرفته می‌شود
-    const soundRaw = (params.get('sound') || (/^\d+$/.test(bg || '') ? '' : bg) || '').toLowerCase();
+    const soundRaw = (params.get('sound') || (/^\d+$/.test(bg || '') || isKaleido(bg) ? '' : bg) || '').toLowerCase();
     if (soundRaw === 'none') {
         selectedSessionBg = 'none';
     } else {
