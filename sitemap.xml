@@ -1,9 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://tpis.ir/</loc><priority>1.0</priority></url>
-  <url><loc>https://tpis.ir/blog/</loc><lastmod>2026-10-29</lastmod><priority>0.8</priority></url>
-  <url><loc>https://tpis.ir/blog/meditation-10-sea-ocean/</loc><lastmod>2026-10-29</lastmod><priority>0.7</priority></url>
-  <url><loc>https://tpis.ir/blog/meditation-10-galaxy-whale/</loc><lastmod>2026-10-29</lastmod><priority>0.7</priority></url>
-  <url><loc>https://tpis.ir/blog/box-breathing/</loc><lastmod>2026-10-29</lastmod><priority>0.7</priority></url>
-  <url><loc>https://tpis.ir/blog/meditation-for-beginners/</loc><lastmod>2026-10-29</lastmod><priority>0.7</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://tpis.ir/</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://tpis.ir/blog/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/en/blog/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/blog/meditation-10-sea-ocean/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/meditation-10-sea-ocean/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/meditation-10-sea-ocean/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/meditation-10-sea-ocean/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/blog/meditation-10-galaxy-whale/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/meditation-10-galaxy-whale/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/meditation-10-galaxy-whale/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/meditation-10-galaxy-whale/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/blog/box-breathing/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/box-breathing/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/box-breathing/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/box-breathing/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/blog/meditation-for-beginners/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/meditation-for-beginners/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/meditation-for-beginners/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/meditation-for-beginners/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/en/blog/meditation-10-sea-ocean/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/meditation-10-sea-ocean/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/meditation-10-sea-ocean/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/meditation-10-sea-ocean/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/en/blog/meditation-10-galaxy-whale/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/meditation-10-galaxy-whale/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/meditation-10-galaxy-whale/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/meditation-10-galaxy-whale/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/en/blog/box-breathing/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/box-breathing/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/box-breathing/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/box-breathing/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/en/blog/meditation-for-beginners/</loc>
+    <lastmod>2026-10-29</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/meditation-for-beginners/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/meditation-for-beginners/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/meditation-for-beginners/"/>
+  </url>
 </urlset>

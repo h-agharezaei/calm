@@ -164,7 +164,7 @@ const translations = {
         
         // Feedback form
         blogTitle: 'Blog',
-        blogDescription: 'Ready-made meditations and short guides on meditation, breathing and calm are on the <a href="/blog/">Calm blog</a> (in Persian).',
+        blogDescription: 'Ready-made meditations and short guides on meditation, breathing and calm are on the <a href="/en/blog/">Calm blog</a>.',
         feedbackTitle: 'Feedback & Suggestions',
         feedbackDescription: 'Your feedback and suggestions are valuable to us',
         feedbackName: 'Name (optional)',

@@ -138,10 +138,10 @@ Created by [h-agharezaei](https://github.com/h-agharezaei)
 
 ## Blog
 
-The blog (`/blog/`, Persian) is plain static HTML generated from Markdown, with no dependencies:
+The blog is plain static HTML generated from Markdown, with no dependencies, in Persian (`/blog/`) and English (`/en/blog/`):
 
-1. Add `_blog/posts/<slug>.md` (lowercase latin slug; it becomes `/blog/<slug>/`). Copy the front matter of an existing post; the fields are documented at the top of `_blog/build.mjs`.
+1. Add `_blog/posts/fa/<slug>.md` and/or `_blog/posts/en/<slug>.md` (lowercase latin slug; it becomes `/blog/<slug>/` or `/en/blog/<slug>/`). Use the **same file name** in both languages for a translation: the pages then link to each other with `hreflang` and the language switch. Copy the front matter of an existing post; the fields are documented at the top of `_blog/build.mjs`.
 2. Add a 1200×630 cover at `assets/images/blog/<slug>.jpg` (it is also the share image).
-3. Run `node _blog/build.mjs` and commit the generated `blog/`, `sitemap.xml` and `robots.txt`.
+3. Run `node _blog/build.mjs` and commit the generated `blog/`, `en/blog/`, `sitemap.xml` and `robots.txt`.
 
-A `session` field (e.g. `min=10&sound=Sea&img=ocean` or `breath=box&rounds=8`) adds a "start" box that opens the app with that session; put `[[session]]` on its own line to repeat it inside the text. A `## سؤال‌های متداول` section with `### question` entries is also emitted as FAQ structured data.
+A `session` field (e.g. `min=10&sound=Sea&img=ocean` or `breath=box&rounds=8`) adds a "start" box that opens the app with that session (`lang=en` is added on English pages); put `[[session]]` on its own line to repeat it inside the text. A `## سؤال‌های متداول` / `## Frequently asked questions` section with `### question` entries is also emitted as FAQ structured data.
