@@ -961,6 +961,12 @@ label {
     margin-bottom: 15px;
 }
 
+.about-content a {
+    color: #667eea;
+    font-weight: 600;
+    text-underline-offset: 3px;
+}
+
 .about-content h3 {
     color: #667eea;
     font-size: 18px;
