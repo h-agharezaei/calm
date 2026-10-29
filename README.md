@@ -135,3 +135,13 @@ Created by [h-agharezaei](https://github.com/h-agharezaei)
 ---
 
 **Note**: This application requires user interaction to start audio playback due to browser autoplay policies.
+
+## Blog
+
+The blog (`/blog/`, Persian) is plain static HTML generated from Markdown, with no dependencies:
+
+1. Add `_blog/posts/<slug>.md` (lowercase latin slug; it becomes `/blog/<slug>/`). Copy the front matter of an existing post; the fields are documented at the top of `_blog/build.mjs`.
+2. Add a 1200×630 cover at `assets/images/blog/<slug>.jpg` (it is also the share image).
+3. Run `node _blog/build.mjs` and commit the generated `blog/`, `sitemap.xml` and `robots.txt`.
+
+A `session` field (e.g. `min=10&sound=Sea&img=ocean` or `breath=box&rounds=8`) adds a "start" box that opens the app with that session; put `[[session]]` on its own line to repeat it inside the text. A `## سؤال‌های متداول` section with `### question` entries is also emitted as FAQ structured data.

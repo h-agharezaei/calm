@@ -163,6 +163,8 @@ const translations = {
         aboutDeveloper: 'Developed by Calm Team',
         
         // Feedback form
+        blogTitle: 'Blog',
+        blogDescription: 'Ready-made meditations and short guides on meditation, breathing and calm are on the <a href="/blog/">Calm blog</a> (in Persian).',
         feedbackTitle: 'Feedback & Suggestions',
         feedbackDescription: 'Your feedback and suggestions are valuable to us',
         feedbackName: 'Name (optional)',
@@ -304,6 +306,8 @@ const translations = {
         aboutDeveloper: 'ساخته شده توسط تیم Calm',
         
         // فرم بازخورد
+        blogTitle: 'بلاگ',
+        blogDescription: 'مدیتیشن‌های آماده و راهنماهای کوتاه درباره‌ی مدیتیشن، تمرین تنفس و آرامش را در <a href="/blog/">بلاگ Calm</a> بخوانید.',
         feedbackTitle: 'پیشنهادات و بازخورد',
         feedbackDescription: 'نظرات و پیشنهادات شما برای ما ارزشمند است',
         feedbackName: 'نام (اختیاری)',
