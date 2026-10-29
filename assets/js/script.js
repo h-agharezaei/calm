@@ -1416,6 +1416,29 @@ vec3 skyGrad(float y) {
     return mix(c, SKY_HZ, exp(-y * 22.0));
 }
 
+// هش بدون الگوی تکراری (Dave Hoskins)
+vec3 hash3(vec2 p) {
+    vec3 q = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+    q += dot(q, q.yxz + 33.33);
+    return fract((q.xxy + q.yzz) * q.zyx);
+}
+
+// یک لایه ستاره: در هر خانه‌ی شبکه حداکثر یک ستاره با جای تصادفی، روشنایی و رنگ متفاوت
+vec3 starLayer(vec2 uv, float cell, float chance, float bright, float px) {
+    vec2 g = uv / cell;
+    vec2 id = floor(g);
+    vec3 h = hash3(id + cell * 1000.0);
+    if (h.x > chance) return vec3(0.0);
+    vec3 h2 = hash3(id.yx + 71.3);
+    vec2 pos = (id + 0.15 + 0.7 * h2.xy) * cell;
+    float b = pow(h.y, 5.0) * bright + 0.04;            // بیشترشان کم‌سو، چندتا پرنور
+    float sigma = px * (0.55 + 0.9 * pow(h.y, 6.0));
+    float d = length(uv - pos);
+    float tw = 0.8 + 0.2 * sin(uTime * (0.7 + 2.5 * h.z) + h2.z * 40.0);
+    vec3 tint = mix(vec3(0.75, 0.85, 1.0), vec3(1.0, 0.9, 0.75), h.z);
+    return tint * b * tw * exp(-d * d / (sigma * sigma));
+}
+
 float moonDist(vec3 d) {
     return sqrt(max(0.0, 2.0 * (1.0 - dot(d, uMoon))));
 }
@@ -1425,7 +1448,7 @@ float moonDist(vec3 d) {
 vec3 moonLight(vec3 d, float bright, float soft) {
     float a = moonDist(d);
     float disc = smoothstep(uMoonR * (1.0 + soft), uMoonR * (0.9 - soft), a);
-    float halo = 0.35 * exp(-a / (uMoonR * 1.6)) + 0.10 * exp(-a / (uMoonR * 7.0));
+    float halo = 0.28 * exp(-a / (uMoonR * 1.4)) + 0.10 * exp(-a / (uMoonR * 6.0)) + 0.03 * exp(-a / (uMoonR * 20.0));
     return MOON * (halo + disc * bright);
 }
 
@@ -1436,16 +1459,29 @@ void main() {
     if (dir.y > 0.0) {
         float a = moonDist(dir);
         col = skyGrad(dir.y);
-        // ستاره‌ها (کم‌سوتر نزدیک افق و ماه)
-        float h = hash(floor(gl_FragCoord.xy));
-        float star = step(0.9986, h) * (0.55 + 0.45 * sin(uTime * (0.8 + h * 2.0) + h * 900.0));
-        star *= smoothstep(0.02, 0.12, dir.y) * smoothstep(uMoonR * 3.0, uMoonR * 10.0, a);
-        col += vec3(0.85, 0.9, 1.0) * star;
-        // ماه، با کمی لک روی قرص
-        vec2 mp = (dir.xy - uMoon.xy) / uMoonR;
-        float mottle = 0.9 + 0.1 * noise(mp * 2.5 + 3.0);
-        float disc = smoothstep(uMoonR, uMoonR * 0.9, a);
-        col += moonLight(dir, 0.0, 0.0) + MOON * disc * 3.0 * mottle;
+        // ستاره‌ها: دو لایه (ریز و پرتعداد + درشت و کم‌تعداد)، کم‌سوتر نزدیک افق و ماه
+        float px = 1.0 / uRes.y;
+        vec3 stars = starLayer(uv, 0.018, 0.45, 0.9, px) + starLayer(uv + 7.3, 0.06, 0.35, 2.2, px);
+        stars *= smoothstep(0.01, 0.12, dir.y) * smoothstep(uMoonR * 3.0, uMoonR * 12.0, a);
+        col += stars;
+        // ماه: کره با دریاهای تیره، دهانه‌های ریز، تیرگی لبه و لبه‌ی نرم
+        vec3 mr = normalize(cross(vec3(0.0, 1.0, 0.0), uMoon));
+        vec3 mu = cross(uMoon, mr);
+        vec2 mp = vec2(dot(dir, mr), dot(dir, mu)) / uMoonR;
+        float r = length(mp);
+        float edge = px / (uMoonR * uFocal) * 1.5;
+        float disc = smoothstep(1.0 + edge, 1.0 - edge, r);
+        col += moonLight(dir, 0.0, 0.0);
+        if (disc > 0.0) {
+            float z = sqrt(max(0.0, 1.0 - r * r));
+            vec2 sp = mp / (0.55 + 0.45 * z);              // کمی انحنای کره در بافت
+            float maria = smoothstep(0.36, 0.7, fbm(sp * 1.1 + vec2(4.1, 2.7)));
+            float crater = fbm(sp * 6.0 + 11.0);
+            float tex = 1.0 - 0.3 * maria - 0.1 * (crater - 0.5);
+            float limb = 0.72 + 0.28 * pow(z, 0.5);
+            vec3 moonCol = vec3(1.0, 0.97, 0.9) * 2.2 * tex * limb;
+            col = mix(col, col * 0.3 + moonCol, disc);
+        }
         // ابرهای نازکِ کشیده که آرام رد می‌شوند و نور ماه رویشان می‌افتد
         vec2 cp = dir.xz / (dir.y + 0.04);
         cp = cp * vec2(0.18, 0.5) + vec2(uTime * 0.012, 0.0);
