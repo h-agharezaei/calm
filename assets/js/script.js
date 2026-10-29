@@ -1349,6 +1349,8 @@ uniform vec3 uMoon;
 uniform float uMoonR;
 uniform float uHz;
 uniform float uFocal;
+uniform sampler2D uMoonTex;   // نیمه‌ی رو به زمینِ نقشه‌ی ماه (NASA LRO)، طول جغرافیایی ‎-90 تا 90
+uniform float uMoonTexOn;
 
 const float CAM_H = 4.0;
 const float WAVE_H = 0.6;
@@ -1439,6 +1441,19 @@ vec3 starLayer(vec2 uv, float cell, float chance, float bright, float px) {
     return tint * b * tw * exp(-d * d / (sigma * sigma));
 }
 
+// نوار کهکشان راه شیری: از نزدیک افق سمت چپ، مورب به بالا (دور از ماه)
+// x = فاصله تا خط وسط نوار، y = جای روی نوار (۰ پایین، ۱ بالا)
+vec2 milkyCoords(vec2 uv) {
+    float asp = uRes.x / uRes.y;
+    vec2 a = vec2((0.42 - 0.5) * asp, uHz);
+    vec2 b = vec2((0.1 - 0.5) * asp, 0.55);
+    vec2 ab = b - a;
+    float len = length(ab);
+    vec2 dirv = ab / len;
+    vec2 q = uv - a;
+    return vec2(dot(q, vec2(dirv.y, -dirv.x)), dot(q, dirv) / len);
+}
+
 float moonDist(vec3 d) {
     return sqrt(max(0.0, 2.0 * (1.0 - dot(d, uMoon))));
 }
@@ -1461,9 +1476,24 @@ void main() {
         col = skyGrad(dir.y);
         // ستاره‌ها: دو لایه (ریز و پرتعداد + درشت و کم‌تعداد)، کم‌سوتر نزدیک افق و ماه
         float px = 1.0 / uRes.y;
-        vec3 stars = starLayer(uv, 0.018, 0.45, 0.9, px) + starLayer(uv + 7.3, 0.06, 0.35, 2.2, px);
-        stars *= smoothstep(0.01, 0.12, dir.y) * smoothstep(uMoonR * 3.0, uMoonR * 12.0, a);
-        col += stars;
+        float fade = smoothstep(0.01, 0.12, dir.y) * smoothstep(uMoonR * 3.0, uMoonR * 12.0, a);
+        // راه شیری: نور مه‌آلود ابرمانند + رگه‌های تیره‌ی غبار + ستاره‌های ریز انبوه
+        vec2 mw = milkyCoords(uv);
+        float w = 0.075 + 0.03 * mw.y;
+        float band = exp(-mw.x * mw.x / (w * w));
+        float wide = exp(-mw.x * mw.x / (w * w * 5.0));
+        vec2 bc = vec2(mw.x * 9.0, mw.y * 3.2);
+        float clump = fbm(bc * vec2(1.4, 1.0) + 3.0);
+        float lane = smoothstep(0.45, 0.72, fbm(bc * vec2(2.5, 1.6) + 17.0)) * exp(-pow((mw.x + 0.012) / (w * 0.45), 2.0));
+        float glow = (band * (0.35 + 0.9 * clump) + wide * 0.25) * (1.0 - 0.75 * lane);
+        glow *= mix(1.25, 0.55, clamp(mw.y, 0.0, 1.0));     // نزدیک افق (مرکز کهکشان) پرنورتر
+        vec3 mwCol = mix(vec3(0.42, 0.48, 0.62), vec3(0.75, 0.66, 0.52), band * clump);
+        col += mwCol * glow * 0.22 * fade;
+        // ستاره‌ها: دو لایه‌ی عمومی + غبار ستاره‌ای داخل نوار
+        vec3 stars = starLayer(uv, 0.018, 0.4, 0.9, px) + starLayer(uv + 7.3, 0.06, 0.35, 2.2, px);
+        stars += starLayer(uv + 3.1, 0.006, 0.75, 0.6, px) * band * (0.5 + clump) * (1.0 - 0.6 * lane);
+        stars += starLayer(uv + 5.7, 0.011, 0.6, 0.9, px) * wide;
+        col += stars * fade;
         // ماه: کره با دریاهای تیره، دهانه‌های ریز، تیرگی لبه و لبه‌ی نرم
         vec3 mr = normalize(cross(vec3(0.0, 1.0, 0.0), uMoon));
         vec3 mu = cross(uMoon, mr);
@@ -1474,12 +1504,17 @@ void main() {
         col += moonLight(dir, 0.0, 0.0);
         if (disc > 0.0) {
             float z = sqrt(max(0.0, 1.0 - r * r));
-            vec2 sp = mp / (0.55 + 0.45 * z);              // کمی انحنای کره در بافت
-            float maria = smoothstep(0.36, 0.7, fbm(sp * 1.1 + vec2(4.1, 2.7)));
-            float crater = fbm(sp * 6.0 + 11.0);
-            float tex = 1.0 - 0.3 * maria - 0.1 * (crater - 0.5);
+            // نقطه‌ی روی کره → طول و عرض جغرافیایی → نقشه‌ی واقعی ماه
+            vec3 sph = vec3(mp, z);
+            float lat = asin(clamp(sph.y, -1.0, 1.0));
+            float lon = atan(sph.x, max(sph.z, 1e-4));
+            vec3 tc = texture2D(uMoonTex, vec2(0.5 + lon / 3.14159265, 0.5 - lat / 3.14159265)).rgb;
+            float lum = dot(tc, vec3(0.3, 0.59, 0.11));
+            vec3 surf = pow(mix(vec3(lum), tc, 0.35) / 0.62, vec3(1.25));
+            // تا وقتی تصویر بار نشده: قرص ساده با کمی بافت
+            surf = mix(vec3(0.95 + 0.05 * fbm(mp * 6.0)), surf, uMoonTexOn);
             float limb = 0.72 + 0.28 * pow(z, 0.5);
-            vec3 moonCol = vec3(1.0, 0.97, 0.9) * 2.2 * tex * limb;
+            vec3 moonCol = vec3(1.0, 0.97, 0.9) * 2.0 * surf * limb;
             col = mix(col, col * 0.3 + moonCol, disc);
         }
         // ابرهای نازکِ کشیده که آرام رد می‌شوند و نور ماه رویشان می‌افتد
@@ -1548,7 +1583,40 @@ function oceanInitGL() {
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     const u = (n) => gl.getUniformLocation(prog, n);
-    return { gl, uRes: u('uRes'), uTime: u('uTime'), uMoon: u('uMoon'), uMoonR: u('uMoonR'), uHz: u('uHz'), uFocal: u('uFocal') };
+    const o = { gl, uRes: u('uRes'), uTime: u('uTime'), uMoon: u('uMoon'), uMoonR: u('uMoonR'), uHz: u('uHz'), uFocal: u('uFocal'), uMoonTexOn: u('uMoonTexOn'), tex: gl.createTexture(), texOn: false };
+    gl.uniform1i(u('uMoonTex'), 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, o.tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([200, 200, 200]));
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    oceanLoadMoon(o);
+    return o;
+}
+
+// تصویر سطح ماه یک‌بار دانلود می‌شود و بعد از رسیدن، روی کره‌ی ماه می‌نشیند
+let oceanMoonImg = null;
+function oceanLoadMoon(o) {
+    const upload = () => {
+        if (oceanGL !== o && oceanGL) return;
+        const gl = o.gl;
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, o.tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, oceanMoonImg);
+        o.texOn = true;
+        if (oceanActive) oceanDraw();   // در حالت «کاهش حرکت» هم یک‌بار دوباره رسم شود
+    };
+    if (oceanMoonImg && oceanMoonImg.complete && oceanMoonImg.naturalWidth) {
+        upload();
+        return;
+    }
+    if (!oceanMoonImg) {
+        oceanMoonImg = new Image();
+        oceanMoonImg.src = 'assets/images/moon.jpg';
+    }
+    oceanMoonImg.addEventListener('load', upload, { once: true });
 }
 
 // اگر WebGL ساخته شد ولی شیدر خطا داد، بوم دیگر 2D نمی‌گیرد؛ یک بوم تازه جایش می‌گذاریم
@@ -1610,6 +1678,7 @@ function oceanDraw() {
     gl.uniform1f(o.uMoonR, 0.05 * Math.min(oceanW, oceanH) / oceanH / OCEAN_FOCAL);
     gl.uniform1f(o.uHz, hz);
     gl.uniform1f(o.uFocal, OCEAN_FOCAL);
+    gl.uniform1f(o.uMoonTexOn, o.texOn ? 1 : 0);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 

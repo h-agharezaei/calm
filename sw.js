@@ -9,7 +9,7 @@
  *
  * Bump VERSION whenever a cached, non-versioned file (images, sounds, font) changes.
  */
-const VERSION = 'calm-v37';
+const VERSION = 'calm-v38';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const OFFLINE_CACHE = 'calm-offline-sounds'; // keep in sync with script.js
@@ -19,7 +19,7 @@ const PRECACHE = [
     'index.html',
     'manifest.webmanifest',
     'assets/css/style.css?v=23',
-    'assets/js/script.js?v=32',
+    'assets/js/script.js?v=33',
     'assets/js/analytics.js?v=9',
     'assets/js/bale.js?v=9',
     'assets/icons/icon-192.png',
