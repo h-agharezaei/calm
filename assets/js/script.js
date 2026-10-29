@@ -1351,6 +1351,7 @@ uniform float uHz;
 uniform float uFocal;
 uniform sampler2D uMoonTex;   // نیمه‌ی رو به زمینِ نقشه‌ی ماه (NASA LRO)، طول جغرافیایی ‎-90 تا 90
 uniform float uMoonTexOn;
+uniform float uMeteor;      // ۰ با «کاهش حرکت»
 
 const float CAM_H = 4.0;
 const float WAVE_H = 0.6;
@@ -1426,7 +1427,8 @@ vec3 hash3(vec2 p) {
 }
 
 // یک لایه ستاره: در هر خانه‌ی شبکه حداکثر یک ستاره با جای تصادفی، روشنایی و رنگ متفاوت
-vec3 starLayer(vec2 uv, float cell, float chance, float bright, float px) {
+// scint: شدت سوسو (نزدیک افق بیشتر، چون نور از هوای بیشتری رد می‌شود)
+vec3 starLayer(vec2 uv, float cell, float chance, float bright, float px, float scint) {
     vec2 g = uv / cell;
     vec2 id = floor(g);
     vec3 h = hash3(id + cell * 1000.0);
@@ -1436,9 +1438,49 @@ vec3 starLayer(vec2 uv, float cell, float chance, float bright, float px) {
     float b = pow(h.y, 5.0) * bright + 0.04;            // بیشترشان کم‌سو، چندتا پرنور
     float sigma = px * (0.55 + 0.9 * pow(h.y, 6.0));
     float d = length(uv - pos);
-    float tw = 0.8 + 0.2 * sin(uTime * (0.7 + 2.5 * h.z) + h2.z * 40.0);
+    // حاصل‌ضرب دو موج با بسامد متفاوت: چشمک نامنظم، نه تپش یکنواخت
+    float s1 = 0.5 + 0.5 * sin(uTime * (1.1 + 3.0 * h.z) + h2.z * 40.0);
+    float s2 = 0.5 + 0.5 * sin(uTime * (2.3 + 4.0 * h2.x) + h.y * 25.0);
+    float tw = 1.0 - scint + scint * 1.6 * s1 * (0.4 + 0.6 * s2);
     vec3 tint = mix(vec3(0.75, 0.85, 1.0), vec3(1.0, 0.9, 0.75), h.z);
+    tint *= 1.0 + scint * 0.35 * vec3(s2 - 0.5, 0.0, 0.5 - s2);   // کمی تغییر رنگ هنگام سوسو
     return tint * b * tw * exp(-d * d / (sigma * sigma));
+}
+
+// تراکم ابر در جهت d (۰ تا ۱): ابرهای کشیده‌ی پیچ‌خورده که آرام به راست می‌روند
+float clouds(vec3 d) {
+    vec2 cp = d.xz / (max(d.y, 0.0) + 0.04);
+    cp = cp * vec2(0.16, 0.45) + vec2(uTime * 0.018, 0.0);
+    vec2 warp = vec2(fbm(cp * 0.7 + 5.0), fbm(cp * 0.7 + 9.0));
+    float n = fbm(cp + warp * 0.6);
+    return smoothstep(0.44, 0.74, n) * smoothstep(0.0, 0.08, d.y);
+}
+
+// شهاب: در هر بازه‌ی ۳۰ ثانیه‌ای حداکثر یکی، با زمان، جا و جهت تصادفی
+vec3 meteor(vec2 uv, float px) {
+    float slot = floor(uTime / 30.0);
+    vec3 h = hash3(vec2(slot, 17.0));
+    vec3 h2 = hash3(vec2(slot, 41.0));
+    if (h.z > 0.8) return vec3(0.0);
+    float dur = 0.7 + 0.6 * h2.z;
+    float t0 = h.x * (30.0 - dur);
+    float p = (uTime - slot * 30.0 - t0) / dur;
+    if (p < 0.0 || p > 1.0) return vec3(0.0);
+    float asp = uRes.x / uRes.y;
+    vec2 st = vec2((h.y - 0.5) * asp * 0.9, uHz + 0.18 + 0.25 * h2.x);
+    float ang = mix(-2.6, -0.55, h2.y);                  // رو به پایین، چپ یا راست
+    vec2 dv = vec2(cos(ang), sin(ang));
+    float len = 0.12 + 0.12 * h2.x;
+    vec2 head = st + dv * len * p;
+    vec2 tail = st + dv * len * max(0.0, p - 0.4);
+    vec2 ba = head - tail;
+    vec2 pa = uv - tail;
+    float k = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-7), 0.0, 1.0);
+    float d = length(pa - ba * k);
+    float w = px * 0.9;
+    float line = exp(-d * d / (w * w)) * k * k;          // پررنگ‌تر نزدیک سر
+    float life = sin(3.14159 * p);
+    return vec3(0.85, 0.9, 1.0) * line * life * 1.6 * smoothstep(0.0, 0.06, uv.y - uHz);
 }
 
 // نوار کهکشان راه شیری: از نزدیک افق سمت چپ، مورب به بالا (دور از ماه)
@@ -1477,6 +1519,7 @@ void main() {
         // ستاره‌ها: دو لایه (ریز و پرتعداد + درشت و کم‌تعداد)، کم‌سوتر نزدیک افق و ماه
         float px = 1.0 / uRes.y;
         float fade = smoothstep(0.01, 0.12, dir.y) * smoothstep(uMoonR * 3.0, uMoonR * 12.0, a);
+        float scint = mix(0.55, 0.15, smoothstep(0.02, 0.22, dir.y));
         // راه شیری: نور مه‌آلود ابرمانند + رگه‌های تیره‌ی غبار + ستاره‌های ریز انبوه
         vec2 mw = milkyCoords(uv);
         float w = 0.075 + 0.03 * mw.y;
@@ -1490,9 +1533,9 @@ void main() {
         vec3 mwCol = mix(vec3(0.42, 0.48, 0.62), vec3(0.75, 0.66, 0.52), band * clump);
         col += mwCol * glow * 0.22 * fade;
         // ستاره‌ها: دو لایه‌ی عمومی + غبار ستاره‌ای داخل نوار
-        vec3 stars = starLayer(uv, 0.018, 0.4, 0.9, px) + starLayer(uv + 7.3, 0.06, 0.35, 2.2, px);
-        stars += starLayer(uv + 3.1, 0.006, 0.75, 0.6, px) * band * (0.5 + clump) * (1.0 - 0.6 * lane);
-        stars += starLayer(uv + 5.7, 0.011, 0.6, 0.9, px) * wide;
+        vec3 stars = starLayer(uv, 0.018, 0.4, 0.9, px, scint) + starLayer(uv + 7.3, 0.06, 0.35, 2.2, px, scint);
+        stars += starLayer(uv + 3.1, 0.006, 0.75, 0.6, px, scint * 0.5) * band * (0.5 + clump) * (1.0 - 0.6 * lane);
+        stars += starLayer(uv + 5.7, 0.011, 0.6, 0.9, px, scint * 0.5) * wide;
         col += stars * fade;
         // ماه: کره با دریاهای تیره، دهانه‌های ریز، تیرگی لبه و لبه‌ی نرم
         vec3 mr = normalize(cross(vec3(0.0, 1.0, 0.0), uMoon));
@@ -1517,12 +1560,13 @@ void main() {
             vec3 moonCol = vec3(1.0, 0.97, 0.9) * 2.0 * surf * limb;
             col = mix(col, col * 0.3 + moonCol, disc);
         }
-        // ابرهای نازکِ کشیده که آرام رد می‌شوند و نور ماه رویشان می‌افتد
-        vec2 cp = dir.xz / (dir.y + 0.04);
-        cp = cp * vec2(0.18, 0.5) + vec2(uTime * 0.012, 0.0);
-        float cl = smoothstep(0.45, 0.8, fbm(cp)) * smoothstep(0.0, 0.08, dir.y);
-        vec3 cloudCol = mix(vec3(0.06, 0.09, 0.16), vec3(0.42, 0.49, 0.62), exp(-a / (uMoonR * 8.0)));
-        col = mix(col, cloudCol, cl * 0.5);
+        // شهاب‌ها (پشت ابرها)
+        col += meteor(uv, px) * uMeteor;
+        // ابرها: نزدیک ماه نقره‌ای و با لبه‌ی روشن، دورتر تیره؛ از جلوی ماه هم رد می‌شوند
+        float cl = clouds(dir);
+        float lit = exp(-a / (uMoonR * 7.0));
+        vec3 cloudCol = mix(vec3(0.075, 0.095, 0.15), vec3(0.62, 0.66, 0.74), lit) * (1.0 + 0.6 * lit * (1.0 - cl));
+        col = mix(col, cloudCol, cl * 0.85);
     } else {
         float t = min(CAM_H / -dir.y, 3000.0);
         vec2 p = dir.xz * t;
@@ -1537,7 +1581,9 @@ void main() {
         vec3 R = reflect(dir, N);
         R.y = abs(R.y);
         float fres = 0.02 + 0.98 * pow(1.0 - max(dot(N, -dir), 0.0), 5.0);
-        vec3 refl = skyGrad(R.y) + moonLight(R, 16.0, 0.45);
+        // وقتی ابر جلوی ماه است، مسیر نور روی آب هم کم‌نور می‌شود
+        float occ = clouds(uMoon);
+        vec3 refl = skyGrad(R.y) + moonLight(R, 16.0, 0.45) * (1.0 - 0.75 * occ);
         vec3 water = DEEP + vec3(0.015, 0.04, 0.05) * pow(h0, 3.0);
         col = mix(water, refl, fres);
         // مه افق
@@ -1583,7 +1629,7 @@ function oceanInitGL() {
     gl.enableVertexAttribArray(loc);
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
     const u = (n) => gl.getUniformLocation(prog, n);
-    const o = { gl, uRes: u('uRes'), uTime: u('uTime'), uMoon: u('uMoon'), uMoonR: u('uMoonR'), uHz: u('uHz'), uFocal: u('uFocal'), uMoonTexOn: u('uMoonTexOn'), tex: gl.createTexture(), texOn: false };
+    const o = { gl, uRes: u('uRes'), uTime: u('uTime'), uMoon: u('uMoon'), uMoonR: u('uMoonR'), uHz: u('uHz'), uFocal: u('uFocal'), uMoonTexOn: u('uMoonTexOn'), uMeteor: u('uMeteor'), tex: gl.createTexture(), texOn: false };
     gl.uniform1i(u('uMoonTex'), 0);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, o.tex);
@@ -1679,6 +1725,7 @@ function oceanDraw() {
     gl.uniform1f(o.uHz, hz);
     gl.uniform1f(o.uFocal, OCEAN_FOCAL);
     gl.uniform1f(o.uMoonTexOn, o.texOn ? 1 : 0);
+    gl.uniform1f(o.uMeteor, oceanReducedMotion() ? 0 : 1);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 }
 
