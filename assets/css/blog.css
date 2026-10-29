@@ -70,6 +70,9 @@ a:focus-visible, .session-btn:focus-visible { outline: 3px solid var(--accent); 
 .nav { display: flex; align-items: center; gap: 18px; font-size: 15px; }
 .nav a { color: var(--ink-soft); text-decoration: none; }
 .nav a:hover { color: var(--ink); }
+.nav .lang-switch { font-size: 14px; border: 1px solid var(--line); padding: 3px 10px; border-radius: 999px; }
+html[lang="fa"] .lang-switch { font-family: 'Inter', sans-serif; }
+html[lang="en"] .lang-switch { font-family: 'Estedad', sans-serif; }
 .nav .nav-cta { background: var(--ink); color: var(--bg); padding: 6px 14px; border-radius: 999px; }
 .nav .nav-cta:hover { color: var(--bg); opacity: .9; }
 
@@ -117,14 +120,15 @@ a:focus-visible, .session-btn:focus-visible { outline: 3px solid var(--accent); 
     transition: transform .15s ease, box-shadow .15s ease;
 }
 .session-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0, 0, 0, .25); }
-.session-btn svg { transform: scaleX(-1); } /* play arrow points forward in RTL */
+.session-btn svg { flex: none; }
+[dir="rtl"] .session-btn svg { transform: scaleX(-1); } /* play arrow points forward in RTL */
 
 .prose { padding-bottom: 12px; }
 .prose h2 { font-size: 24px; line-height: 1.55; margin: 38px 0 8px; }
 .prose h3 { font-size: 19px; line-height: 1.6; margin: 26px 0 4px; }
 .prose p { margin: 0 0 16px; }
 .prose ul, .prose ol { padding-inline-start: 24px; margin: 0 0 16px; }
-.prose ol { list-style-type: persian; }
+[lang="fa"] .prose ol { list-style-type: persian; }
 .prose li { margin-bottom: 6px; }
 .prose li::marker { color: var(--muted); }
 .prose blockquote { margin: 20px 0; padding: 12px 18px; border-inline-start: 4px solid var(--accent); background: var(--surface); border-radius: 0 12px 12px 0; color: var(--ink-soft); }
@@ -138,9 +142,16 @@ a:focus-visible, .session-btn:focus-visible { outline: 3px solid var(--accent); 
 .site-footer { margin-top: 48px; border-top: 1px solid var(--line); padding: 22px 0 36px; font-size: 14.5px; color: var(--ink-soft); }
 .site-footer p { margin: 0 0 6px; }
 
+/* English pages: Latin type reads better slightly tighter */
+html[lang="en"] body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; line-height: 1.75; }
+html[lang="en"] .post-header h1, html[lang="en"] .blog-hero h1 { font-weight: 750; letter-spacing: -0.01em; line-height: 1.25; }
+html[lang="en"] .prose h2, html[lang="en"] .prose h3 { line-height: 1.35; }
+html[lang="en"] .card h3 { line-height: 1.4; }
+
 @media (max-width: 520px) {
     body { font-size: 16.5px; }
-    .nav { gap: 12px; }
+    .nav { gap: 10px; }
+    .nav .nav-cta { padding: 5px 11px; }
     .session-box { padding: 16px; }
     .session-btn { width: 100%; justify-content: center; }
 }
