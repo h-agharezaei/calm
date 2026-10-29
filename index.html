@@ -44,7 +44,7 @@
     <link rel="preload" href="assets/fonts/Inter-latin-VF.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="assets/css/style.css?v=22">
+    <link rel="stylesheet" href="assets/css/style.css?v=23">
     
  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "54a5c1f34bde403fb376d604168b982e"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -60,6 +60,7 @@
     <div class="background-image" id="backgroundImage"></div>
     <canvas class="kaleidoscope-canvas" id="kaleidoscopeCanvas" aria-hidden="true" hidden></canvas>
     <canvas class="kaleidoscope-canvas galaxy-canvas" id="galaxyCanvas" aria-hidden="true" hidden></canvas>
+    <canvas class="kaleidoscope-canvas ocean-canvas" id="oceanCanvas" aria-hidden="true" hidden></canvas>
     
     <!-- Overlay شروع -->
     <div class="start-overlay" id="startOverlay">
@@ -406,6 +407,10 @@
                         <span class="bg-mode-preview preview-galaxy" aria-hidden="true"></span>
                         <span class="bg-mode-name" data-i18n="bgModeGalaxy">کهکشان</span>
                     </button>
+                    <button type="button" class="bg-mode-tile" data-mode="ocean" aria-pressed="false">
+                        <span class="bg-mode-preview preview-ocean" aria-hidden="true"></span>
+                        <span class="bg-mode-name" data-i18n="bgModeOcean">اقیانوس</span>
+                    </button>
                 </div>
                 <select id="bgMode" hidden>
                     <option value="single" data-i18n="bgModeSingle">تصویر ثابت</option>
@@ -413,6 +418,7 @@
                     <option value="kaleidoscope" data-i18n="bgModeKaleidoscope">زیبابین</option>
                     <option value="kaleidoscope-soft" data-i18n="bgModeKaleidoscopeSoft">زیبابین نرم</option>
                     <option value="galaxy" data-i18n="bgModeGalaxy">کهکشان</option>
+                    <option value="ocean" data-i18n="bgModeOcean">اقیانوس</option>
                 </select>
             </div>
             
@@ -772,7 +778,7 @@
     </audio>
 
     <script src="assets/js/analytics.js?v=9"></script>
-    <script src="assets/js/script.js?v=29"></script>
+    <script src="assets/js/script.js?v=30"></script>
     <script src="assets/js/bale.js?v=9"></script>
 </body>
 </html>

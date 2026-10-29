@@ -103,6 +103,7 @@ const translations = {
         bgModeKaleidoscope: 'Kaleidoscope',
         bgModeKaleidoscopeSoft: 'Soft kaleidoscope',
         bgModeGalaxy: 'Galaxy',
+        bgModeOcean: 'Ocean',
         selectImage: 'Select Image:',
         imageChangeInterval: 'Image Change Interval (seconds):',
         updateBgInterval: 'Update',
@@ -243,6 +244,7 @@ const translations = {
         bgModeKaleidoscope: 'زیبابین',
         bgModeKaleidoscopeSoft: 'زیبابین نرم',
         bgModeGalaxy: 'کهکشان',
+        bgModeOcean: 'اقیانوس',
         selectImage: 'انتخاب تصویر:',
         imageChangeInterval: 'زمان تغییر تصویر (ثانیه):',
         updateBgInterval: 'تغییر زمان',
@@ -540,9 +542,9 @@ function imageUrl(name) {
 let currentImageIndex = Math.floor(Math.random() * images.length); // شروع با عکس تصادفی
 let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
-let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope-soft' | 'galaxy'
+let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope-soft' | 'galaxy' | 'ocean'
 const KALEIDO_MODES = ['kaleidoscope', 'kaleidoscope-soft']; // زیبابین نرم = همان، بدون مثلث‌ها
-const CANVAS_MODES = KALEIDO_MODES.concat('galaxy'); // حالت‌هایی که تصویر ندارند
+const CANVAS_MODES = KALEIDO_MODES.concat('galaxy', 'ocean'); // حالت‌هایی که تصویر ندارند
 let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
 
 // ============================================
@@ -649,6 +651,7 @@ function updateAllTexts() {
         bgModeSelect.options[2].text = t.bgModeKaleidoscope;
         bgModeSelect.options[3].text = t.bgModeKaleidoscopeSoft;
         bgModeSelect.options[4].text = t.bgModeGalaxy;
+        bgModeSelect.options[5].text = t.bgModeOcean;
     }
 }
 
@@ -1297,6 +1300,354 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ============================================
+// پس‌زمینه‌ی اقیانوس: دریای آرام در شب مهتابی
+// آسمان ستاره‌دار، ماه، ابرهای نازک، موج‌های لایه‌ای و بازتاب ماه روی آب
+// ============================================
+
+const oceanCanvas = document.getElementById('oceanCanvas');
+const OCEAN_FRAME_MS = 1000 / 30;
+const OCEAN_HORIZON = 0.4;      // ارتفاع افق نسبت به صفحه
+const OCEAN_LAYERS = 12;        // تعداد لایه‌های موج
+const OCEAN_MOON_Y = 0.19;
+let oceanCtx = null;
+let oceanW = 0;
+let oceanH = 0;
+let oceanSky = null;            // آسمان ثابت (گرادیان + ستاره + ماه)، یک‌بار رسم می‌شود
+let oceanSprites = null;
+let oceanMoonGrad = null;       // گرادیان افقی نور ماه روی تاج موج‌ها
+let oceanTwinkle = [];
+let oceanClouds = [];
+let oceanGlints = [];
+let oceanRaf = 0;
+let oceanLastTs = 0;
+let oceanElapsed = 0;
+let oceanActive = false;
+
+// در صفحه‌ی عمودی (گوشی) ماه کمی به وسط نزدیک‌تر است
+function oceanMoonX() {
+    return oceanW < oceanH ? 0.62 : 0.7;
+}
+
+function oceanLerp(a, b, t) {
+    return a + (b - a) * t;
+}
+
+function oceanRadialSprite(size, stops) {
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = size;
+    const g = cv.getContext('2d');
+    const gr = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    stops.forEach(s => gr.addColorStop(s[0], s[1]));
+    g.fillStyle = gr;
+    g.fillRect(0, 0, size, size);
+    return cv;
+}
+
+function oceanBuild() {
+    const W = oceanW;
+    const H = oceanH;
+    const hzY = H * OCEAN_HORIZON;
+    const moonX = W * oceanMoonX();
+    const moonY = H * OCEAN_MOON_Y;
+    const moonR = Math.min(W, H) * 0.05;
+
+    if (!oceanSprites) {
+        oceanSprites = {
+            halo: oceanRadialSprite(256, [[0, 'rgba(210,225,255,0.55)'], [0.18, 'rgba(170,200,255,0.25)'], [0.5, 'rgba(110,150,230,0.07)'], [1, 'rgba(80,120,220,0)']]),
+            glow: oceanRadialSprite(128, [[0, 'rgba(200,220,255,0.5)'], [0.5, 'rgba(150,185,245,0.14)'], [1, 'rgba(120,160,240,0)']]),
+            cloud: oceanRadialSprite(128, [[0, 'rgba(150,175,225,0.55)'], [0.55, 'rgba(110,140,200,0.2)'], [1, 'rgba(90,120,190,0)']])
+        };
+    }
+
+    // ---- آسمان ثابت ----
+    oceanSky = document.createElement('canvas');
+    oceanSky.width = W;
+    oceanSky.height = Math.ceil(hzY) + 2;
+    const s = oceanSky.getContext('2d');
+    const sg = s.createLinearGradient(0, 0, 0, hzY);
+    sg.addColorStop(0, '#03060f');
+    sg.addColorStop(0.55, '#0a1530');
+    sg.addColorStop(0.88, '#17335a');
+    sg.addColorStop(1, '#27507a');
+    s.fillStyle = sg;
+    s.fillRect(0, 0, W, oceanSky.height);
+
+    // ستاره‌ها (کم‌سو‌تر نزدیک افق و نزدیک ماه)
+    for (let i = 0; i < 170; i++) {
+        const x = Math.random() * W;
+        const y = Math.pow(Math.random(), 1.25) * hzY * 0.92;
+        const near = Math.hypot(x - moonX, y - moonY) / (moonR * 9);
+        const a = (0.25 + Math.random() * 0.6) * Math.min(1, near) * (1 - (y / hzY) * 0.6);
+        s.fillStyle = 'rgba(' + (Math.random() < 0.3 ? '255,235,210' : '215,230,255') + ',' + a.toFixed(3) + ')';
+        const sz = Math.random() < 0.08 ? 2 : 1;
+        s.fillRect(Math.floor(x), Math.floor(y), sz, sz);
+    }
+
+    // هاله و قرص ماه
+    const halo = moonR * 11;
+    s.drawImage(oceanSprites.halo, moonX - halo, moonY - halo, halo * 2, halo * 2);
+    const disc = s.createRadialGradient(moonX - moonR * 0.3, moonY - moonR * 0.3, moonR * 0.1, moonX, moonY, moonR);
+    disc.addColorStop(0, '#fffdf4');
+    disc.addColorStop(1, '#e3ebfa');
+    s.fillStyle = disc;
+    s.beginPath();
+    s.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+    s.fill();
+    s.fillStyle = 'rgba(160,178,210,0.13)';
+    [[-0.3, -0.1, 0.28], [0.25, 0.3, 0.2], [0.1, -0.45, 0.14], [-0.35, 0.4, 0.12]].forEach(c => {
+        s.beginPath();
+        s.arc(moonX + c[0] * moonR, moonY + c[1] * moonR, c[2] * moonR, 0, Math.PI * 2);
+        s.fill();
+    });
+
+    // ---- ستاره‌های چشمک‌زن ----
+    oceanTwinkle = [];
+    for (let i = 0; i < 28; i++) {
+        oceanTwinkle.push({
+            x: Math.floor(Math.random() * W),
+            y: Math.floor(Math.pow(Math.random(), 1.2) * hzY * 0.8),
+            ph: Math.random() * 6.28,
+            sp: 0.6 + Math.random() * 1.6,
+            z: Math.random() < 0.2 ? 2 : 1
+        });
+    }
+
+    // ---- ابرهای نازک که آرام می‌روند ----
+    oceanClouds = [];
+    for (let i = 0; i < 5; i++) {
+        oceanClouds.push({
+            x: Math.random(),
+            y: oceanLerp(0.06, 0.34, Math.random()) * H,
+            w: W * oceanLerp(0.35, 0.7, Math.random()),
+            h: H * oceanLerp(0.025, 0.05, Math.random()),
+            v: oceanLerp(0.004, 0.011, Math.random()),
+            a: oceanLerp(0.35, 0.8, Math.random())
+        });
+    }
+
+    // ---- درخشش‌های بازتاب ماه ----
+    oceanGlints = [];
+    for (let i = 0; i < 170; i++) {
+        const u = Math.pow(Math.random(), 1.35);   // 0 = افق، 1 = جلو
+        const g1 = (Math.random() + Math.random() + Math.random() - 1.5) * 1.3;
+        oceanGlints.push({
+            u: u,
+            dx: g1 * (0.012 + 0.11 * u),
+            w: (0.006 + 0.045 * u) * (0.4 + Math.random() * 0.9),
+            a: 0.25 + Math.random() * 0.6,
+            ph: Math.random() * 6.28,
+            sp: 0.5 + Math.random() * 1.6,
+            dr: (Math.random() - 0.5) * 0.01
+        });
+    }
+
+    // ---- نور ماه روی تاج موج‌ها ----
+    oceanMoonGrad = s.createLinearGradient(moonX - W * 0.4, 0, moonX + W * 0.4, 0);
+    oceanMoonGrad.addColorStop(0, 'rgba(190,215,255,0)');
+    oceanMoonGrad.addColorStop(0.5, 'rgba(225,238,255,1)');
+    oceanMoonGrad.addColorStop(1, 'rgba(190,215,255,0)');
+}
+
+function oceanResize() {
+    if (!oceanCanvas) return;
+    const scale = 0.75;
+    oceanW = Math.max(2, Math.round(window.innerWidth * scale));
+    oceanH = Math.max(2, Math.round(window.innerHeight * scale));
+    oceanCanvas.width = oceanW;
+    oceanCanvas.height = oceanH;
+    oceanCtx = oceanCanvas.getContext('2d');
+    oceanBuild();
+}
+
+// رنگ آب: نزدیک افق روشن‌تر (بازتاب آسمان)، جلو تیره
+function oceanWaterColor(d, dark) {
+    const k = dark ? 0.55 : 1;
+    const r = oceanLerp(34, 4, Math.pow(d, 0.7)) * k;
+    const g = oceanLerp(78, 14, Math.pow(d, 0.7)) * k;
+    const b = oceanLerp(118, 32, Math.pow(d, 0.7)) * k;
+    return 'rgb(' + Math.round(r) + ',' + Math.round(g) + ',' + Math.round(b) + ')';
+}
+
+function oceanDraw() {
+    if (!oceanCtx || !oceanSky) return;
+    const c = oceanCtx;
+    const W = oceanW;
+    const H = oceanH;
+    const t = oceanElapsed;
+    const hzY = H * OCEAN_HORIZON;
+    const moonX = W * oceanMoonX();
+    const px = Math.max(1, W / 900);   // ضخامت خط‌ها متناسب با اندازه‌ی بوم
+
+    // ---- آسمان ----
+    c.globalAlpha = 1;
+    c.fillStyle = '#050a18';
+    c.fillRect(0, 0, W, H);
+    c.drawImage(oceanSky, 0, 0);
+
+    for (let i = 0; i < oceanTwinkle.length; i++) {
+        const st = oceanTwinkle[i];
+        const a = 0.15 + 0.6 * Math.pow(0.5 + 0.5 * Math.sin(t * st.sp + st.ph), 2);
+        c.fillStyle = 'rgba(235,242,255,' + a.toFixed(3) + ')';
+        c.fillRect(st.x, st.y, st.z, st.z);
+    }
+
+    for (let i = 0; i < oceanClouds.length; i++) {
+        const cl = oceanClouds[i];
+        const x = ((cl.x + cl.v * t / 10) % 1.4) * (W * 1.4) - cl.w;
+        c.globalAlpha = cl.a * 0.55;
+        c.drawImage(oceanSprites.cloud, x, cl.y - cl.h / 2, cl.w, cl.h);
+    }
+    c.globalAlpha = 1;
+
+    // ---- آب ----
+    c.fillStyle = oceanWaterColor(0, false);
+    c.fillRect(0, hzY, W, H - hzY);
+
+    // درخشش بازتاب ماه روی آب (ستونی نرم)
+    c.save();
+    c.beginPath();
+    c.rect(0, hzY, W, H - hzY);
+    c.clip();
+    c.globalAlpha = 0.55;
+    const gw = W * 0.34;
+    c.drawImage(oceanSprites.glow, moonX - gw / 2, hzY - (H - hzY) * 0.15, gw, (H - hzY) * 1.0);
+    c.restore();
+    c.globalAlpha = 1;
+
+    const step = 4;
+    for (let i = 0; i < OCEAN_LAYERS; i++) {
+        const d = i / (OCEAN_LAYERS - 1);
+        const base = hzY + (H * 0.93 - hzY) * Math.pow(d, 1.75);
+        const amp = H * (0.0012 + 0.014 * Math.pow(d, 1.3));
+        const lam = W * (0.1 + 0.42 * d);
+        const dir = i % 2 ? -1 : 1;
+        const sp = (0.28 + 0.55 * d) * dir;
+        const ph = i * 1.7;
+        const k1 = Math.PI * 2 / lam;
+        const k2 = k1 / 0.47;
+
+        // مسیر موج
+        const next = hzY + (H * 0.93 - hzY) * Math.pow(Math.min(1, (i + 1) / (OCEAN_LAYERS - 1)), 1.75);
+        c.beginPath();
+        c.moveTo(0, H + 2);
+        let prevY = 0;
+        for (let x = 0; x <= W + step; x += step) {
+            const y = base + amp * (Math.sin(x * k1 + t * sp + ph) + 0.45 * Math.sin(x * k2 - t * sp * 1.35 + ph * 2.1));
+            c.lineTo(x, y);
+            prevY = y;
+        }
+        c.lineTo(W + step, H + 2);
+        c.closePath();
+        const fg = c.createLinearGradient(0, base - amp, 0, Math.max(next, base + amp * 6));
+        fg.addColorStop(0, oceanWaterColor(d, false));
+        fg.addColorStop(1, oceanWaterColor(Math.min(1, d + 1 / (OCEAN_LAYERS - 1)), true));
+        c.fillStyle = fg;
+        c.fill();
+
+        // تاج موج که ماه روشنش می‌کند
+        c.beginPath();
+        for (let x = 0; x <= W + step; x += step) {
+            const y = base + amp * (Math.sin(x * k1 + t * sp + ph) + 0.45 * Math.sin(x * k2 - t * sp * 1.35 + ph * 2.1));
+            if (x === 0) c.moveTo(x, y); else c.lineTo(x, y);
+        }
+        c.strokeStyle = oceanMoonGrad;
+        c.globalAlpha = 0.06 + 0.22 * d;
+        c.lineWidth = px * (0.7 + 1.1 * d);
+        c.stroke();
+
+        // کف نرم روی تاج‌های بلند لایه‌های نزدیک
+        if (d >= 0.4) {
+            c.fillStyle = 'rgb(205,225,250)';
+            for (let x = 0; x <= W; x += step * 4) {
+                const crest = Math.sin(x * k1 + t * sp + ph);
+                if (crest < 0.86) continue;
+                const jitter = Math.sin(x * 12.9898 + i * 78.233) * 0.5 + 0.5;
+                const y = base + amp * (crest + 0.45 * Math.sin(x * k2 - t * sp * 1.35 + ph * 2.1));
+                c.globalAlpha = (crest - 0.86) / 0.14 * (0.12 + 0.2 * d) * (0.4 + jitter);
+                const fw = (3 + 7 * d) * (0.5 + jitter) * px;
+                c.fillRect(x - fw / 2, y - px * 0.5, fw, px * (1 + d));
+            }
+        }
+        c.globalAlpha = 1;
+    }
+
+    // ---- درخشش‌های ماه ----
+    c.fillStyle = 'rgb(232,242,255)';
+    const waterH = H * 0.93 - hzY;
+    for (let i = 0; i < oceanGlints.length; i++) {
+        const g = oceanGlints[i];
+        const pulse = Math.pow(0.5 + 0.5 * Math.sin(t * g.sp + g.ph), 2);
+        const a = g.a * pulse * (1 - 0.45 * g.u);
+        if (a < 0.02) continue;
+        const y = hzY + waterH * g.u + Math.sin(t * 0.5 + g.ph) * px * (0.4 + g.u * 1.6);
+        const x = moonX + W * (g.dx + g.dr * Math.sin(t * 0.3 + g.ph) * 3);
+        const gw2 = W * g.w;
+        c.globalAlpha = a;
+        c.fillRect(x - gw2 / 2, y, gw2, px * (0.8 + 1.8 * g.u));
+    }
+    c.globalAlpha = 1;
+
+    // ---- مه‌ی افق ----
+    const hg = c.createLinearGradient(0, hzY - H * 0.05, 0, hzY + H * 0.05);
+    hg.addColorStop(0, 'rgba(120,165,215,0)');
+    hg.addColorStop(0.5, 'rgba(140,180,225,0.2)');
+    hg.addColorStop(1, 'rgba(120,165,215,0)');
+    c.fillStyle = hg;
+    c.fillRect(0, hzY - H * 0.05, W, H * 0.1);
+}
+
+function oceanFrame(ts) {
+    if (!oceanActive) return;
+    oceanRaf = requestAnimationFrame(oceanFrame);
+    if (!oceanLastTs) oceanLastTs = ts;
+    const dt = ts - oceanLastTs;
+    if (dt < OCEAN_FRAME_MS) return;
+    oceanLastTs = ts;
+    oceanElapsed += Math.min(dt, 100) / 1000;
+    oceanDraw();
+}
+
+function oceanReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function startOcean() {
+    if (!oceanCanvas) return;
+    oceanActive = true;
+    oceanCanvas.hidden = false;
+    backgroundImage.style.visibility = 'hidden';
+    oceanResize();
+    oceanDraw();
+    cancelAnimationFrame(oceanRaf);
+    oceanLastTs = 0;
+    // با «کاهش حرکت» فقط یک فریم ثابت رسم می‌شود
+    if (!oceanReducedMotion() && !document.hidden) {
+        oceanRaf = requestAnimationFrame(oceanFrame);
+    }
+}
+
+function stopOcean() {
+    oceanActive = false;
+    cancelAnimationFrame(oceanRaf);
+    if (oceanCanvas) oceanCanvas.hidden = true;
+}
+
+window.addEventListener('resize', () => {
+    if (!oceanActive) return;
+    oceanResize();
+    oceanDraw();
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (!oceanActive) return;
+    cancelAnimationFrame(oceanRaf);
+    if (!document.hidden && !oceanReducedMotion()) {
+        oceanLastTs = 0;
+        oceanRaf = requestAnimationFrame(oceanFrame);
+    }
+});
+
+// ============================================
 // توابع مدیریت پخش صدا
 // ============================================
 
@@ -1522,11 +1873,14 @@ function applyBgMode(mode) {
     // اول هر دو را متوقف می‌کنیم، بعد فقط حالت انتخاب‌شده را روشن می‌کنیم
     stopKaleidoscope();
     stopGalaxy();
+    stopOcean();
     if (KALEIDO_MODES.includes(bgMode)) {
         kaleidoShards = bgMode === 'kaleidoscope';
         startKaleidoscope();
     } else if (bgMode === 'galaxy') {
         startGalaxy();
+    } else if (bgMode === 'ocean') {
+        startOcean();
     }
 }
 
