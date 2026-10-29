@@ -1301,10 +1301,10 @@ document.addEventListener('visibilitychange', () => {
 
 // ============================================
 // پس‌زمینه‌ی اقیانوس: دریای آرام در شب مهتابی
-// آسمان ستاره‌دار، ماه، ابرهای نازک، موج‌های لایه‌ای و بازتاب ماه روی آب
+// اصلی با WebGL (سطح آب واقعی با بازتاب ماه)؛ اگر WebGL نبود، نسخه‌ی ساده‌ی Canvas 2D
 // ============================================
 
-const oceanCanvas = document.getElementById('oceanCanvas');
+let oceanCanvas = document.getElementById('oceanCanvas');
 const OCEAN_FRAME_MS = 1000 / 30;
 const OCEAN_HORIZON = 0.4;      // ارتفاع افق نسبت به صفحه
 const OCEAN_LAYERS = 12;        // تعداد لایه‌های موج
@@ -1327,6 +1327,257 @@ let oceanActive = false;
 function oceanMoonX() {
     return oceanW < oceanH ? 0.62 : 0.7;
 }
+
+// ---------- نسخه‌ی WebGL (اصلی) ----------
+// هر پیکسل آب: برخورد پرتو دوربین با سطح دریا، نرمال از جمع موج‌های تیز (exp(sin))،
+// سپس بازتاب آسمان و ماه با ضریب فرنل. مسیر نور ماه خودش از زاویه‌ی موج‌ها درمی‌آید.
+const OCEAN_FOCAL = 1.4;
+const OCEAN_GL_PIXELS = 650000;   // سقف تعداد پیکسل بوم (برای گرم نشدن گوشی)
+let oceanMode = '';               // '' | 'gl' | '2d'
+let oceanGL = null;
+
+const OCEAN_VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
+const OCEAN_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform vec2 uRes;
+uniform float uTime;
+uniform vec3 uMoon;
+uniform float uMoonR;
+uniform float uHz;
+uniform float uFocal;
+
+const float CAM_H = 4.0;
+const float WAVE_H = 0.6;
+const float DRAG = 0.38;
+const vec3 SKY_HZ = vec3(0.16, 0.31, 0.47);
+const vec3 SKY_MID = vec3(0.035, 0.075, 0.18);
+const vec3 SKY_TOP = vec3(0.010, 0.022, 0.055);
+const vec3 DEEP = vec3(0.004, 0.014, 0.028);
+const vec3 MOON = vec3(0.93, 0.95, 1.0);
+
+float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 4; i++) {
+        v += a * noise(p);
+        p = p * 2.03 + vec2(1.7, 9.2);
+        a *= 0.5;
+    }
+    return v;
+}
+
+// ارتفاع آب (۰ تا ۱): موج‌هایی با جهت‌های مختلف که هر کدام موقعیت موج بعدی را کمی جابه‌جا می‌کند
+float waves(vec2 p, float iters) {
+    float iter = 0.0;
+    float freq = 1.0;
+    float tm = 1.0;
+    float w = 1.0;
+    float sv = 0.0;
+    float sw = 0.0;
+    float t = uTime * 0.8;
+    for (int i = 0; i < 24; i++) {
+        if (float(i) >= iters) break;
+        vec2 d = vec2(sin(iter), cos(iter));
+        float x = dot(d, p) * freq + t * tm;
+        float wv = exp(sin(x) - 1.0);
+        float dx = wv * cos(x);
+        p -= d * dx * w * DRAG;
+        sv += wv * w;
+        sw += w;
+        w *= 0.82;
+        freq *= 1.18;
+        tm *= 1.07;
+        iter += 1232.399963;
+    }
+    return sv / sw;
+}
+
+vec3 skyGrad(float y) {
+    y = max(y, 0.0);
+    vec3 c = mix(SKY_TOP, SKY_MID, exp(-y * 6.0));
+    return mix(c, SKY_HZ, exp(-y * 22.0));
+}
+
+float moonDist(vec3 d) {
+    return sqrt(max(0.0, 2.0 * (1.0 - dot(d, uMoon))));
+}
+
+// قرص و هاله‌ی ماه؛ bright شدت قرص است (در بازتاب بیشتر، تا درخشش‌ها دیده شوند)
+// soft لبه‌ی قرص را نرم می‌کند تا درخشش‌های روی آب لبه‌ی پیکسلی نداشته باشند
+vec3 moonLight(vec3 d, float bright, float soft) {
+    float a = moonDist(d);
+    float disc = smoothstep(uMoonR * (1.0 + soft), uMoonR * (0.9 - soft), a);
+    float halo = 0.35 * exp(-a / (uMoonR * 1.6)) + 0.10 * exp(-a / (uMoonR * 7.0));
+    return MOON * (halo + disc * bright);
+}
+
+void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+    vec3 dir = normalize(vec3(uv.x, uv.y - uHz, uFocal));
+    vec3 col;
+    if (dir.y > 0.0) {
+        float a = moonDist(dir);
+        col = skyGrad(dir.y);
+        // ستاره‌ها (کم‌سوتر نزدیک افق و ماه)
+        float h = hash(floor(gl_FragCoord.xy));
+        float star = step(0.9986, h) * (0.55 + 0.45 * sin(uTime * (0.8 + h * 2.0) + h * 900.0));
+        star *= smoothstep(0.02, 0.12, dir.y) * smoothstep(uMoonR * 3.0, uMoonR * 10.0, a);
+        col += vec3(0.85, 0.9, 1.0) * star;
+        // ماه، با کمی لک روی قرص
+        vec2 mp = (dir.xy - uMoon.xy) / uMoonR;
+        float mottle = 0.9 + 0.1 * noise(mp * 2.5 + 3.0);
+        float disc = smoothstep(uMoonR, uMoonR * 0.9, a);
+        col += moonLight(dir, 0.0, 0.0) + MOON * disc * 3.0 * mottle;
+        // ابرهای نازکِ کشیده که آرام رد می‌شوند و نور ماه رویشان می‌افتد
+        vec2 cp = dir.xz / (dir.y + 0.04);
+        cp = cp * vec2(0.18, 0.5) + vec2(uTime * 0.012, 0.0);
+        float cl = smoothstep(0.45, 0.8, fbm(cp)) * smoothstep(0.0, 0.08, dir.y);
+        vec3 cloudCol = mix(vec3(0.06, 0.09, 0.16), vec3(0.42, 0.49, 0.62), exp(-a / (uMoonR * 8.0)));
+        col = mix(col, cloudCol, cl * 0.5);
+    } else {
+        float t = min(CAM_H / -dir.y, 3000.0);
+        vec2 p = dir.xz * t;
+        // دورتر = جزئیات کمتر (هم سریع‌تر، هم بدون سوسوی نویز)
+        float iters = floor(mix(24.0, 8.0, clamp(t / 150.0, 0.0, 1.0)));
+        float e = 0.01 + t * 0.003;
+        float h0 = waves(p, iters);
+        float hx = waves(p + vec2(e, 0.0), iters);
+        float hz = waves(p + vec2(0.0, e), iters);
+        vec3 N = normalize(vec3((h0 - hx) * WAVE_H, e, (h0 - hz) * WAVE_H));
+        N = normalize(mix(N, vec3(0.0, 1.0, 0.0), smoothstep(40.0, 400.0, t) * 0.85));
+        vec3 R = reflect(dir, N);
+        R.y = abs(R.y);
+        float fres = 0.02 + 0.98 * pow(1.0 - max(dot(N, -dir), 0.0), 5.0);
+        vec3 refl = skyGrad(R.y) + moonLight(R, 16.0, 0.45);
+        vec3 water = DEEP + vec3(0.015, 0.04, 0.05) * pow(h0, 3.0);
+        col = mix(water, refl, fres);
+        // مه افق
+        col = mix(col, SKY_HZ * 0.85, smoothstep(60.0, 700.0, t) * 0.7);
+    }
+    col = 1.0 - exp(-col * 1.15);
+    gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+function oceanInitGL() {
+    let gl = null;
+    try {
+        const opts = { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' };
+        gl = oceanCanvas.getContext('webgl', opts) || oceanCanvas.getContext('experimental-webgl', opts);
+    } catch (err) {
+        gl = null;
+    }
+    if (!gl) return null;
+    const compile = (type, src) => {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+            console.warn('ocean shader:', gl.getShaderInfoLog(s));
+            return null;
+        }
+        return s;
+    };
+    const vs = compile(gl.VERTEX_SHADER, OCEAN_VERT);
+    const fs = compile(gl.FRAGMENT_SHADER, OCEAN_FRAG);
+    if (!vs || !fs) return null;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const u = (n) => gl.getUniformLocation(prog, n);
+    return { gl, uRes: u('uRes'), uTime: u('uTime'), uMoon: u('uMoon'), uMoonR: u('uMoonR'), uHz: u('uHz'), uFocal: u('uFocal') };
+}
+
+// اگر WebGL ساخته شد ولی شیدر خطا داد، بوم دیگر 2D نمی‌گیرد؛ یک بوم تازه جایش می‌گذاریم
+function oceanFreshCanvas() {
+    const fresh = oceanCanvas.cloneNode(false);
+    oceanCanvas.replaceWith(fresh);
+    oceanCanvas = fresh;
+}
+
+function oceanResize() {
+    if (!oceanCanvas) return;
+    if (!oceanMode) {
+        oceanGL = oceanInitGL();
+        if (oceanGL) {
+            oceanMode = 'gl';
+            oceanCanvas.addEventListener('webglcontextlost', (e) => {
+                e.preventDefault();
+                cancelAnimationFrame(oceanRaf);
+            });
+            oceanCanvas.addEventListener('webglcontextrestored', () => {
+                oceanGL = oceanInitGL();
+                if (!oceanGL) return;
+                if (oceanActive) startOcean();
+            });
+        } else {
+            oceanMode = '2d';
+            oceanFreshCanvas();
+        }
+    }
+    if (oceanMode === '2d') {
+        oceanResize2D();
+        return;
+    }
+    const cssW = window.innerWidth;
+    const cssH = window.innerHeight;
+    const scale = Math.min(0.75, Math.sqrt(OCEAN_GL_PIXELS / Math.max(1, cssW * cssH)));
+    oceanW = Math.max(2, Math.round(cssW * scale));
+    oceanH = Math.max(2, Math.round(cssH * scale));
+    oceanCanvas.width = oceanW;
+    oceanCanvas.height = oceanH;
+}
+
+function oceanDraw() {
+    if (oceanMode === '2d') {
+        oceanDraw2D();
+        return;
+    }
+    if (!oceanGL) return;
+    const o = oceanGL;
+    const gl = o.gl;
+    const hz = 0.5 - OCEAN_HORIZON;   // افق در مختصات uv
+    const mx = (oceanMoonX() - 0.5) * oceanW / oceanH;
+    const my = 0.5 - OCEAN_MOON_Y - hz;
+    const len = Math.hypot(mx, my, OCEAN_FOCAL);
+    gl.viewport(0, 0, oceanW, oceanH);
+    gl.uniform2f(o.uRes, oceanW, oceanH);
+    gl.uniform1f(o.uTime, 20 + (oceanElapsed % 10000));
+    gl.uniform3f(o.uMoon, mx / len, my / len, OCEAN_FOCAL / len);
+    gl.uniform1f(o.uMoonR, 0.05 * Math.min(oceanW, oceanH) / oceanH / OCEAN_FOCAL);
+    gl.uniform1f(o.uHz, hz);
+    gl.uniform1f(o.uFocal, OCEAN_FOCAL);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// ---------- نسخه‌ی Canvas 2D (پشتیبان، وقتی WebGL نیست) ----------
 
 function oceanLerp(a, b, t) {
     return a + (b - a) * t;
@@ -1448,7 +1699,7 @@ function oceanBuild() {
     oceanMoonGrad.addColorStop(1, 'rgba(190,215,255,0)');
 }
 
-function oceanResize() {
+function oceanResize2D() {
     if (!oceanCanvas) return;
     const scale = 0.75;
     oceanW = Math.max(2, Math.round(window.innerWidth * scale));
@@ -1468,7 +1719,7 @@ function oceanWaterColor(d, dark) {
     return 'rgb(' + Math.round(r) + ',' + Math.round(g) + ',' + Math.round(b) + ')';
 }
 
-function oceanDraw() {
+function oceanDraw2D() {
     if (!oceanCtx || !oceanSky) return;
     const c = oceanCtx;
     const W = oceanW;
