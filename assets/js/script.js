@@ -195,6 +195,10 @@ const translations = {
         // What's new + updates
         whatsNewTitle: "What's new",
         whatsNewTag: 'New',
+        wnBlogTitle: 'Calm blog',
+        wnBlogBody: 'Ready-made meditations (like 10 minutes of ocean sounds) and short guides to meditation and breathing, each with a button that starts the session here.',
+        wnBlogLink: 'Open the blog',
+        sessionDoneBlog: 'More meditations on the blog',
         wnKaleidoTitle: 'Kaleidoscope background',
         wnKaleidoBody: 'You can now use a slow, moving kaleidoscope as your background instead of an image. In Settings, set Background Mode to Kaleidoscope.',
         wn432Title: '432 Hz music',
@@ -338,6 +342,10 @@ const translations = {
         // تازه‌ها و به‌روزرسانی
         whatsNewTitle: 'تازه‌ها',
         whatsNewTag: 'جدید',
+        wnBlogTitle: 'بلاگ Calm',
+        wnBlogBody: 'مدیتیشن‌های آماده (مثل ۱۰ دقیقه صدای اقیانوس) و راهنماهای کوتاه درباره‌ی مدیتیشن و تنفس، هرکدام با دکمه‌ای که جلسه را همین‌جا شروع می‌کند.',
+        wnBlogLink: 'باز کردن بلاگ',
+        sessionDoneBlog: 'مدیتیشن‌های بیشتر در بلاگ',
         wnKaleidoTitle: 'پس‌زمینه‌ی زیبابین',
         wnKaleidoBody: 'حالا می‌توانید به‌جای تصویر، یک زیبابین (کالیدوسکوپ) آرام و متحرک را پس‌زمینه کنید. در تنظیمات، «حالت پس‌زمینه» را روی «زیبابین» بگذارید.',
         wn432Title: 'موسیقی ۴۳۲ هرتز',
@@ -3169,6 +3177,10 @@ const sessionBar = document.getElementById('sessionBar');
 const sessionTimeEl = document.getElementById('sessionTime');
 const sessionEndBtn = document.getElementById('sessionEndBtn');
 const sessionDoneEl = document.getElementById('sessionDone');
+const sessionDoneBlogEl = document.getElementById('sessionDoneBlog');
+const syncBlogLinks = () => { if (sessionDoneBlogEl) sessionDoneBlogEl.href = blogUrl(); };
+document.addEventListener('calm:languagechange', syncBlogLinks);
+if (sessionDoneBlogEl) sessionDoneBlogEl.addEventListener('click', () => track('blog_open', { from: 'session_done' }));
 const sessionStatusEl = document.getElementById('sessionStatus');
 const sessionSky = document.getElementById('sessionSky');
 const sessionVolumeWrap = document.getElementById('sessionVolume');
@@ -3675,9 +3687,10 @@ sessionEndBtn.addEventListener('click', () => finishSession(false));
 // پیام کوتاه پایان مدیتیشن
 let sessionDoneTimeoutId = null;
 function showSessionDone() {
+    syncBlogLinks();
     sessionDoneEl.hidden = false;
     clearTimeout(sessionDoneTimeoutId);
-    sessionDoneTimeoutId = setTimeout(() => { sessionDoneEl.hidden = true; }, 10000);
+    sessionDoneTimeoutId = setTimeout(() => { sessionDoneEl.hidden = true; }, 15000);
 }
 
 // ---------- پنل مدیتیشن ----------
@@ -4260,7 +4273,11 @@ renderBreathPanel();
 // - until: (اختیاری) تاریخ YYYY-MM-DD؛ بعد از آن نقطه‌ی روی آیکون دیگر نشان داده نمی‌شود
 // بازدیدکننده‌ی تازه‌وارد همه‌چیز را «تازه» می‌بیند، پس برایش هیچ نشانی گذاشته نمی‌شود.
 
+// آدرس بلاگ به زبان فعلی (صفحه‌ی بلاگ در تب جدید باز می‌شود تا جلسه‌ی در حال اجرا قطع نشود)
+const blogUrl = () => (currentLang === 'en' ? '/en/blog/' : '/blog/');
+
 const WHATS_NEW = [
+    { id: 4, titleKey: 'wnBlogTitle', bodyKey: 'wnBlogBody', linkKey: 'wnBlogLink', until: '2027-01-31' },
     { id: 3, titleKey: 'wnKaleidoTitle', bodyKey: 'wnKaleidoBody', badge: 'settingsIcon', until: '2027-01-31' },
     { id: 2, titleKey: 'wn432Title', bodyKey: 'wn432Body', badge: 'bgSoundsIcon', until: '2026-12-31' },
     { id: 1, titleKey: 'wnMeditationTitle', bodyKey: 'wnMeditationBody', badge: 'meditationIcon', until: '2026-12-31' }
@@ -4349,6 +4366,16 @@ const whatsNew = (function setupWhatsNew() {
             p.className = 'whatsnew-item-body';
             p.textContent = t[item.bodyKey];
             li.append(h, p);
+            if (item.linkKey) {
+                const a = document.createElement('a');
+                a.className = 'whatsnew-link';
+                a.href = blogUrl();
+                a.target = '_blank';
+                a.rel = 'noopener';
+                a.textContent = t[item.linkKey];
+                a.addEventListener('click', () => track('blog_open', { from: 'whats_new' }));
+                li.appendChild(a);
+            }
             list.appendChild(li);
         });
     }

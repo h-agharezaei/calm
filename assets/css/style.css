@@ -2163,6 +2163,7 @@ body:has(#breathStage:not([hidden])) .donate-fab {
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
+    width: max-content;
     max-width: 90%;
     padding: 12px 24px;
     font-size: 15px;
@@ -2172,6 +2173,29 @@ body:has(#breathStage:not([hidden])) .donate-fab {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border-radius: 30px;
+}
+
+.session-toast-link {
+    display: block;
+    margin-top: 2px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.session-toast-link:hover,
+.session-toast-link:focus-visible {
+    color: white;
+}
+
+.whatsnew-link {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #667eea;
+    text-underline-offset: 3px;
 }
 
 @media (max-width: 480px) {
