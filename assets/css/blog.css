@@ -133,6 +133,10 @@ html[lang="en"] .lang-switch { font-family: 'Estedad', sans-serif; }
 .prose li::marker { color: var(--muted); }
 .prose blockquote { margin: 20px 0; padding: 12px 18px; border-inline-start: 4px solid var(--accent); background: var(--surface); border-radius: 0 12px 12px 0; color: var(--ink-soft); }
 [dir="rtl"] .prose blockquote { border-radius: 12px 0 0 12px; }
+.prose figure { margin: 24px 0; }
+.prose figure picture { display: block; }
+.prose figure img { display: block; width: 100%; height: auto; border-radius: var(--radius); background: var(--night); }
+.prose figcaption { margin-top: 8px; font-size: 14px; line-height: 1.7; color: var(--muted); text-align: center; }
 .prose blockquote p { margin: 0; }
 .prose strong { font-weight: 700; }
 
