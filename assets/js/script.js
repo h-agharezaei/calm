@@ -104,6 +104,7 @@ const translations = {
         bgModeKaleidoscopeSoft: 'Soft kaleidoscope',
         bgModeGalaxy: 'Galaxy',
         bgModeOcean: 'Ocean',
+        bgModeMerger: 'Colliding galaxies',
         selectImage: 'Select Image:',
         imageChangeInterval: 'Image Change Interval (seconds):',
         updateBgInterval: 'Update',
@@ -251,6 +252,7 @@ const translations = {
         bgModeKaleidoscopeSoft: 'زیبابین نرم',
         bgModeGalaxy: 'کهکشان',
         bgModeOcean: 'اقیانوس',
+        bgModeMerger: 'برخورد کهکشان‌ها',
         selectImage: 'انتخاب تصویر:',
         imageChangeInterval: 'زمان تغییر تصویر (ثانیه):',
         updateBgInterval: 'تغییر زمان',
@@ -554,9 +556,9 @@ function imageUrl(name) {
 let currentImageIndex = Math.floor(Math.random() * images.length); // شروع با عکس تصادفی
 let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
-let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope-soft' | 'galaxy' | 'ocean'
+let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope-soft' | 'galaxy' | 'ocean' | 'merger'
 const KALEIDO_MODES = ['kaleidoscope', 'kaleidoscope-soft']; // زیبابین نرم = همان، بدون مثلث‌ها
-const CANVAS_MODES = KALEIDO_MODES.concat('galaxy', 'ocean'); // حالت‌هایی که تصویر ندارند
+const CANVAS_MODES = KALEIDO_MODES.concat('galaxy', 'ocean', 'merger'); // حالت‌هایی که تصویر ندارند
 let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
 
 // ============================================
@@ -664,6 +666,7 @@ function updateAllTexts() {
         bgModeSelect.options[3].text = t.bgModeKaleidoscopeSoft;
         bgModeSelect.options[4].text = t.bgModeGalaxy;
         bgModeSelect.options[5].text = t.bgModeOcean;
+        bgModeSelect.options[6].text = t.bgModeMerger;
     }
 }
 
@@ -2063,6 +2066,818 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ============================================
+// پس‌زمینه‌ی «برخورد کهکشان‌ها»: شبیه‌سازی گرانشی برخورد دو کهکشان مارپیچی
+// مدل «سه‌جسمی محدود» تومره و تومره (۱۹۷۲)، همان مدلی که دم‌های کهکشان‌های آنتن را توضیح داد:
+// دو هسته‌ی سنگین هم را جذب می‌کنند و با اصطکاک دینامیکی آخر یکی می‌شوند؛ ستاره‌ها و گاز
+// فقط از این دو هسته نیرو می‌گیرند، پس دم‌ها و پل‌ها خودشان شکل می‌گیرند.
+// هر جا گاز فشرده شود، خوشه‌های صورتی ستاره‌زایی روشن می‌شوند.
+// رسم با WebGL: جمع نور ستاره‌ها، درخشش (bloom)، جذب نور توسط غبار و نگاشت تُن.
+// بدون WebGL: نقطه‌ها با Canvas 2D.
+// ============================================
+
+let mergerCanvas = document.getElementById('mergerCanvas');
+const MERGER_FRAME_MS = 1000 / 30;
+const MERGER_GL_PIXELS = 650000;
+const MERGER_SPEED = 0.045;       // واحد زمان شبیه‌سازی در هر ثانیه (کل برخورد ≈ ۱۴ دقیقه)
+const MERGER_T_START = 1;
+const MERGER_T_END = 40;
+const MERGER_T_STATIC = 15;       // لحظه‌ای شبیه کهکشان‌های آنتن، برای «کاهش حرکت»
+const MERGER_FADE = 4 * MERGER_SPEED;
+const MERGER_EPS2 = 0.09;         // نرم‌کننده‌ی گرانش هسته‌ها (Plummer، ε = 0.3)
+const MERGER_DISK_R = 1.5;
+const MERGER_DT = 0.01;
+const MERGER_GRID = 40;           // شبکه‌ی سه‌بعدی برای چگالی گاز
+const MERGER_GRID_HALF = 5;
+let mergerMode = '';              // '' | 'gl' | '2d'
+let mergerGL = null;
+let mergerCtx = null;
+let mergerW = 0;
+let mergerH = 0;
+let mergerRaf = 0;
+let mergerLastTs = 0;
+let mergerActive = false;
+let mergerT = 0;
+let mergerN = 0;
+let mergerPos = null;             // Float64Array، N×3
+let mergerVel = null;
+let mergerBuf = null;             // Float32Array، N×7 برای GPU: مکان، روشنایی، شعاع نرم، جهت جریان روی صفحه
+let mergerAttr = null;            // Float32Array، N×8: رنگ نور، غبار، اندازه‌ی ستاره‌ی تیز، تیز است؟، دانه، نوع
+let mergerSmooth = null;          // شعاع لکه‌ی نور هر ذره (واحد جهان)، از روی تراکم اطراف
+let mergerKind = null;            // 0 ستاره، 1 غبار، 2 خوشه‌ی ستاره‌زا
+let mergerCls = null;             // کلاس رنگ برای نسخه‌ی 2D
+let mergerGlow = null;            // روشنایی نرم‌شده‌ی خوشه‌ها
+let mergerBase = null;            // چگالی گاز اطراف هر خوشه در دیسک آرام (پیش از برخورد)
+let mergerCell = null;
+let mergerGrid = null;
+let mergerExpect = 1;             // تعداد گاز مورد انتظار در هر خانه‌ی دیسک آرام
+let mergerCore = new Float64Array(6);
+let mergerCoreV = new Float64Array(6);
+let mergerCam = { az: 0, tilt: 0.7, roll: 0 };
+let mergerStaticDirty = true;
+
+function mergerRand(a, b) { return a + Math.random() * (b - a); }
+function mergerGauss() { return Math.random() + Math.random() + Math.random() - 1.5; }
+function mergerVc(r) { return Math.sqrt(r * r / Math.pow(r * r + MERGER_EPS2, 1.5)); }
+
+function mergerReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+// ساخت دو کهکشان و مدار برخورد
+function mergerSetup() {
+    const small = Math.max(window.innerWidth, window.innerHeight) < 900;
+    const perGal = small ? 6000 : 11000;
+    if (mergerN !== perGal * 2) {
+        mergerN = perGal * 2;
+        mergerPos = new Float64Array(mergerN * 3);
+        mergerVel = new Float64Array(mergerN * 3);
+        mergerBuf = new Float32Array(mergerN * 7);
+        mergerAttr = new Float32Array(mergerN * 8);
+        mergerSmooth = new Float32Array(mergerN);
+        mergerKind = new Uint8Array(mergerN);
+        mergerCls = new Uint8Array(mergerN);
+        mergerGlow = new Float32Array(mergerN);
+        mergerBase = new Float32Array(mergerN);
+        mergerCell = new Int32Array(mergerN);
+        mergerGrid = new Uint16Array(MERGER_GRID * MERGER_GRID * MERGER_GRID);
+    }
+    mergerStaticDirty = true;
+
+    // مدار نسبی کپلری (بیضی e=0.7، کمترین فاصله q)، شروع کمی پیش از نزدیک‌ترین نقطه
+    const q = 1.0, e = 0.7, mu = 2, p = q * (1 + e), f = -2.5;
+    const r = p / (1 + e * Math.cos(f));
+    const k = Math.sqrt(mu / p);
+    const vr = k * e * Math.sin(f), vt = k * (1 + e * Math.cos(f));
+    const rel = [r * Math.cos(f), r * Math.sin(f), 0];
+    const relV = [vr * Math.cos(f) - vt * Math.sin(f), vr * Math.sin(f) + vt * Math.cos(f), 0];
+    for (let a = 0; a < 3; a++) {
+        mergerCore[a] = -rel[a] / 2; mergerCore[3 + a] = rel[a] / 2;
+        mergerCoreV[a] = -relV[a] / 2; mergerCoreV[3 + a] = relV[a] / 2;
+    }
+
+    // دیسک‌ها: هر دو هم‌جهت با مدار (prograde) ولی کج؛ همین دم‌های بلند می‌سازد
+    const incs = [mergerRand(20, 40), mergerRand(55, 75)].map(d => d * Math.PI / 180);
+    const azs = [mergerRand(0, 6.283), mergerRand(0, 6.283)];
+    mergerCam.az = mergerRand(-0.4, 0.4);
+    mergerCam.tilt = mergerRand(0.55, 0.85);
+
+    const gasExp = [];
+    let i = 0;
+    for (let g = 0; g < 2; g++) {
+        const ci = g * 3;
+        const n = [Math.sin(incs[g]) * Math.cos(azs[g]), Math.sin(incs[g]) * Math.sin(azs[g]), Math.cos(incs[g])];
+        // u عمود بر n، w = n × u
+        let u = Math.abs(n[2]) < 0.9 ? [n[1], -n[0], 0] : [0, n[2], -n[1]];
+        const ul = Math.hypot(u[0], u[1], u[2]);
+        u = u.map(x => x / ul);
+        const w = [n[1] * u[2] - n[2] * u[1], n[2] * u[0] - n[0] * u[2], n[0] * u[1] - n[1] * u[0]];
+        const armPhase = Math.random() * 6.283;
+        let gasCount = 0;
+        for (let j = 0; j < perGal; j++, i++) {
+            const roll = Math.random();
+            const o = i * 3, oa = i * 8;
+            let kind = 0, rgb, dust = 0, size, soft = 0, cls = 0;
+            if (roll < 0.2) {
+                // برآمدگی مرکزی: ستاره‌های پیر و گرم روی مدارهای تصادفی
+                const rr = 0.02 + Math.pow(Math.random(), 1.6) * 0.45;   // برآمدگی با لبه‌ی نرم
+                let dx = mergerGauss(), dy = mergerGauss(), dz = mergerGauss();
+                const dl = Math.hypot(dx, dy, dz) || 1;
+                dx /= dl; dy /= dl; dz /= dl;
+                let tx = mergerGauss(), ty = mergerGauss(), tz = mergerGauss();
+                const dot = tx * dx + ty * dy + tz * dz;
+                tx -= dot * dx; ty -= dot * dy; tz -= dot * dz;
+                const tl = Math.hypot(tx, ty, tz) || 1;
+                const v = mergerVc(rr);
+                mergerPos[o] = mergerCore[ci] + dx * rr;
+                mergerPos[o + 1] = mergerCore[ci + 1] + dy * rr;
+                mergerPos[o + 2] = mergerCore[ci + 2] + dz * rr;
+                mergerVel[o] = mergerCoreV[ci] + tx / tl * v;
+                mergerVel[o + 1] = mergerCoreV[ci + 1] + ty / tl * v;
+                mergerVel[o + 2] = mergerCoreV[ci + 2] + tz / tl * v;
+                rgb = [0.4, 0.29, 0.18];          // برآمدگی متراکم است؛ نور هر ستاره کمتر
+                size = 1.4 + Math.random() * 0.6;
+                soft = Math.random() < 0.06 ? 1 : 0;
+                cls = 0;
+            } else {
+                const gas = roll >= 0.72;
+                // نیمی نمایی (متمرکز) و نیمی یکنواخت تا لبه، تا دم‌ها ستاره‌ی کافی داشته باشند
+                let rr;
+                if (Math.random() < 0.5) { do { rr = 0.1 - Math.log(1 - Math.random()) * 0.35; } while (rr > MERGER_DISK_R); }
+                else rr = Math.sqrt(Math.random()) * MERGER_DISK_R;
+                if (gas && rr < 0.15) rr = 0.15 + Math.random() * 0.4;
+                // بازوهای مارپیچی اولیه برای گاز و ستاره‌های جوان
+                let th = Math.random() * 6.283;
+                if ((gas || rr > 0.4) && Math.random() < 0.6) {
+                    th = armPhase + (Math.random() < 0.5 ? 0 : Math.PI) + Math.log(rr / 0.2) / 0.35 + mergerGauss() * 0.3;
+                }
+                const ct = Math.cos(th), st = Math.sin(th);
+                const z = mergerGauss() * (gas ? 0.012 : 0.025);
+                const v = mergerVc(rr) * (1 + mergerGauss() * 0.02);
+                for (let a = 0; a < 3; a++) {
+                    mergerPos[o + a] = mergerCore[ci + a] + rr * (ct * u[a] + st * w[a]) + n[a] * z;
+                    mergerVel[o + a] = mergerCoreV[ci + a] + v * (-st * u[a] + ct * w[a]);
+                }
+                if (!gas) {
+                    const blue = Math.min(1, Math.max(0, (rr - 0.2) / 0.7));
+                    rgb = [1.0 - 0.4 * blue, 0.85 - 0.08 * blue, 0.66 + 0.34 * blue];
+                    size = 1.1 + Math.random() * 1.2;
+                    soft = Math.random() < 0.3 ? 1 : 0;
+                    cls = blue < 0.33 ? 1 : (blue < 0.66 ? 2 : 3);
+                } else if (Math.random() < 0.3) {
+                    kind = 2;
+                    rgb = [1.0, 0.36, 0.62];
+                    size = 1.8 + Math.random() * 1.2;
+                    soft = 1;
+                    cls = 4;
+                    gasCount++;
+                } else {
+                    kind = 1;
+                    rgb = [0, 0, 0];
+                    dust = 1;
+                    size = 0;
+                    soft = 0;
+                    cls = 5;
+                    gasCount++;
+                }
+            }
+            mergerKind[i] = kind;
+            mergerCls[i] = cls;
+            mergerGlow[i] = 0;
+            mergerAttr[oa] = rgb[0]; mergerAttr[oa + 1] = rgb[1]; mergerAttr[oa + 2] = rgb[2];
+            // soft اینجا یعنی «ستاره‌ی تیز هم رسم شود»
+            mergerAttr[oa + 3] = dust; mergerAttr[oa + 4] = size; mergerAttr[oa + 5] = soft;
+            mergerAttr[oa + 6] = Math.random(); mergerAttr[oa + 7] = kind;
+            mergerSmooth[i] = 0.1;
+        }
+        gasExp.push(gasCount);
+    }
+    // گاز مورد انتظار در هر خانه برای یک دیسک آرام
+    const cell = 2 * MERGER_GRID_HALF / MERGER_GRID;
+    mergerExpect = Math.max(1, (gasExp[0] + gasExp[1]) / 2 * cell * cell / (Math.PI * MERGER_DISK_R * MERGER_DISK_R));
+    mergerT = 0;
+}
+
+// یک گام زمانی (اویلر سیمپلکتیک): اول ستاره‌ها با جای فعلی هسته‌ها، بعد خود هسته‌ها
+function mergerStep(dt) {
+    const c = mergerCore, cv = mergerCoreV;
+    const P = mergerPos, V = mergerVel;
+    const ax = c[0], ay = c[1], az = c[2], bx = c[3], by = c[4], bz = c[5];
+    for (let o = 0, n3 = mergerN * 3; o < n3; o += 3) {
+        const x = P[o], y = P[o + 1], z = P[o + 2];
+        let dx = ax - x, dy = ay - y, dz = az - z;
+        let d2 = dx * dx + dy * dy + dz * dz + MERGER_EPS2;
+        let inv = 1 / (d2 * Math.sqrt(d2));
+        let fx = dx * inv, fy = dy * inv, fz = dz * inv;
+        dx = bx - x; dy = by - y; dz = bz - z;
+        d2 = dx * dx + dy * dy + dz * dz + MERGER_EPS2;
+        inv = 1 / (d2 * Math.sqrt(d2));
+        fx += dx * inv; fy += dy * inv; fz += dz * inv;
+        V[o] += fx * dt; V[o + 1] += fy * dt; V[o + 2] += fz * dt;
+        P[o] += V[o] * dt; P[o + 1] += V[o + 1] * dt; P[o + 2] += V[o + 2] * dt;
+    }
+    // هسته‌ها: گرانش متقابل + اصطکاک دینامیکی وقتی هاله‌ها در هم فرو می‌روند
+    const dx = bx - ax, dy = by - ay, dz = bz - az;
+    const r2 = dx * dx + dy * dy + dz * dz;
+    const d2 = r2 + 0.25;
+    const inv = 1 / (d2 * Math.sqrt(d2));
+    const drag = 0.05 * Math.exp(-Math.sqrt(r2) / 1.6);
+    const rvx = cv[3] - cv[0], rvy = cv[4] - cv[1], rvz = cv[5] - cv[2];
+    cv[0] += (dx * inv + drag * rvx * 0.5) * dt;
+    cv[1] += (dy * inv + drag * rvy * 0.5) * dt;
+    cv[2] += (dz * inv + drag * rvz * 0.5) * dt;
+    cv[3] += (-dx * inv - drag * rvx * 0.5) * dt;
+    cv[4] += (-dy * inv - drag * rvy * 0.5) * dt;
+    cv[5] += (-dz * inv - drag * rvz * 0.5) * dt;
+    for (let a = 0; a < 6; a++) c[a] += cv[a] * dt;
+    mergerT += dt;
+}
+
+function mergerAdvance(simDt) {
+    const steps = Math.max(1, Math.ceil(simDt / MERGER_DT - 1e-6));
+    const dt = simDt / steps;
+    for (let s = 0; s < steps; s++) mergerStep(dt);
+}
+
+// از ابتدا تا زمان t (برای شروع، تکرار حلقه و حالت ثابت)
+function mergerSeek(t) {
+    mergerSetup();
+    mergerUpdateGlow(0, true, true);
+    mergerUpdateRoll(0, true);
+    mergerAdvance(t);
+    mergerUpdateGlow(0, true);
+    mergerUpdateRoll(0, true);
+}
+
+// چگالی گاز در شبکه‌ی سه‌بعدی → روشنایی خوشه‌های ستاره‌زا (آرام عوض می‌شود)
+function mergerUpdateGlow(dtReal, instant, setBase) {
+    const G = MERGER_GRID, H = MERGER_GRID_HALF, sc = G / (2 * H);
+    const grid = mergerGrid, P = mergerPos;
+    grid.fill(0);
+    for (let i = 0; i < mergerN; i++) {
+        const o = i * 3;
+        const gx = Math.floor((P[o] + H) * sc), gy = Math.floor((P[o + 1] + H) * sc), gz = Math.floor((P[o + 2] + H) * sc);
+        if (gx < 0 || gy < 0 || gz < 0 || gx >= G || gy >= G || gz >= G) { mergerCell[i] = -1; continue; }
+        const cell = (gz * G + gy) * G + gx;
+        mergerCell[i] = cell;
+        if (grid[cell] < 65535) grid[cell]++;
+    }
+    const k = instant ? 1 : Math.min(1, dtReal / 2.5);
+    const ks = instant ? 1 : Math.min(1, dtReal / 1.2);
+    const ref = mergerN / 13000;
+    for (let i = 0; i < mergerN; i++) {
+        const cell = mergerCell[i];
+        const count = cell < 0 ? 0 : grid[cell];
+        // شعاع لکه‌ی نور: جای شلوغ کوچک و تیز، جای خلوت بزرگ و کم‌نور (مثل نمایش SPH)
+        let hT = Math.min(0.24, Math.max(0.02, 0.25 * Math.sqrt(6 / Math.max(count, 0.5))));
+        if (mergerKind[i] === 2) hT = Math.min(hT * 0.6, 0.1);
+        else if (mergerKind[i] === 1) hT *= 1.3;
+        mergerSmooth[i] += (hT - mergerSmooth[i]) * ks;
+        if (mergerKind[i] === 0) {
+            // ستاره‌های تنها (ذره‌های پراکنده‌ی دم) کم‌نورترند؛ دم‌های پرستاره روشن می‌مانند
+            const x = Math.min(1, Math.max(0, (count / ref - 1) / 13));
+            mergerGlow[i] += (0.1 + 0.9 * x * (2 - x) - mergerGlow[i]) * ks;
+            continue;
+        }
+        if (mergerKind[i] !== 2) continue;
+        if (setBase) mergerBase[i] = Math.max(count, mergerExpect * 0.5);
+        // فشرده‌تر شدن گاز نسبت به حالت آرام خودش → ستاره‌زایی
+        const ratio = count / mergerBase[i];
+        let target = Math.min(1, Math.max(0, (ratio - 1.3) / 1.7));
+        target = 0.1 * Math.min(1, ratio * ratio) + 0.9 * target * target * (3 - 2 * target);
+        mergerGlow[i] += (target - mergerGlow[i]) * k;
+    }
+}
+
+// دوربین: ردیف‌های ماتریس چرخش (x و y صفحه) + مقیاس
+function mergerCamera() {
+    const portrait = mergerW < mergerH;
+    const ca = Math.cos(mergerCam.az), sa = Math.sin(mergerCam.az);
+    const ct = Math.cos(mergerCam.tilt), stl = Math.sin(mergerCam.tilt);
+    const roll = mergerCam.roll + (portrait ? Math.PI / 2 - 0.25 : 0.3);
+    const cr = Math.cos(roll), sr = Math.sin(roll);
+    // R = Rz(roll) · Rx(tilt) · Rz(az)
+    const a0 = [ca, -sa, 0];
+    const a1 = [sa * ct, ca * ct, -stl];
+    const rx = [cr * a0[0] - sr * a1[0], cr * a0[1] - sr * a1[1], cr * a0[2] - sr * a1[2]];
+    const ry = [sr * a0[0] + cr * a1[0], sr * a0[1] + cr * a1[1], sr * a0[2] + cr * a1[2]];
+    // با جلو رفتن برخورد کمی نزدیک‌تر می‌شویم
+    // با بلند شدن دم‌ها عقب می‌رویم و وقتی دم‌ها کم‌رنگ شدند دوباره نزدیک می‌شویم
+    const ease = (a, b) => { const x = Math.min(1, Math.max(0, (mergerT - a) / (b - a))); return x * x * (3 - 2 * x); };
+    const span = 4.6 + 1.8 * ease(5, 10) - 2.2 * ease(14, 24);   // واحدهایی که در ضلع کوتاه صفحه دیده می‌شود
+    const s = Math.min(mergerW, mergerH) / span;           // پیکسل در هر واحد
+    return { rx, ry, s };
+}
+
+// دوربین آرام می‌چرخد تا خط میان دو هسته کمی مورب در امتداد ضلع بلند صفحه بماند
+function mergerUpdateRoll(dtReal, instant) {
+    const c = mergerCore;
+    const dx = c[3] - c[0], dy = c[4] - c[1], dz = c[5] - c[2];
+    const ca = Math.cos(mergerCam.az), sa = Math.sin(mergerCam.az);
+    const ct = Math.cos(mergerCam.tilt), stl = Math.sin(mergerCam.tilt);
+    const px = ca * dx - sa * dy;
+    const py = sa * ct * dx + ca * ct * dy - stl * dz;
+    const len = Math.hypot(px, py);
+    if (len < 0.8 && !instant) return;           // هسته‌ها خیلی نزدیک‌اند؛ جهت معنایی ندارد
+    let target = -Math.atan2(py, px);
+    let d = target - mergerCam.roll;
+    d = Math.atan2(Math.sin(2 * d), Math.cos(2 * d)) / 2;   // خط جهت ندارد: پیمانه‌ی π
+    mergerCam.roll += instant ? d : d * Math.min(1, dtReal / 60);
+}
+
+function mergerFadeLevel() {
+    const a = Math.min(1, Math.max(0, (mergerT - MERGER_T_START) / MERGER_FADE));
+    const b = Math.min(1, Math.max(0, (MERGER_T_END - mergerT) / MERGER_FADE));
+    return mergerReducedMotion() ? 1 : Math.min(a, b);
+}
+
+// ---------- WebGL ----------
+const MERGER_FS_VERT = 'attribute vec2 p;varying vec2 vUv;void main(){vUv=p*0.5+0.5;gl_Position=vec4(p,0.0,1.0);}';
+const MERGER_PT_VERT = `
+attribute vec4 aPos;    // مکان، روشنایی
+attribute vec3 aDyn;    // شعاع لکه (واحد جهان)، جهت جریان روی صفحه
+attribute vec4 aCol;    // رنگ نور، غبار
+attribute vec4 aSz;     // اندازه‌ی ستاره‌ی تیز، تیز است؟، دانه‌ی تصادفی، نوع
+uniform vec3 uRx;
+uniform vec3 uRy;
+uniform vec2 uScale;
+uniform float uPx;      // پیکسل در هر واحد جهان
+uniform float uStarPx;
+uniform float uPass;    // ۰: نور پخش و غبار، ۱: ستاره‌های تیز
+uniform float uFlux;
+uniform float uDustK;
+uniform float uSharp;
+varying vec4 vCol;
+varying vec2 vDir;
+varying float vE;
+varying float vMode;
+varying float vSeed;
+void main(){
+    gl_Position = vec4(vec2(dot(uRx, aPos.xyz), dot(uRy, aPos.xyz)) * uScale, 0.0, 1.0);
+    vSeed = aSz.z;
+    vec2 dir = aDyn.yz * uScale;
+    float dl = length(dir);
+    vDir = dl > 1e-6 ? dir / dl : vec2(1.0, 0.0);
+    if (uPass > 0.5) {
+        vE = 1.0;
+        vMode = 2.0;
+        if (aSz.y < 0.5) {
+            gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+            gl_PointSize = 1.0;
+            vCol = vec4(0.0);
+            return;
+        }
+        gl_PointSize = aSz.x * uStarPx;
+        vCol = vec4(aCol.rgb * aPos.w * uSharp, 0.0);
+        return;
+    }
+    bool dust = aCol.a > 0.0;
+    float lum = aSz.w > 1.5 ? aPos.w * 10.0 : 1.0;          // خوشه‌ها: روشنایی از فشردگی گاز
+    float ps = clamp(3.2 * aDyn.x * uPx, 1.5, 64.0);
+    float e = dust ? 2.4 : 1.0 + min(0.7, aDyn.x * 3.0);   // کشیدگی در جهت جریان
+    // شار ثابت: روشنایی سطحی به اندازه‌ی لکه و بزرگ‌نمایی بستگی ندارد
+    float k = uPx * uPx * 4.5 * e / (ps * ps);
+    vCol = dust ? vec4(0.0, 0.0, 0.0, aCol.a * uDustK * k) : vec4(aCol.rgb * lum * uFlux * k, 0.0);
+    vE = e;
+    vMode = dust ? 1.0 : 0.0;
+    gl_PointSize = ps;
+}`;
+const MERGER_PT_FRAG = `
+precision mediump float;
+varying vec4 vCol;
+varying vec2 vDir;
+varying float vE;
+varying float vMode;
+varying float vSeed;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p){
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+void main(){
+    vec2 d = gl_PointCoord - 0.5;
+    d.y = -d.y;
+    if (vMode > 1.5) {
+        gl_FragColor = vCol * exp(-dot(d, d) * 14.0);
+        return;
+    }
+    vec2 q = vec2(dot(d, vDir), dot(d, vec2(-vDir.y, vDir.x)));
+    float f = exp(-(q.x * q.x + q.y * q.y * vE * vE) * 14.0);
+    if (vMode > 0.5) {
+        // غبار: رگه‌های رشته‌ای در امتداد جریان
+        float n = noise(q * vec2(5.0, 16.0) + vSeed * 53.0);
+        f *= smoothstep(0.25, 0.85, n) * 1.8;
+    }
+    gl_FragColor = vCol * f;
+}`;
+const MERGER_DOWN_FRAG = `
+precision mediump float;
+uniform sampler2D uTex;
+uniform vec2 uTexel;
+varying vec2 vUv;
+void main(){
+    gl_FragColor = 0.25 * (texture2D(uTex, vUv + uTexel * vec2(-1.0, -1.0)) + texture2D(uTex, vUv + uTexel * vec2(1.0, -1.0))
+                         + texture2D(uTex, vUv + uTexel * vec2(-1.0, 1.0)) + texture2D(uTex, vUv + uTexel * vec2(1.0, 1.0)));
+}`;
+const MERGER_BLUR_FRAG = `
+precision mediump float;
+uniform sampler2D uTex;
+uniform vec2 uDir;
+varying vec2 vUv;
+void main(){
+    vec4 s = texture2D(uTex, vUv) * 0.2270;
+    s += (texture2D(uTex, vUv + uDir * 1.3846) + texture2D(uTex, vUv - uDir * 1.3846)) * 0.3162;
+    s += (texture2D(uTex, vUv + uDir * 3.2308) + texture2D(uTex, vUv - uDir * 3.2308)) * 0.0703;
+    gl_FragColor = s;
+}`;
+const MERGER_COMP_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform sampler2D uA;
+uniform sampler2D uB;
+uniform vec2 uRes;
+uniform float uGain;
+uniform float uFade;
+uniform float uTime;
+varying vec2 vUv;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void main(){
+    vec4 a = texture2D(uA, vUv) * uGain;
+    vec4 b = texture2D(uB, vUv) * uGain;
+    // نور تیز ستاره‌ها + نور پخش‌شده (میلیاردها ستاره‌ی تفکیک‌نشده)
+    vec3 light = a.rgb + b.rgb * 0.4;
+    // غبار نور آبی را بیشتر می‌گیرد → رگه‌های قهوه‌ای
+    float dust = a.a + b.a * 0.3;
+    dust = dust / (1.0 + dust * 0.4);   // غبار خیلی متراکم سیاه مطلق نشود
+    light *= exp(-dust * vec3(1.8, 2.3, 3.0));
+    vec3 col = (1.0 - exp(-pow(light, vec3(0.85)) * 1.7)) * uFade;   // منحنی نرم‌تر تا دم‌های کم‌نور هم دیده شوند
+
+    // آسمان پس‌زمینه: ستاره‌های دور و چند کهکشان کوچک دوردست (ثابت روی صفحه)
+    vec2 sc = gl_FragCoord.xy / uRes.y * 300.0;
+    float sh = hash(floor(sc));
+    float sky = step(0.986, sh) * smoothstep(0.42, 0.0, length(fract(sc) - 0.5)) * (0.2 + 0.6 * fract(sh * 91.7));
+    sky *= 0.8 + 0.2 * sin(uTime * (0.5 + sh) + sh * 30.0);
+    vec2 gc = gl_FragCoord.xy / uRes.y * 14.0;
+    float gh = hash(floor(gc) + 17.0);
+    vec2 gp = fract(gc) - 0.5;
+    float ang = gh * 31.0;
+    gp = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * gp * vec2(1.0, 2.6);
+    float far = step(0.93, gh) * exp(-dot(gp, gp) * 900.0) * 0.35;
+    vec3 bg = vec3(0.012, 0.014, 0.022) + sky * vec3(0.85, 0.9, 1.0) + far * vec3(1.0, 0.7, 0.45);
+    col += bg * (1.0 - clamp(dot(col, vec3(0.33)) * 3.0, 0.0, 1.0));
+
+    vec2 v = vUv - 0.5;
+    col *= 1.0 - 0.5 * dot(v, v);
+    gl_FragColor = vec4(col, 1.0);
+}`;
+
+function mergerProgram(gl, vsrc, fsrc, attrs) {
+    const compile = (type, src) => {
+        const sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+            console.warn('merger shader:', gl.getShaderInfoLog(sh));
+            return null;
+        }
+        return sh;
+    };
+    const vs = compile(gl.VERTEX_SHADER, vsrc);
+    const fs = compile(gl.FRAGMENT_SHADER, fsrc);
+    if (!vs || !fs) return null;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    attrs.forEach((name, idx) => gl.bindAttribLocation(prog, idx, name));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    const u = {};
+    const count = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+    for (let k = 0; k < count; k++) {
+        const info = gl.getActiveUniform(prog, k);
+        u[info.name] = gl.getUniformLocation(prog, info.name);
+    }
+    return { prog, u };
+}
+
+function mergerTarget(o, w, h) {
+    const gl = o.gl;
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, o.type, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, o.filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, o.filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    if (!ok) { gl.deleteTexture(tex); gl.deleteFramebuffer(fb); return null; }
+    return { tex, fb, w, h };
+}
+
+function mergerFreeTargets(o) {
+    ['A', 'B', 'C'].forEach(k => {
+        if (!o[k]) return;
+        o.gl.deleteTexture(o[k].tex);
+        o.gl.deleteFramebuffer(o[k].fb);
+        o[k] = null;
+    });
+}
+
+// اگر بافت نیم‌شناور (HDR) شد، از آن استفاده می‌کنیم؛ وگرنه ۸ بیتی با نور کم‌تر
+function mergerBuildTargets(o) {
+    mergerFreeTargets(o);
+    const gl = o.gl;
+    const bw = Math.max(1, Math.round(mergerW / 4)), bh = Math.max(1, Math.round(mergerH / 4));
+    const tryMake = () => {
+        o.A = mergerTarget(o, mergerW, mergerH);
+        o.B = o.A && mergerTarget(o, bw, bh);
+        o.C = o.B && mergerTarget(o, bw, bh);
+        return !!o.C;
+    };
+    if (o.half) {
+        o.type = o.half.HALF_FLOAT_OES;
+        o.filter = o.halfLinear ? gl.LINEAR : gl.NEAREST;
+        o.gain = 1;
+        if (tryMake()) return true;
+        mergerFreeTargets(o);
+        o.half = null;
+    }
+    o.type = gl.UNSIGNED_BYTE;
+    o.filter = gl.LINEAR;
+    o.gain = 4;
+    return tryMake();
+}
+
+function mergerInitGL() {
+    let gl = null;
+    try {
+        const opts = { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' };
+        gl = mergerCanvas.getContext('webgl', opts) || mergerCanvas.getContext('experimental-webgl', opts);
+    } catch (err) {
+        gl = null;
+    }
+    if (!gl) return null;
+    const pts = mergerProgram(gl, MERGER_PT_VERT, MERGER_PT_FRAG, ['aPos', 'aDyn', 'aCol', 'aSz']);
+    const down = mergerProgram(gl, MERGER_FS_VERT, MERGER_DOWN_FRAG, ['p']);
+    const blur = mergerProgram(gl, MERGER_FS_VERT, MERGER_BLUR_FRAG, ['p']);
+    const comp = mergerProgram(gl, MERGER_FS_VERT, MERGER_COMP_FRAG, ['p']);
+    if (!pts || !down || !blur || !comp) return null;
+    const o = { gl, pts, down, blur, comp, A: null, B: null, C: null };
+    o.half = gl.getExtension('OES_texture_half_float');
+    o.halfLinear = !!gl.getExtension('OES_texture_half_float_linear');
+    gl.getExtension('EXT_color_buffer_half_float');
+    o.tri = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, o.tri);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    o.dyn = gl.createBuffer();
+    o.stat = gl.createBuffer();
+    mergerStaticDirty = true;
+    return o;
+}
+
+function mergerFullscreen(o, prog, target) {
+    const gl = o.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fb : null);
+    gl.viewport(0, 0, target ? target.w : mergerW, target ? target.h : mergerH);
+    gl.useProgram(prog.prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, o.tri);
+    gl.enableVertexAttribArray(0);
+    gl.disableVertexAttribArray(1);
+    gl.disableVertexAttribArray(2);
+    gl.disableVertexAttribArray(3);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+}
+
+function mergerDrawGL() {
+    const o = mergerGL;
+    if (!o || !o.A) return;
+    const gl = o.gl;
+    const cam = mergerCamera();
+
+    // داده‌ی هر فریم: مکان، روشنایی، شعاع لکه و جهت حرکت نسبت به هسته‌ی نزدیک‌تر (روی صفحه)
+    const B = mergerBuf, P = mergerPos, V = mergerVel, c = mergerCore, cv = mergerCoreV;
+    const rx = cam.rx, ry = cam.ry;
+    for (let i = 0; i < mergerN; i++) {
+        const o7 = i * 7, o3 = i * 3;
+        const x = P[o3], y = P[o3 + 1], z = P[o3 + 2];
+        const da = (x - c[0]) ** 2 + (y - c[1]) ** 2 + (z - c[2]) ** 2;
+        const db = (x - c[3]) ** 2 + (y - c[4]) ** 2 + (z - c[5]) ** 2;
+        const ci = da < db ? 0 : 3;
+        const vx = V[o3] - cv[ci], vy = V[o3 + 1] - cv[ci + 1], vz = V[o3 + 2] - cv[ci + 2];
+        B[o7] = x; B[o7 + 1] = y; B[o7 + 2] = z;
+        B[o7 + 3] = mergerKind[i] === 1 ? 1 : mergerGlow[i];
+        B[o7 + 4] = mergerSmooth[i];
+        B[o7 + 5] = rx[0] * vx + rx[1] * vy + rx[2] * vz;
+        B[o7 + 6] = ry[0] * vx + ry[1] * vy + ry[2] * vz;
+    }
+
+    // ۱) نور و غبار ذره‌ها جمع می‌شود
+    gl.bindFramebuffer(gl.FRAMEBUFFER, o.A.fb);
+    gl.viewport(0, 0, o.A.w, o.A.h);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);
+    gl.useProgram(o.pts.prog);
+    const g = 1 / o.gain;
+    const u = o.pts.u;
+    gl.uniform3f(u.uRx, rx[0], rx[1], rx[2]);
+    gl.uniform3f(u.uRy, ry[0], ry[1], ry[2]);
+    gl.uniform2f(u.uScale, 2 * cam.s / mergerW, 2 * cam.s / mergerH);
+    gl.uniform1f(u.uPx, cam.s);
+    gl.uniform1f(u.uStarPx, Math.max(1, mergerH / 700));
+    gl.uniform1f(u.uFlux, 6 / mergerN * g);
+    gl.uniform1f(u.uDustK, 6 / mergerN * g);
+    gl.uniform1f(u.uSharp, 0.9 * g);
+    gl.bindBuffer(gl.ARRAY_BUFFER, o.dyn);
+    gl.bufferData(gl.ARRAY_BUFFER, B, gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 28, 0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 28, 16);
+    gl.bindBuffer(gl.ARRAY_BUFFER, o.stat);
+    if (mergerStaticDirty) {
+        gl.bufferData(gl.ARRAY_BUFFER, mergerAttr, gl.STATIC_DRAW);
+        mergerStaticDirty = false;
+    }
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 32, 0);
+    gl.enableVertexAttribArray(3);
+    gl.vertexAttribPointer(3, 4, gl.FLOAT, false, 32, 16);
+    gl.uniform1f(u.uPass, 0);
+    gl.drawArrays(gl.POINTS, 0, mergerN);
+    gl.uniform1f(u.uPass, 1);
+    gl.drawArrays(gl.POINTS, 0, mergerN);
+    gl.disable(gl.BLEND);
+
+    // ۲) کوچک‌سازی و تار کردن برای درخشش و غبار نرم
+    gl.activeTexture(gl.TEXTURE0);
+    mergerFullscreen(o, o.down, o.B);
+    gl.uniform1i(o.down.u.uTex, 0);
+    gl.uniform2f(o.down.u.uTexel, 1 / o.A.w, 1 / o.A.h);
+    gl.bindTexture(gl.TEXTURE_2D, o.A.tex);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    for (let pass = 0; pass < 2; pass++) {
+        mergerFullscreen(o, o.blur, o.C);
+        gl.uniform1i(o.blur.u.uTex, 0);
+        gl.uniform2f(o.blur.u.uDir, (pass + 1) / o.B.w, 0);
+        gl.bindTexture(gl.TEXTURE_2D, o.B.tex);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        mergerFullscreen(o, o.blur, o.B);
+        gl.uniform2f(o.blur.u.uDir, 0, (pass + 1) / o.B.h);
+        gl.bindTexture(gl.TEXTURE_2D, o.C.tex);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    // ۳) ترکیب نهایی روی صفحه
+    mergerFullscreen(o, o.comp, null);
+    gl.uniform1i(o.comp.u.uA, 0);
+    gl.uniform1i(o.comp.u.uB, 1);
+    gl.uniform2f(o.comp.u.uRes, mergerW, mergerH);
+    gl.uniform1f(o.comp.u.uGain, o.gain);
+    gl.uniform1f(o.comp.u.uFade, mergerFadeLevel());
+    gl.uniform1f(o.comp.u.uTime, mergerReducedMotion() ? 0 : (performance.now() / 1000) % 1000);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, o.B.tex);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, o.A.tex);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// ---------- Canvas 2D (پشتیبان) ----------
+const MERGER_2D_COLORS = ['#ffc98a', '#ffe2bd', '#e6e4f2', '#a9c0ff', '#ff6fa8'];
+function mergerDraw2D() {
+    const c = mergerCtx;
+    if (!c) return;
+    const cam = mergerCamera();
+    const cx = mergerW / 2, cy = mergerH / 2, P = mergerPos;
+    c.globalCompositeOperation = 'source-over';
+    c.globalAlpha = 1;
+    c.fillStyle = '#030409';
+    c.fillRect(0, 0, mergerW, mergerH);
+    c.globalCompositeOperation = 'lighter';
+    const fade = mergerFadeLevel();
+    for (let k = 0; k < MERGER_2D_COLORS.length; k++) {
+        c.fillStyle = MERGER_2D_COLORS[k];
+        const size = k === 4 ? 3 : 1.5;
+        for (let i = 0; i < mergerN; i++) {
+            if (mergerCls[i] !== k) continue;
+            const o = i * 3;
+            const x = cx + (cam.rx[0] * P[o] + cam.rx[1] * P[o + 1] + cam.rx[2] * P[o + 2]) * cam.s;
+            const y = cy - (cam.ry[0] * P[o] + cam.ry[1] * P[o + 1] + cam.ry[2] * P[o + 2]) * cam.s;
+            c.globalAlpha = fade * (k === 4 ? mergerGlow[i] * 0.8 : 0.55);
+            c.fillRect(x, y, size, size);
+        }
+    }
+    c.globalAlpha = 1;
+    c.globalCompositeOperation = 'source-over';
+}
+
+function mergerResize() {
+    if (!mergerCanvas) return;
+    if (!mergerMode) {
+        mergerGL = mergerInitGL();
+        if (mergerGL) {
+            mergerMode = 'gl';
+            mergerCanvas.addEventListener('webglcontextlost', (e) => {
+                e.preventDefault();
+                cancelAnimationFrame(mergerRaf);
+            });
+            mergerCanvas.addEventListener('webglcontextrestored', () => {
+                mergerGL = mergerInitGL();
+                if (mergerGL && mergerActive) startMerger();
+            });
+        } else {
+            mergerMode = '2d';
+            // بومی که getContext('webgl') رویش صدا زده شده دیگر 2D نمی‌دهد
+            const fresh = mergerCanvas.cloneNode(false);
+            mergerCanvas.replaceWith(fresh);
+            mergerCanvas = fresh;
+        }
+    }
+    const cssW = window.innerWidth;
+    const cssH = window.innerHeight;
+    let scale = 0.75;
+    if (cssW * cssH * scale * scale > MERGER_GL_PIXELS) scale = Math.sqrt(MERGER_GL_PIXELS / (cssW * cssH));
+    mergerW = Math.max(4, Math.round(cssW * scale));
+    mergerH = Math.max(4, Math.round(cssH * scale));
+    mergerCanvas.width = mergerW;
+    mergerCanvas.height = mergerH;
+    if (mergerMode === 'gl' && mergerGL && !mergerBuildTargets(mergerGL)) {
+        console.warn('merger: no render target');
+    }
+    if (mergerMode === '2d') mergerCtx = mergerCanvas.getContext('2d');
+}
+
+function mergerDraw() {
+    if (!mergerN) return;
+    if (mergerMode === 'gl') mergerDrawGL();
+    else mergerDraw2D();
+}
+
+function mergerFrame(ts) {
+    if (!mergerActive) return;
+    mergerRaf = requestAnimationFrame(mergerFrame);
+    if (!mergerLastTs) mergerLastTs = ts;
+    const dt = ts - mergerLastTs;
+    if (dt < MERGER_FRAME_MS) return;
+    mergerLastTs = ts;
+    const real = Math.min(dt, 100) / 1000;
+    mergerAdvance(real * MERGER_SPEED);
+    if (mergerT >= MERGER_T_END) mergerSeek(MERGER_T_START);   // برخورد بعدی با زاویه‌ای تازه
+    else {
+        mergerUpdateGlow(real, false);
+        mergerUpdateRoll(real, false);
+    }
+    mergerDraw();
+}
+
+function startMerger() {
+    if (!mergerCanvas) return;
+    mergerActive = true;
+    mergerResize();
+    mergerCanvas.hidden = false;
+    backgroundImage.style.visibility = 'hidden';
+    if (mergerReducedMotion()) mergerSeek(MERGER_T_STATIC);
+    else if (!mergerN) mergerSeek(MERGER_T_START);
+    mergerDraw();
+    cancelAnimationFrame(mergerRaf);
+    mergerLastTs = 0;
+    if (!mergerReducedMotion() && !document.hidden) {
+        mergerRaf = requestAnimationFrame(mergerFrame);
+    }
+}
+
+function stopMerger() {
+    mergerActive = false;
+    cancelAnimationFrame(mergerRaf);
+    if (mergerCanvas) mergerCanvas.hidden = true;
+}
+
+window.addEventListener('resize', () => {
+    if (!mergerActive) return;
+    mergerResize();
+    mergerDraw();
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (!mergerActive) return;
+    cancelAnimationFrame(mergerRaf);
+    if (!document.hidden && !mergerReducedMotion()) {
+        mergerLastTs = 0;
+        mergerRaf = requestAnimationFrame(mergerFrame);
+    }
+});
+
+// ============================================
 // توابع مدیریت پخش صدا
 // ============================================
 
@@ -2289,6 +3104,7 @@ function applyBgMode(mode) {
     stopKaleidoscope();
     stopGalaxy();
     stopOcean();
+    stopMerger();
     if (KALEIDO_MODES.includes(bgMode)) {
         kaleidoShards = bgMode === 'kaleidoscope';
         startKaleidoscope();
@@ -2296,6 +3112,8 @@ function applyBgMode(mode) {
         startGalaxy();
     } else if (bgMode === 'ocean') {
         startOcean();
+    } else if (bgMode === 'merger') {
+        startMerger();
     }
 }
 
