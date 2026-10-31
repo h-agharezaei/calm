@@ -1054,7 +1054,7 @@ document.addEventListener('visibilitychange', () => {
 // ============================================
 // پس‌زمینه‌ی کهکشان: یک کهکشان مارپیچی که آرام می‌چرخد
 // ============================================
-const galaxyCanvas = document.getElementById('galaxyCanvas');
+let galaxyCanvas = document.getElementById('galaxyCanvas');
 const GALAXY_BASE = '#03040c';
 const GALAXY_FRAME_MS = 1000 / 30;
 const GALAXY_ARMS = 3;
@@ -1166,7 +1166,7 @@ function galaxyBuild() {
     }
 }
 
-function galaxyResize() {
+function galaxyResize2D() {
     if (!galaxyCanvas) return;
     const scale = 0.7;
     galaxyW = Math.max(2, Math.round(window.innerWidth * scale));
@@ -1183,7 +1183,7 @@ function galaxyResize() {
     galaxyBuild();
 }
 
-function galaxyDraw() {
+function galaxyDraw2D() {
     if (!galaxyCtx) return;
     const c = galaxyCtx;
     const t = galaxyElapsed;
@@ -1229,7 +1229,7 @@ function galaxyDraw() {
     // ابرهای غبار درخشان
     for (let i = 0; i < galaxyDust.length; i++) {
         const d = galaxyDust[i];
-        p = project(d.r, d.th + d.om * t);
+        p = project(d.r, d.th - d.om * t);
         const size = d.s * R * 2;
         c.save();
         c.globalAlpha = d.a;
@@ -1243,7 +1243,7 @@ function galaxyDraw() {
         for (let i = 0; i < galaxyStars.length; i++) {
             const s = galaxyStars[i];
             if (s.cls !== k) continue;
-            p = project(s.r, s.th + s.om * t, s.jy);
+            p = project(s.r, s.th - s.om * t, s.jy);
             c.globalAlpha = s.a;
             c.fillRect(p[0], p[1], s.z, s.z);
         }
@@ -1263,6 +1263,369 @@ function galaxyDraw() {
     c.drawImage(galaxySprites.warm, cx - core2, cy - core2, core2 * 2, core2 * 2);
     c.globalAlpha = 1;
     c.globalCompositeOperation = 'source-over';
+}
+
+// ---------- نسخه‌ی WebGL (اصلی): ستاره‌ها روی مدار خودشان می‌چرخند ----------
+// مدل موج چگالی: هر ستاره روی یک مدار کمی سه‌پر می‌چرخد و جهت مدارها با شعاع پیچ می‌خورد.
+// جایی که مدارها به هم نزدیک می‌شوند بازو دیده می‌شود؛ ستاره‌ها از بازوها رد می‌شوند ولی بازوها پیچیده نمی‌شوند.
+const GALAXY_GL_PIXELS = 1600000;  // سقف پیکسل بوم
+const GALAXY_ECC = 0.11;           // کشیدگی مدارها (کمتر از PITCH/ARMS تا مدارها هم را قطع نکنند)
+const GALAXY_PATTERN_SPEED = 0.012; // چرخش آرام خود الگوی بازوها
+let galaxyMode = '';               // '' | 'gl' | '2d'
+let galaxyGL = null;
+let galaxyPx = 1;                  // پیکسل بوم به ازای هر پیکسل CSS
+
+const GALAXY_GLSL_COMMON = `
+const float ARMS = ${GALAXY_ARMS}.0;
+const float R0 = ${GALAXY_R0};
+const float PITCH = ${GALAXY_PITCH};
+const float TILT = ${GALAXY_TILT};
+const float ANG = ${GALAXY_ANGLE};
+const float ECC = ${GALAXY_ECC};
+float ecc(float a) { return ECC * smoothstep(0.06, 0.22, a) * (1.0 - 0.35 * smoothstep(0.7, 1.05, a)); }
+// تراکم مدارها در نقطه‌ای با شعاع پایه‌ی a و زاویه‌ی th (۱ = بی‌بازو)
+float compression(float a, float th, float pat, float e) {
+    float ph = ARMS * (th - log(max(a, R0) / R0) / PITCH - pat);
+    return 1.0 / max(1.0 + e * cos(ph) + (ARMS * e / PITCH) * sin(ph), 0.08);
+}
+`;
+
+const GALAXY_PT_VERT = `
+attribute vec4 aOrb;   // a, زاویه‌ی اولیه, ضخامت عمودی, نوع (0 پیر، 1 جوان، 2 برآمدگی، 3 گاز)
+attribute vec4 aLook;  // رنگ و روشنایی
+uniform vec2 uRes;
+uniform float uScale;
+uniform float uT;
+uniform float uPat;
+uniform float uPx;
+uniform float uMaxPt;
+uniform float uSpeed;
+varying vec3 vCol;
+varying float vK;
+${GALAXY_GLSL_COMMON}
+void main() {
+    float a = aOrb.x;
+    float kind = aOrb.w;
+    // پراکندگی سرعت: هر ستاره کمی از مدار ایده‌آل فاصله دارد تا بازوها نرم و پهن شوند
+    float j1 = fract(aOrb.y * 437.585);
+    float j2 = fract(aOrb.y * 911.317);
+    float e = kind > 1.5 && kind < 2.5 ? 0.0 : ecc(a) * (0.55 + 0.7 * j2);
+    float th = aOrb.y - uSpeed / pow(a + 0.45, 0.6) * uT;
+    float ph = ARMS * (th - log(max(a, R0) / R0) / PITCH - uPat + (j1 - 0.5) * 0.55);
+    float r = a * (1.0 + e * cos(ph));
+    float comp = 1.0 / max(1.0 + e * cos(ph) + (ARMS * e / PITCH) * sin(ph), 0.08);
+    vec2 p = vec2(cos(th), sin(th)) * r;
+    p.y += aOrb.z;
+    float ca = cos(ANG), sa = sin(ANG);
+    vec2 s = vec2(p.x * ca - p.y * TILT * sa, p.x * sa + p.y * TILT * ca) * uScale;
+    gl_Position = vec4(2.0 * s.x / uRes.x, -2.0 * s.y / uRes.y, 0.0, 1.0);
+
+    float b = aLook.w;
+    float size = (1.0 + b) * uPx;
+    vK = 14.0;
+    if (kind > 2.5) {
+        // ابر گاز: وقتی وارد بازو می‌شود روشن می‌شود و بیرون که می‌رود خاموش
+        b *= smoothstep(1.2, 3.2, comp);
+        size = min(uScale * (0.022 + 0.035 * fract(aOrb.y * 3.7)), uMaxPt);
+        vK = 9.0;
+    } else if (kind > 0.5 && kind < 1.5) {
+        // ستاره‌ی جوان آبی: بیشتر داخل بازوها دیده می‌شود
+        b *= 0.15 + 0.7 * clamp(comp - 1.0, 0.0, 4.0);
+        size = (1.2 + 0.8 * aLook.w) * uPx;
+    }
+    gl_PointSize = max(size, 1.0);
+    vCol = aLook.rgb * b;
+}
+`;
+
+const GALAXY_PT_FRAG = `
+precision mediump float;
+varying vec3 vCol;
+varying float vK;
+void main() {
+    vec2 d = gl_PointCoord - 0.5;
+    gl_FragColor = vec4(vCol * exp(-dot(d, d) * vK), 1.0);
+}
+`;
+
+// گذر تمام‌صفحه: uPass=0 آسمان و نور پخش دیسک، uPass=1 رگه‌های غبار (ضرب‌شونده)
+const GALAXY_FS_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform vec2 uRes;
+uniform float uScale;
+uniform float uTime;
+uniform float uPat;
+uniform float uTwinkle;
+uniform float uPass;
+${GALAXY_GLSL_COMMON}
+vec3 hash32(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+    p3 += dot(p3, p3.yxz + 33.33);
+    return fract((p3.xxy + p3.yzz) * p3.zyx);
+}
+float hash12(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), u.x),
+               mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+float fbm(vec2 p) {
+    float s = 0.0, a = 0.5;
+    for (int i = 0; i < 4; i++) { s += a * noise(p); p = mat2(1.6, 1.2, -1.2, 1.6) * p + 17.0; a *= 0.5; }
+    return s / 0.9375;
+}
+vec3 skyStars(vec2 frag, float cell, float prob, float seed) {
+    vec2 c = floor(frag / cell);
+    vec3 h = hash32(c + seed);
+    if (h.z > prob) return vec3(0.0);
+    vec2 d = (c + 0.2 + 0.6 * h.xy) * cell - frag;
+    float lum = 0.05 + 0.85 * pow(1.0 - h.z / prob, 4.0);
+    float tw = 1.0 + uTwinkle * 0.4 * sin(uTime * (0.6 + 1.7 * h.x) + 40.0 * h.y);
+    vec3 k = mix(vec3(1.0, 0.88, 0.75), vec3(0.75, 0.85, 1.0), h.y);
+    float w = cell / 9.0;
+    return k * lum * tw * exp(-dot(d, d) / (0.6 * w * w));
+}
+void main() {
+    vec2 frag = gl_FragCoord.xy;
+    vec2 sd = vec2(frag.x - 0.5 * uRes.x, 0.5 * uRes.y - frag.y) / uScale;
+    float ca = cos(ANG), sa = sin(ANG);
+    vec2 v = vec2(sd.x * ca + sd.y * sa, -sd.x * sa + sd.y * ca);
+    vec2 p = vec2(v.x, v.y / TILT);
+    float r = length(p);
+    float th = atan(p.y, p.x);
+    float env = smoothstep(0.08, 0.22, r) * smoothstep(1.15, 0.5, r);
+
+    if (uPass > 0.5) {
+        float cd = compression(r * 1.07, th, uPat, ecc(r * 1.07));
+        float pt = th - uPat;
+        vec2 q = vec2(cos(pt), sin(pt)) * r;
+        float n = fbm(q * 14.0 + 5.0);
+        float tau = clamp(cd - 1.6, 0.0, 4.0) * 0.16 * (0.2 + 1.6 * n * n) * env;
+        tau += smoothstep(0.55, 0.85, n) * 0.25 * env * exp(-r / 0.5);
+        gl_FragColor = vec4(exp(-tau * vec3(0.8, 1.0, 1.3)), 1.0);
+        return;
+    }
+
+    vec3 col = vec3(0.012, 0.016, 0.047);
+    col += vec3(0.010, 0.010, 0.024) * fbm(sd * 1.7 + 3.0);
+    float cell = 9.0;
+    col += skyStars(frag, cell * 0.8, 0.14, 11.0) + skyStars(frag, cell * 1.5, 0.2, 47.0);
+
+    float comp = compression(r, th, uPat, ecc(r));
+    float disk = exp(-r / 0.24) * smoothstep(1.3, 0.4, r);
+    col += vec3(1.0, 0.86, 0.7) * disk * 0.22;
+    col += vec3(0.5, 0.65, 1.0) * clamp(comp - 1.0, 0.0, 4.0) * env * exp(-r / 0.6) * 0.05;
+    col += vec3(0.55, 0.62, 0.9) * 0.035 * exp(-r / 0.55);
+    vec2 bq = vec2(v.x, v.y / 0.78);
+    float rb = length(bq);
+    col += vec3(1.0, 0.8, 0.56) * (0.5 * exp(-rb / 0.05) + 0.12 * exp(-rb / 0.16) + 0.6 * exp(-rb * rb / 0.00008));
+    gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+// ذرات یک‌بار ساخته می‌شوند؛ حرکتشان کاملاً در شیدر رأس حساب می‌شود
+function galaxyBuildParticles(big) {
+    const nStars = big ? 36000 : 18000;
+    const nGas = big ? 520 : 320;
+    const data = new Float32Array((nStars + nGas) * 8);
+    const hex = (h) => [parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255];
+    const pal = GALAXY_COLORS.map(hex);
+    let k = 0;
+    const push = (a, th, jy, kind, c, b) => {
+        data[k++] = a; data[k++] = th; data[k++] = jy; data[k++] = kind;
+        data[k++] = c[0]; data[k++] = c[1]; data[k++] = c[2]; data[k++] = b;
+    };
+    for (let i = 0; i < nStars; i++) {
+        const u = Math.random();
+        const th = Math.random() * Math.PI * 2;
+        if (u < 0.16) {
+            // برآمدگی‌ی مرکزی: متراکم، گرد و کمی ضخیم
+            const a = Math.pow(Math.random(), 2.2) * 0.3 + 0.01;
+            push(a, th, galaxyGauss() * 0.05 * (1 - a / 0.32), 2, pal[Math.random() < 0.6 ? 0 : 1], 0.25 + 0.55 * Math.random());
+        } else if (u < 0.55) {
+            // ستاره‌های پیر دیسک (زرد و سفید)
+            let a;
+            do { a = 0.05 - Math.log(1 - Math.random()) * 0.32; } while (a > 1.05);
+            const warm = Math.max(0, 1 - a * 2.6);
+            const c = Math.random() < warm ? pal[Math.random() < 0.6 ? 0 : 1] : pal[Math.random() < 0.5 ? 2 : 3];
+            push(a, th, galaxyGauss() * 0.012, 0, c, 0.18 + 0.5 * Math.random());
+        } else {
+            // ستاره‌های جوان (آبی، گاهی صورتی)
+            let a;
+            do { a = 0.14 - Math.log(1 - Math.random()) * 0.42; } while (a > 1.05);
+            const c = Math.random() < 0.06 && a > 0.25 ? pal[5] : pal[Math.random() < 0.6 ? 4 : 3];
+            push(a, th, galaxyGauss() * 0.008, 1, c, 0.4 + 0.6 * Math.pow(Math.random(), 2));
+        }
+    }
+    const pink = [1.0, 0.45, 0.72];
+    const blue = [0.47, 0.6, 1.0];
+    for (let i = 0; i < nGas; i++) {
+        let a;
+        do { a = 0.18 - Math.log(1 - Math.random()) * 0.32; } while (a > 0.85);
+        push(a, Math.random() * Math.PI * 2, 0, 3, Math.random() < 0.35 ? pink : blue, 0.12 + 0.14 * Math.random());
+    }
+    return { data, count: nStars + nGas };
+}
+
+function galaxyInitGL() {
+    let gl = null;
+    try {
+        const opts = { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' };
+        gl = galaxyCanvas.getContext('webgl', opts) || galaxyCanvas.getContext('experimental-webgl', opts);
+    } catch (err) {
+        gl = null;
+    }
+    if (!gl) return null;
+    const compile = (type, src) => {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+            console.warn('galaxy shader:', gl.getShaderInfoLog(s));
+            return null;
+        }
+        return s;
+    };
+    const link = (vsSrc, fsSrc) => {
+        const vs = compile(gl.VERTEX_SHADER, vsSrc);
+        const fs = compile(gl.FRAGMENT_SHADER, fsSrc);
+        if (!vs || !fs) return null;
+        const prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        gl.linkProgram(prog);
+        return gl.getProgramParameter(prog, gl.LINK_STATUS) ? prog : null;
+    };
+    const fsProg = link('attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}', GALAXY_FS_FRAG);
+    const ptProg = link(GALAXY_PT_VERT, GALAXY_PT_FRAG);
+    if (!fsProg || !ptProg) return null;
+    const quad = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const big = window.innerWidth * window.innerHeight > 600000;
+    const parts = galaxyBuildParticles(big);
+    const pts = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, pts);
+    gl.bufferData(gl.ARRAY_BUFFER, parts.data, gl.STATIC_DRAW);
+    const uf = (n) => gl.getUniformLocation(fsProg, n);
+    const up = (n) => gl.getUniformLocation(ptProg, n);
+    const range = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE);
+    return {
+        gl, fsProg, ptProg, quad, pts, count: parts.count,
+        maxPt: Math.min(range ? range[1] : 64, 256),
+        fsP: gl.getAttribLocation(fsProg, 'p'),
+        aOrb: gl.getAttribLocation(ptProg, 'aOrb'),
+        aLook: gl.getAttribLocation(ptProg, 'aLook'),
+        f: { uRes: uf('uRes'), uScale: uf('uScale'), uTime: uf('uTime'), uPat: uf('uPat'), uTwinkle: uf('uTwinkle'), uPass: uf('uPass') },
+        p: { uRes: up('uRes'), uScale: up('uScale'), uT: up('uT'), uPat: up('uPat'), uPx: up('uPx'), uMaxPt: up('uMaxPt'), uSpeed: up('uSpeed') }
+    };
+}
+
+function galaxyResize() {
+    if (!galaxyCanvas) return;
+    if (!galaxyMode) {
+        galaxyGL = galaxyInitGL();
+        if (galaxyGL) {
+            galaxyMode = 'gl';
+            galaxyCanvas.addEventListener('webglcontextlost', (e) => {
+                e.preventDefault();
+                cancelAnimationFrame(galaxyRaf);
+            });
+            galaxyCanvas.addEventListener('webglcontextrestored', () => {
+                galaxyGL = galaxyInitGL();
+                if (!galaxyGL) return;
+                if (galaxyActive) startGalaxy();
+            });
+        } else {
+            // بومی که getContext('webgl') رویش صدا زده شده دیگر 2D نمی‌دهد
+            galaxyMode = '2d';
+            const fresh = galaxyCanvas.cloneNode(false);
+            galaxyCanvas.replaceWith(fresh);
+            galaxyCanvas = fresh;
+        }
+    }
+    if (galaxyMode === '2d') {
+        galaxyResize2D();
+        return;
+    }
+    const cssW = window.innerWidth;
+    const cssH = window.innerHeight;
+    galaxyPx = Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(GALAXY_GL_PIXELS / Math.max(1, cssW * cssH)));
+    galaxyW = Math.max(2, Math.round(cssW * galaxyPx));
+    galaxyH = Math.max(2, Math.round(cssH * galaxyPx));
+    galaxyCanvas.width = galaxyW;
+    galaxyCanvas.height = galaxyH;
+    galaxyScale = Math.max(galaxyW, galaxyH) * 0.52; // شعاع کهکشان
+}
+
+function galaxyDraw() {
+    if (galaxyMode === '2d') {
+        galaxyDraw2D();
+        return;
+    }
+    if (!galaxyGL) return;
+    const o = galaxyGL;
+    const gl = o.gl;
+    const t = galaxyElapsed;
+    const pat = -((t * GALAXY_PATTERN_SPEED) % (Math.PI * 2));
+    gl.viewport(0, 0, galaxyW, galaxyH);
+
+    // ۱) آسمان و نور پخش
+    gl.disable(gl.BLEND);
+    gl.useProgram(o.fsProg);
+    gl.disableVertexAttribArray(o.aOrb);
+    gl.disableVertexAttribArray(o.aLook);
+    gl.bindBuffer(gl.ARRAY_BUFFER, o.quad);
+    gl.enableVertexAttribArray(o.fsP);
+    gl.vertexAttribPointer(o.fsP, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform2f(o.f.uRes, galaxyW, galaxyH);
+    gl.uniform1f(o.f.uScale, galaxyScale);
+    gl.uniform1f(o.f.uTime, t % 1000);
+    gl.uniform1f(o.f.uPat, pat);
+    gl.uniform1f(o.f.uTwinkle, galaxyReducedMotion() ? 0 : 1);
+    gl.uniform1f(o.f.uPass, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // ۲) ستاره‌ها و ابرهای گاز (جمع‌شونده)
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);
+    gl.useProgram(o.ptProg);
+    gl.disableVertexAttribArray(o.fsP);
+    gl.bindBuffer(gl.ARRAY_BUFFER, o.pts);
+    gl.enableVertexAttribArray(o.aOrb);
+    gl.vertexAttribPointer(o.aOrb, 4, gl.FLOAT, false, 32, 0);
+    gl.enableVertexAttribArray(o.aLook);
+    gl.vertexAttribPointer(o.aLook, 4, gl.FLOAT, false, 32, 16);
+    gl.uniform2f(o.p.uRes, galaxyW, galaxyH);
+    gl.uniform1f(o.p.uScale, galaxyScale);
+    gl.uniform1f(o.p.uT, t);
+    gl.uniform1f(o.p.uPat, pat);
+    gl.uniform1f(o.p.uPx, galaxyPx);
+    gl.uniform1f(o.p.uMaxPt, o.maxPt);
+    gl.uniform1f(o.p.uSpeed, GALAXY_SPEED);   // زاویه کم می‌شود: بازوها «دنباله‌رو» باشند، مثل کهکشان واقعی
+    gl.drawArrays(gl.POINTS, 0, o.count);
+
+    // ۳) رگه‌های غبار روی لبه‌ی داخلی بازوها (ضرب در عبور نور)
+    gl.blendFunc(gl.ZERO, gl.SRC_COLOR);
+    gl.useProgram(o.fsProg);
+    gl.disableVertexAttribArray(o.aOrb);
+    gl.disableVertexAttribArray(o.aLook);
+    gl.bindBuffer(gl.ARRAY_BUFFER, o.quad);
+    gl.enableVertexAttribArray(o.fsP);
+    gl.vertexAttribPointer(o.fsP, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform1f(o.f.uPass, 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.disable(gl.BLEND);
 }
 
 function galaxyFrame(ts) {
