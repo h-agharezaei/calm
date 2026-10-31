@@ -1,7 +1,8 @@
 ---
 title: "How to Meditate for Beginners: What Meditation Is, and a 5-Minute First Practice"
 description: What is meditation, really? A beginner's guide to how to meditate, the main types, a step-by-step 5-minute practice, common mistakes and what the research actually shows.
-date: 2026-10-31
+date: 2026-10-29
+updated: 2026-10-31
 category: learn
 order: 4
 cover: /assets/images/blog/meditation-for-beginners.jpg
