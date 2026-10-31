@@ -46,7 +46,15 @@
             window.gtag('config', ANALYTICS_ID);
             script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ANALYTICS_ID)}`;
         }
-        document.head.appendChild(script);
+
+        // Events are queued in dataLayer right away; the (large) tag script itself is fetched only
+        // after the page has loaded and gone idle, so it never competes with the app's own startup.
+        const inject = () => document.head.appendChild(script);
+        const whenIdle = () => (window.requestIdleCallback
+            ? window.requestIdleCallback(inject, { timeout: 3000 })
+            : setTimeout(inject, 1500));
+        if (document.readyState === 'complete') whenIdle();
+        else window.addEventListener('load', whenIdle, { once: true });
     }
 
     function setActive(on) {
