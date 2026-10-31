@@ -7,15 +7,15 @@
  *   network (new deploys still show up on the next visit) and when offline.
  * - Versioned CSS/JS (?v=N): cache first. The URL changes on every edit, so a cached copy is never stale.
  * - Other same-origin files: network first, cache as offline fallback.
- * - Images, fonts, icons: stale-while-revalidate in ASSET_CACHE, which survives VERSION bumps
- *   (no re-download after each deploy; a changed file is picked up in the background).
+ * - Images, fonts, icons: cache first in ASSET_CACHE, which survives VERSION bumps (no re-download
+ *   after each deploy); copies older than a day are refreshed in the background (stale-while-revalidate).
  * - Short sounds: cache first (media elements send Range requests; answered from the cached file).
  * - Large background sounds (assets/bg-sounds) are streamed from the network, unless the user saved
  *   them for offline use (stored by the page in OFFLINE_CACHE, which survives VERSION bumps)
  *
  * Bump VERSION whenever a precached file changes (the ?v= values below, index.html, bowl sounds).
  */
-const VERSION = 'calm-v54';
+const VERSION = 'calm-v56';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const ASSET_CACHE = 'calm-assets';            // images, fonts, icons: kept across versions
@@ -26,8 +26,8 @@ const PRECACHE = [
     './',
     'index.html',
     'manifest.webmanifest',
-    'assets/css/style.css?v=38',
-    'assets/js/script.js?v=45',
+    'assets/css/style.css?v=40',
+    'assets/js/script.js?v=47',
     'assets/js/analytics.js?v=10',
     'assets/js/bale.js?v=10',
     'assets/fonts/Estedad-VF.woff2', // already in the HTTP cache from the page's preload
@@ -66,7 +66,7 @@ self.addEventListener('fetch', (event) => {
     const isGoogleFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 
     if (isGoogleFont) {
-        event.respondWith(staleWhileRevalidate(req));
+        event.respondWith(staleWhileRevalidate(req, RUNTIME_CACHE, event));
         return;
     }
     if (!sameOrigin) return; // analytics etc.: leave to the network
@@ -83,7 +83,7 @@ self.addEventListener('fetch', (event) => {
     }
 
     if (/\/assets\/(images|fonts|icons)\//.test(url.pathname)) {
-        event.respondWith(staleWhileRevalidate(req, ASSET_CACHE));
+        event.respondWith(staleWhileRevalidate(req, ASSET_CACHE, event));
         return;
     }
 
@@ -93,7 +93,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    event.respondWith(networkFirst(req, req.mode === 'navigate' ? NAV_TIMEOUT_MS : 0));
+    event.respondWith(networkFirst(req, req.mode === 'navigate' ? NAV_TIMEOUT_MS : 0, event));
 });
 
 async function offlineSound(req) {
@@ -104,6 +104,7 @@ async function offlineSound(req) {
     return fetch(req);
 }
 
+// Offline fallback: the cached copy of this page (query ignored), or else the app itself
 async function cachedFallback(req) {
     const hit = await caches.match(req, { ignoreSearch: true });
     if (hit) return hit;
@@ -111,9 +112,9 @@ async function cachedFallback(req) {
     return undefined;
 }
 
-// timeoutMs > 0: if the network is slower than that and a cached copy exists, answer from the cache
-// (the network response still refreshes the cache for the next visit)
-async function networkFirst(req, timeoutMs) {
+// timeoutMs > 0: if the network is slower than that and THIS page is cached, answer from the cache
+// (never with a different page; the network response still refreshes the cache for the next visit)
+async function networkFirst(req, timeoutMs, event) {
     const network = fetch(req, { cache: 'no-cache' }) // skip the HTTP cache so new deploys show up at once
         .then(async (res) => {
             if (res.ok) {
@@ -122,9 +123,10 @@ async function networkFirst(req, timeoutMs) {
             }
             return res;
         });
+    if (event) event.waitUntil(network.catch(() => {})); // keep the worker alive until the cache is updated
 
     if (timeoutMs > 0) {
-        const fallback = await cachedFallback(req);
+        const fallback = await caches.match(req, { ignoreSearch: true });
         if (fallback) {
             const timer = new Promise((resolve) => setTimeout(() => resolve(fallback), timeoutMs));
             return Promise.race([network.catch(() => fallback), timer]);
@@ -154,16 +156,27 @@ async function cacheFirst(req, cacheName = RUNTIME_CACHE) {
     return res;
 }
 
-async function staleWhileRevalidate(req, cacheName = RUNTIME_CACHE) {
+// Cached copies younger than this are served without asking the network at all
+const REVALIDATE_AFTER_MS = 24 * 60 * 60 * 1000;
+
+function isRecent(res) {
+    const date = Date.parse(res.headers.get('date') || '');
+    return !isNaN(date) && Date.now() - date < REVALIDATE_AFTER_MS;
+}
+
+async function staleWhileRevalidate(req, cacheName = RUNTIME_CACHE, event) {
     const cache = await caches.open(cacheName);
     const hit = await cache.match(req.url) || await caches.match(req.url); // e.g. the precached font
+    if (hit && isRecent(hit)) return hit; // no network request at all
     const network = fetch(req)
-        .then((res) => {
-            if (res.ok || res.type === 'opaque') cache.put(req.url, res.clone());
+        .then(async (res) => {
+            if (res.ok || res.type === 'opaque') await cache.put(req.url, res.clone());
             return res;
         });
     if (hit) {
-        network.catch(() => {}); // offline: the cached copy is enough
+        // answer from the cache now; refresh it in the background (at most once a day per file)
+        if (event) event.waitUntil(network.catch(() => {}));
+        else network.catch(() => {});
         return hit;
     }
     return network;

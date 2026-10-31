@@ -4174,6 +4174,7 @@ function initializeApp() {
     if (activeThumbnail) activeThumbnail.classList.add('active');
 
     hideLoadingOverlay();
+    document.documentElement.classList.add('js-ready'); // دکمه‌ی «شروع» از این لحظه کار می‌کند (CSS)
 
     // بعد از اجرای کامل اسکریپت (لینک اشتراکی ممکن است حالت/تصویر را عوض کند) تصویر را بخواه
     setTimeout(() => {
@@ -6120,6 +6121,25 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+// <audio preload="none"> keeps the bowl sound out of the startup. After the page has loaded (and the
+// service worker has precached the sound, so this is not a second download) the chime is buffered,
+// so the first gong after «شروع» plays at once, as it did with preload="auto".
+(function warmUpChime() {
+    function warm() {
+        if (!soundEnabled || intervalId || !audio.paused || audio.currentTime > 0) return; // already in use
+        if (navigator.connection && navigator.connection.saveData) return;
+        audio.preload = 'auto';
+        audio.src = sounds[currentSound];
+        audio.load();
+    }
+    window.addEventListener('load', () => {
+        const fallback = setTimeout(warm, 4000); // no service worker (or it failed)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(() => { clearTimeout(fallback); warm(); });
+        }
+    }, { once: true });
+})();
 
 
 // دکمه‌ی تمام‌صفحه: فقط وقتی مرورگر Fullscreen API دارد نمایش داده می‌شود
