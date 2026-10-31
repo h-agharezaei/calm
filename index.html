@@ -44,7 +44,7 @@
     <link rel="preload" href="assets/fonts/Inter-latin-VF.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="assets/css/style.css?v=27">
+    <link rel="stylesheet" href="assets/css/style.css?v=33">
     
  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "54a5c1f34bde403fb376d604168b982e"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -308,7 +308,7 @@
         </div>
     </div>
 
-    <div class="controls">
+    <div class="controls" id="controlsMenu">
         <!-- دکمه آیکون تمرین تنفس (باد) -->
         <button class="breath-icon" id="breathIcon" aria-label="Breathing exercise" data-i18n-aria-label="ariaBreath">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -358,6 +358,25 @@
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
                 <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+        </button>
+
+        <!-- دکمه آیکون تمام‌صفحه (فقط وقتی مرورگر پشتیبانی کند) -->
+        <button class="fullscreen-icon" id="fullscreenIcon" type="button" aria-label="Fullscreen" data-i18n-aria-label="ariaFullscreen" hidden>
+            <svg class="fs-enter" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+            <svg class="fs-exit" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+            </svg>
+        </button>
+
+        <!-- دکمه‌ی باز/بسته کردن منو (بقیه‌ی دکمه‌ها تا وقتی موس روی این نرود مخفی‌اند) -->
+        <button class="controls-toggle" id="controlsToggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="controlsMenu" data-i18n-aria-label="ariaMenu">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line class="ct-l1" x1="4" y1="7" x2="20" y2="7"></line>
+                <line class="ct-l2" x1="4" y1="12" x2="20" y2="12"></line>
+                <line class="ct-l3" x1="4" y1="17" x2="20" y2="17"></line>
             </svg>
         </button>
     </div>
@@ -760,11 +779,6 @@
 
     <!-- Language toggle (top right, faded until hover) -->
     <button class="lang-toggle" id="langToggle" type="button" aria-label="Switch language" title="Switch language">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="2" y1="12" x2="22" y2="12"></line>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-        </svg>
         <span class="lang-toggle-label" id="langToggleLabel">EN</span>
     </button>
 
@@ -777,7 +791,7 @@
         <span class="whatsnew-dot" id="whatsNewDot" hidden></span>
     </button>
 
-    <!-- Install app (faded, bottom left; shown only when the browser can install the app) -->
+    <!-- Install app (faded, top right; shown only when the browser can install the app) -->
     <button class="install-fab" id="installFab" type="button" aria-label="نصب برنامه" title="نصب برنامه" data-i18n-aria-label="installApp" data-i18n-title="installApp" hidden>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 3v12"></path>
@@ -812,7 +826,7 @@
     </audio>
 
     <script src="assets/js/analytics.js?v=9"></script>
-    <script src="assets/js/script.js?v=40"></script>
+    <script src="assets/js/script.js?v=42"></script>
     <script src="assets/js/bale.js?v=9"></script>
 </body>
 </html>

@@ -181,6 +181,9 @@ const translations = {
         ariaSoundInterval: 'Sound interval settings',
         ariaBgSounds: 'Background sounds',
         ariaSettings: 'Settings',
+        ariaMenu: 'Menu',
+        ariaFullscreen: 'Enter fullscreen',
+        ariaExitFullscreen: 'Exit fullscreen',
         ariaDonate: 'Support the project',
         ariaVolume: '{0} volume',
         imageAlt: 'Background image {0}',
@@ -329,6 +332,9 @@ const translations = {
         ariaSoundInterval: 'تنظیمات بازه پخش صدا',
         ariaBgSounds: 'صداهای پس‌زمینه',
         ariaSettings: 'تنظیمات',
+        ariaMenu: 'منو',
+        ariaFullscreen: 'حالت تمام‌صفحه',
+        ariaExitFullscreen: 'خروج از تمام‌صفحه',
         ariaDonate: 'حمایت از پروژه',
         ariaVolume: 'میزان صدای {0}',
         imageAlt: 'تصویر پس‌زمینه {0}',
@@ -587,6 +593,7 @@ function changeLanguage(lang) {
 }
 
 // دکمه‌ی تغییر زبان (بالا سمت راست): زبان مقصد را نشان می‌دهد
+let syncFullscreenLabel = null; // set by setupFullscreen() at the end of the file
 const langToggle = document.getElementById('langToggle');
 const langToggleLabel = document.getElementById('langToggleLabel');
 
@@ -627,6 +634,8 @@ function updateAllTexts() {
             element.setAttribute('aria-label', t[key]);
         }
     });
+    
+    if (syncFullscreenLabel) syncFullscreenLabel();
     
     // tooltip (title) برای دکمه‌های فقط‌آیکون
     document.querySelectorAll('[data-i18n-title]').forEach(element => {
@@ -5673,3 +5682,73 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+
+// دکمه‌ی تمام‌صفحه: فقط وقتی مرورگر Fullscreen API دارد نمایش داده می‌شود
+// (آیفون Safari ندارد)
+(function setupFullscreen() {
+    const btn = document.getElementById('fullscreenIcon');
+    if (!btn) return;
+    const root = document.documentElement;
+    const enter = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (!enter || (document.fullscreenEnabled === false)) return;
+    btn.hidden = false;
+
+    const current = () => document.fullscreenElement || document.webkitFullscreenElement;
+    function sync() {
+        const on = !!current();
+        btn.classList.toggle('is-fullscreen', on);
+        const label = translations[currentLang][on ? 'ariaExitFullscreen' : 'ariaFullscreen'];
+        btn.setAttribute('aria-label', label);
+        btn.title = label;
+    }
+    btn.addEventListener('click', () => {
+        if (current()) {
+            (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+        } else {
+            const p = enter.call(root);
+            if (p && p.catch) p.catch(() => {});
+        }
+        track('fullscreen_toggle', { on: !current() });
+    });
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync);
+    syncFullscreenLabel = sync;
+    sync();
+})();
+
+
+// منوی کناری جمع‌شونده: با رفتن موس روی دکمه‌ی منو باز می‌شود، با رفتن موس بیرون
+// (یا کلیک بیرون / Esc) بسته می‌شود. در لمسی با ضربه باز و بسته می‌شود.
+(function setupControlsMenu() {
+    const menu = document.getElementById('controlsMenu');
+    const toggle = document.getElementById('controlsToggle');
+    if (!menu || !toggle) return;
+    let closeTimer = null;
+
+    function setOpen(on) {
+        clearTimeout(closeTimer);
+        menu.classList.toggle('open', on);
+        toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
+    }
+    function closeSoon() {
+        clearTimeout(closeTimer);
+        closeTimer = setTimeout(() => {
+            if (!menu.contains(document.activeElement) || !menu.matches(':focus-within')) setOpen(false);
+        }, 250);
+    }
+
+    toggle.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') setOpen(true); });
+    menu.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse' && menu.classList.contains('open')) clearTimeout(closeTimer); });
+    menu.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { clearTimeout(closeTimer); closeTimer = setTimeout(() => setOpen(false), 250); } });
+    toggle.addEventListener('click', () => setOpen(!menu.classList.contains('open')));
+    // keyboard: focusing any button inside opens the menu
+    menu.addEventListener('focusin', e => { if (e.target.matches(':focus-visible')) setOpen(true); });
+    menu.addEventListener('focusout', e => { if (!menu.contains(e.relatedTarget)) closeSoon(); });
+    document.addEventListener('pointerdown', e => { if (!menu.contains(e.target)) setOpen(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+    // choosing an item (opens a panel / starts something) folds the menu again
+    menu.querySelectorAll('button:not(.controls-toggle)').forEach(b => {
+        b.addEventListener('click', () => { if (b.id !== 'fullscreenIcon') setOpen(false); });
+    });
+})();
