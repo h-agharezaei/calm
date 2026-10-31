@@ -2962,3 +2962,8 @@ body:has(#breathStage:not([hidden])) .donate-fab {
         transform: translateX(-24px) scale(0.4);
     }
 }
+
+.about-content .credits {
+    font-size: 0.85em;
+    opacity: 0.8;
+}
