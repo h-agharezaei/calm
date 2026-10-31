@@ -81,6 +81,12 @@ html.i18n-pending .loading-overlay {
     transition: opacity 0.5s ease, visibility 0.5s ease;
 }
 
+/* English UI: the start screen is still Persian under the overlay; keep it unpainted until it is
+   translated, so the swap is not a layout shift (CLS) */
+html.i18n-pending:not(.js-ready) .start-content {
+    visibility: hidden;
+}
+
 .loading-overlay.hidden {
     opacity: 0;
     visibility: hidden;
@@ -1304,8 +1310,15 @@ label {
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
+    transition: transform 0.3s, box-shadow 0.3s, opacity 0.3s;
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
+/* The (Persian) start screen is painted before script.js runs: until then a tap would be lost,
+   so the button looks inactive. html.js-ready is set by initializeApp(). */
+html:not(.js-ready) .start-button {
+    opacity: 0.6;
+    pointer-events: none;
 }
 
 .start-button:hover {
