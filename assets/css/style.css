@@ -141,6 +141,10 @@ html[lang="fa"] body {
     background: #06060a;
 }
 
+.candle-canvas {
+    background: #060302;
+}
+
 .kaleidoscope-canvas[hidden] {
     display: none;
 }
@@ -675,6 +679,7 @@ label {
         radial-gradient(ellipse 70% 38% at 50% 50%, rgba(130, 150, 255, 0.65), transparent 75%),
         #03040c;
 }
+.preview-candle { background-image: url('../images/candle-thumb.webp'); }
 .preview-merger { background-image: url('../images/merger-thumb.webp'); }
 .preview-ocean {
     background:
