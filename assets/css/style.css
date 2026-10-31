@@ -1637,10 +1637,12 @@ label {
     z-index: 9999;
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
     border: none;
-    border-radius: 999px;
+    border-radius: 50%;
     background: rgba(255, 255, 255, 0.95);
     color: #667eea;
     font-family: 'Inter', sans-serif;
@@ -1738,7 +1740,7 @@ label {
 .install-fab {
     position: fixed;
     top: 20px;
-    right: 109px; /* just left of the What's new button */
+    right: 112px; /* just left of the What's new button */
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -2453,7 +2455,7 @@ body:has(#breathStage:not([hidden])) .donate-fab {
 .whatsnew-btn {
     position: fixed;
     top: 20px;
-    right: 63px; /* just left of the language toggle */
+    right: 66px; /* just left of the language toggle */
     z-index: 9999;
     width: 36px;
     height: 36px;
