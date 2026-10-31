@@ -105,6 +105,7 @@ const translations = {
         bgModeGalaxy: 'Galaxy',
         bgModeOcean: 'Ocean',
         bgModeMerger: 'Colliding galaxies',
+        bgModeCandle: 'Candle',
         selectImage: 'Select Image:',
         imageChangeInterval: 'Image Change Interval (seconds):',
         updateBgInterval: 'Update',
@@ -256,6 +257,7 @@ const translations = {
         bgModeGalaxy: 'کهکشان',
         bgModeOcean: 'اقیانوس',
         bgModeMerger: 'برخورد کهکشان‌ها',
+        bgModeCandle: 'شمع',
         selectImage: 'انتخاب تصویر:',
         imageChangeInterval: 'زمان تغییر تصویر (ثانیه):',
         updateBgInterval: 'تغییر زمان',
@@ -563,9 +565,9 @@ function imageUrl(name) {
 let currentImageIndex = Math.floor(Math.random() * images.length); // شروع با عکس تصادفی
 let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
-let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope-soft' | 'galaxy' | 'ocean' | 'merger'
+let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope-soft' | 'galaxy' | 'ocean' | 'merger' | 'candle'
 const KALEIDO_MODES = ['kaleidoscope', 'kaleidoscope-soft']; // زیبابین نرم = همان، بدون مثلث‌ها
-const CANVAS_MODES = KALEIDO_MODES.concat('galaxy', 'ocean', 'merger'); // حالت‌هایی که تصویر ندارند
+const CANVAS_MODES = KALEIDO_MODES.concat('galaxy', 'ocean', 'merger', 'candle'); // حالت‌هایی که تصویر ندارند
 let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
 
 // ============================================
@@ -677,6 +679,7 @@ function updateAllTexts() {
         bgModeSelect.options[4].text = t.bgModeGalaxy;
         bgModeSelect.options[5].text = t.bgModeOcean;
         bgModeSelect.options[6].text = t.bgModeMerger;
+        bgModeSelect.options[7].text = t.bgModeCandle;
     }
 }
 
@@ -3251,6 +3254,527 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ============================================
+// پس‌زمینه‌ی «شمع»: یک شمع روشن در اتاقی تاریک، با شیدر WebGL
+// شعله از یک پروفایل قطره‌ای با نوسان نرم ساخته می‌شود (هسته‌ی تیره‌ی بخار، منطقه‌ی زرد، لبه‌ی نارنجی و
+// پایه‌ی آبی)، و نور آن روی دیوار، بدنه‌ی موم، حوضچه‌ی موم مذاب و ذره‌های گردوغبار می‌افتد.
+// بدون WebGL یک نسخه‌ی ساده‌ی Canvas 2D رسم می‌شود.
+// ============================================
+
+let candleCanvas = document.getElementById('candleCanvas');
+const CANDLE_GL_PIXELS = 1300000;
+const CANDLE_FRAME_MS = 1000 / 60 - 2;
+let candleW = 0;
+let candleH = 0;
+let candleRaf = 0;
+let candleLastTs = 0;
+let candleElapsed = 12;
+let candleActive = false;
+let candleMode = '';          // '' | 'gl' | '2d'
+let candleGL = null;
+let candleCtx = null;
+
+const CANDLE_VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
+const CANDLE_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform vec2 uRes;
+uniform float uTime;
+uniform float uMotion;   // ۰ با «کاهش حرکت»
+
+// هندسه (واحد: ارتفاع صفحه)
+const float R = 0.062;               // شعاع شمع
+const float YT = -0.06;              // مرکز بیضی سطح بالای شمع
+const float E = 0.0155;              // نیم‌قطر کوچک بیضی (دید کمی از بالا)
+const float HF = 0.20;               // ارتفاع شعله
+const float YB = YT + 0.022;         // پایه‌ی شعله
+const float FW = 0.034;              // نیم‌پهنای شعله
+const float WL = 0.098;              // طول فتیله
+const vec3 LCOL = vec3(1.0, 0.57, 0.25);
+const vec3 WAX = vec3(0.96, 0.87, 0.70);
+
+float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+float fbm(vec2 p) {
+    float s = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 4; i++) {
+        s += a * noise(p);
+        p = p * 2.03 + vec2(17.1, 9.3);
+        a *= 0.5;
+    }
+    return s;
+}
+
+float tn(float x) {
+    float i = floor(x);
+    float f = fract(x);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(hash(vec2(i, 3.7)), hash(vec2(i + 1.0, 3.7)), f);
+}
+
+// جابه‌جایی افقی خط مرکزی شعله در ارتفاع نسبی h
+float flameSway(float h, float t, float lean) {
+    h = clamp(h, 0.0, 1.0);
+    return lean * h * h
+        + (noise(vec2(t * 2.7, h * 1.6 + 1.0)) - 0.5) * 0.014 * h
+        + (noise(vec2(t * 6.9 + 4.0, h * 2.7)) - 0.5) * 0.006 * h * h;
+}
+
+float wickX(float s) {
+    return 0.0105 * s * s;
+}
+
+vec3 ramp(float T) {
+    vec3 c = mix(vec3(0.50, 0.05, 0.0), vec3(1.0, 0.36, 0.04), smoothstep(0.0, 0.35, T));
+    c = mix(c, vec3(1.0, 0.70, 0.20), smoothstep(0.3, 0.65, T));
+    c = mix(c, vec3(1.0, 0.84, 0.42), smoothstep(0.6, 0.9, T));
+    c = mix(c, vec3(1.0, 0.96, 0.78), smoothstep(0.9, 1.0, T));
+    return c;
+}
+
+// خود شعله (نور خروجی، HDR)
+vec3 flame(vec2 p, float t, float lean, float Hf, float Fw, float L) {
+    vec2 q = p - vec2(0.0, YB);
+    float h = q.y / Hf;
+    if (h < -0.2 || h > 1.15) return vec3(0.0);
+    float hc = clamp(h, 0.0, 1.0);
+    float x = q.x - flameSway(h, t, lean);
+    x += (noise(vec2(hc * 5.0 - t * 4.5, 3.3 + t * 1.1)) - 0.5) * 0.006 * hc * uMotion;
+    float w = Fw * pow(sin(3.14159 * pow(hc, 0.62)), 0.9) * (1.0 - 0.25 * hc);
+    float s = abs(x) - w;                       // منفی یعنی داخل شعله
+    float soft = 0.0035 + 0.004 * hc;
+    float a = 1.0 - smoothstep(-soft, soft * 1.6, s);
+    a *= 1.0 - smoothstep(0.82, 1.0, h);   // نوک شعله نرم محو شود، نه بریده
+    float d = clamp(-s / max(w, 0.0008), 0.0, 1.0);
+    float T = pow(d, 0.75);
+    float vp = exp(-pow((h - 0.25) / 0.38, 2.0));
+    T *= 0.45 + 0.55 * vp;
+    T *= 1.0 - 0.55 * smoothstep(0.5, 1.0, h);
+    float I = mix(0.40, 1.9, smoothstep(0.0, 1.0, T));
+    // هسته‌ی تیره‌ی بخار دور فتیله
+    float vapor = exp(-pow(x / (0.0055 + 0.009 * hc), 2.0))
+        * smoothstep(0.10, 0.20, h) * (1.0 - smoothstep(0.34, 0.62, h));
+    I *= 1.0 - 0.85 * vapor;
+    // رگه‌های ریز در حال بالا رفتن
+    I *= 0.88 + 0.24 * noise(vec2(x * 140.0, h * 6.0 - t * 5.0));
+    vec3 c = ramp(T) * I * a;
+    // پایه‌ی آبی
+    float bl = exp(-pow(h / 0.17, 2.0)) * (0.45 + 0.55 * (1.0 - d)) * a;
+    bl *= 1.0 - 0.5 * smoothstep(0.08, 0.2, h) * exp(-pow(x / 0.012, 2.0));   // کنار فتیله آبی کمتر، تیره‌تر
+    c += vec3(0.10, 0.28, 1.0) * 2.6 * bl;
+    return c * L;
+}
+
+// دیوار پشت شمع: نور شمع روی گچ
+vec3 wall(vec2 p, vec3 LP, float L) {
+    vec2 d = p - LP.xy;
+    float r2 = dot(d, d);
+    float I = 0.012 / pow(r2 + 0.04, 1.2) * L;
+    float tex = 0.78 + 0.45 * fbm(p * 3.2 + 4.0) + 0.10 * noise(p * 260.0);
+    return vec3(0.26, 0.19, 0.14) * LCOL * I * tex + vec3(0.004, 0.0028, 0.0024);
+}
+
+// ذره‌های گردوغبار که در نور شمع می‌درخشند
+vec3 motes(vec2 p, float t, vec3 LP) {
+    vec3 c = vec3(0.0);
+    for (int k = 0; k < 2; k++) {
+        float fk = float(k);
+        float sc = 7.0 + 6.0 * fk;
+        vec2 q = p * sc;
+        q.y -= t * (0.35 + 0.2 * fk) * uMotion;
+        q += vec2(fk * 21.0, fk * 8.0);
+        vec2 id = floor(q);
+        vec2 f = fract(q);
+        float h = hash(id + 5.0);
+        float occ = step(0.72, hash(id + 9.0));
+        vec2 pos = vec2(0.5) + 0.2 * vec2(sin(t * 0.7 * uMotion + h * 6.28), cos(t * 0.5 * uMotion + h * 9.0));
+        pos += (vec2(hash(id), hash(id + 2.0)) - 0.5) * 0.3;
+        float d = length(f - pos) / sc;
+        float r = 0.0022 + 0.0014 * hash(id + 4.0);
+        float dot_ = (1.0 - smoothstep(r * 0.4, r, d));
+        vec2 dl = p - LP.xy;
+        float I = 0.0035 / (dot(dl, dl) + 0.012);
+        float tw = 0.6 + 0.4 * sin(t * 1.3 * uMotion + h * 30.0);
+        c += LCOL * dot_ * occ * I * tw;
+    }
+    return c;
+}
+
+struct Drip { float h; float u; };
+
+Drip drip(vec2 p, float rimY, float xc, float w, float len) {
+    Drip r;
+    r.h = 0.0;
+    r.u = 0.0;
+    float dy = rimY - p.y;
+    if (dy < 0.0 || dy > len) return r;
+    float wd = w * (0.82 + 0.18 * smoothstep(0.0, 0.03, dy));
+    float e = max(dy - (len - wd), 0.0) / wd;
+    wd *= sqrt(max(1.0 - e * e, 0.0));
+    float u = (p.x - xc) / max(wd, 0.0001);
+    if (abs(u) < 1.0) {
+        r.h = sqrt(1.0 - u * u) * smoothstep(0.0, 0.007, dy);
+        r.u = u;
+    }
+    return r;
+}
+
+vec3 body(vec2 p, vec3 LP, float L) {
+    float sx = clamp(p.x / R, -1.0, 1.0);
+    float cz = sqrt(max(1.0 - sx * sx, 0.0));
+    float rimY = YT - E * cz;
+    vec3 n = vec3(sx, 0.0, cz);
+    n.x += (fbm(vec2(p.x * 70.0, p.y * 6.0)) - 0.5) * 0.14;
+    n.y += (fbm(vec2(p.x * 22.0 + 5.0, p.y * 38.0)) - 0.5) * 0.06;
+    Drip d1 = drip(p, rimY, R * 0.52, 0.0075, 0.15);
+    Drip d2 = drip(p, rimY, -R * 0.40, 0.0062, 0.085);
+    Drip d3 = drip(p, rimY, -R * 0.82, 0.0050, 0.23);
+    Drip d4 = drip(p, rimY, R * 0.10, 0.0050, 0.045);
+    float dh = max(max(d1.h, d2.h), max(d3.h, d4.h));
+    float du = d1.h >= dh ? d1.u : (d2.h >= dh ? d2.u : (d3.h >= dh ? d3.u : d4.u));
+    n.x += du * dh * 0.85;
+    n = normalize(n);
+    vec3 P = vec3(p.x, p.y, R * cz);
+    vec3 Lv = LP - P;
+    float dist = length(Lv);
+    Lv /= dist;
+    float I = 0.02 / (dist * dist + 0.006) * L;
+    float diff = max(dot(n, Lv), 0.0);
+    vec3 col = WAX * LCOL * I * (0.12 + 0.88 * diff);
+    // عبور نور از موم (زیرسطحی): بالای شمع کهربایی می‌درخشد
+    float depth = rimY - p.y;
+    float sss = exp(-depth / 0.05);
+    float edge = 0.35 + 0.65 * pow(abs(sx), 1.5);
+    col += vec3(1.0, 0.48, 0.12) * sss * edge * 0.5 * L;
+    col += vec3(1.0, 0.55, 0.16) * dh * 0.10 * (0.3 + sss) * L;
+    col += LCOL * 0.05 * L * dh * pow(1.0 - abs(du), 2.0) * (0.4 + sss);
+    col *= 1.0 - 0.28 * smoothstep(0.72, 1.0, abs(du)) * dh;   // سایه‌ی لبه‌ی قطره
+    vec3 Hh = normalize(Lv + vec3(0.0, 0.0, 1.0));
+    col += LCOL * pow(max(dot(n, Hh), 0.0), 28.0) * 0.4 * I;
+    vec2 dw = p - LP.xy;
+    float amb = 0.012 / pow(dot(dw, dw) + 0.04, 1.2) * 0.45 * L;
+    col += WAX * LCOL * amb * (0.45 + 0.55 * cz);
+    col += LCOL * I * 0.22 * exp(-pow((sx + 0.38) / 0.2, 2.0));   // نوار براق عمودی
+    col *= 1.0 - 0.35 * smoothstep(0.82, 1.0, sx);                   // لبه‌ی سمت دور از نور
+    return col;
+}
+
+vec3 topFace(vec2 p, vec3 LP, float L, float t, float Hf) {
+    vec2 e = vec2(p.x / R, (p.y - YT) / E);
+    float rr = length(e);
+    float ang = atan(e.y, e.x);
+    float pr = 0.80 + 0.05 * sin(ang * 3.0 + 1.0) + 0.03 * sin(ang * 5.0 + 2.0);
+    float I = 0.028 / (0.0025 + 0.012) * L;
+    // لبه‌ی جامد موم
+    vec3 rim = WAX * LCOL * I * 0.46;
+    rim *= 0.82 + 0.28 * smoothstep(0.85, 1.0, rr) + 0.15 * e.y;
+    // حوضچه‌ی موم مذاب: شفاف و درخشان
+    vec3 pool = mix(vec3(0.95, 0.45, 0.08), vec3(1.0, 0.72, 0.28), smoothstep(-1.0, 1.0, e.y) * 0.75);
+    pool *= (0.8 + 0.9 * exp(-rr * rr / 0.12)) * L * 1.1;
+    // انعکاس شعله روی سطح مایع
+    float rf = exp(-pow(e.x / 0.13, 2.0)) * exp(-pow((e.y + 0.38) / 0.32, 2.0));
+    pool += vec3(1.0, 0.80, 0.45) * rf * 1.35 * L;
+    float inPool = 1.0 - smoothstep(pr - 0.05, pr, rr);
+    vec3 c = mix(rim, pool, inPool);
+    c *= 1.0 - 0.25 * exp(-pow((rr - pr) / 0.03, 2.0)) * (1.0 - inPool * 0.5);   // شیار کنار حوضچه
+    return c;
+}
+
+void main() {
+    vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+    float asp = uRes.x / uRes.y;
+    float zoom = 1.0 + 0.55 * clamp((1.0 - asp) / 0.5, 0.0, 1.0);
+    vec2 p = uv / zoom;
+    float px = 1.5 / (uRes.y * zoom);
+    float t = uTime;
+    float m = uMotion;
+
+    // نوسان شعله
+    float f1 = tn(t * 2.3);
+    float f2 = tn(t * 5.7 + 10.0);
+    float f3 = tn(t * 0.8 + 30.0);
+    float gust = smoothstep(0.82, 1.0, tn(t * 0.33 + 50.0)) * m;
+    float lean = ((tn(t * 0.5 + 7.0) - 0.5) * 0.020 + (tn(t * 0.21 + 90.0) - 0.5) * 0.03 * gust) * m;
+    float Hf = HF * (1.0 + m * (0.10 * (f1 - 0.5) + 0.06 * (f2 - 0.5) - 0.10 * gust));
+    float Fw = FW * (1.0 - 0.5 * (Hf / HF - 1.0));
+    float L = 1.0 + m * (0.16 * (f1 - 0.5) + 0.08 * (f2 - 0.5) + 0.05 * (f3 - 0.5) - 0.12 * gust);
+    vec3 LP = vec3(flameSway(0.3, t, lean), YB + 0.3 * Hf, 0.07);
+
+    // دیوار
+    vec3 col = wall(p, LP, L);
+
+    // شمع
+    float sx = clamp(p.x / R, -1.0, 1.0);
+    float cz = sqrt(max(1.0 - sx * sx, 0.0));
+    float wm = 1.0 - smoothstep(R - px, R + px, abs(p.x));
+    float tm = 1.0 - smoothstep(-px, px, p.y - (YT + E * cz));
+    float cm = wm * tm;
+    if (cm > 0.0) {
+        vec2 e = vec2(p.x / R, (p.y - YT) / E);
+        float em = 1.0 - smoothstep(1.0 - px / E, 1.0 + px / E, length(e));
+        vec3 b = body(p, LP, L);
+        vec3 tf = topFace(p, LP, L, t, Hf);
+        vec3 cc = mix(b, tf, em);
+        // نور لبه‌ی بدنه
+        cc += vec3(1.0, 0.5, 0.15) * 0.10 * pow(abs(sx), 6.0) * smoothstep(-0.2, 0.0, YT - p.y) * L;
+        col = mix(col, cc, cm);
+    }
+
+    // شعله
+    col += flame(p, t, lean, Hf, Fw, L);
+
+    // هاله‌ی نور دور شعله
+    vec2 dl = p - vec2(LP.x, YB + 0.34 * Hf);
+    dl.y *= 0.7;
+    float rl = length(dl);
+    col += vec3(1.0, 0.55, 0.20) * (0.30 * exp(-rl * rl / 0.0020) + 0.20 * exp(-rl * rl / 0.0150) + 0.06 * exp(-rl / 0.45)) * L;
+
+    // فتیله روی شعله
+    float s = (p.y - YT) / WL;
+    if (s > 0.0 && s < 1.02) {
+        float wd = 0.0019 * (1.0 - 0.4 * s);
+        float dw = abs(p.x - wickX(s));
+        float wmk = (1.0 - smoothstep(wd - px, wd + px, dw)) * (1.0 - smoothstep(1.0, 1.0 + 2.0 * px / WL, s));
+        vec3 wc = mix(vec3(0.55, 0.42, 0.28) * 0.9 * L, vec3(0.012, 0.008, 0.006), smoothstep(0.12, 0.45, s));
+        wc += vec3(1.0, 0.35, 0.06) * 1.4 * smoothstep(0.82, 1.0, s) * (1.0 - smoothstep(0.0, wd, dw) * 0.4);
+        col = mix(col, wc, wmk * 0.93);
+    }
+
+    col += motes(p, t, LP);
+
+    // ویگنت و تن‌مپ
+    col *= 1.0 - 0.35 * dot(uv, uv);
+    col = 1.0 - exp(-col * 1.2);
+    col = pow(col, vec3(0.8));
+    col += (hash(gl_FragCoord.xy + fract(t) * 91.0) - 0.5) / 255.0;
+    gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+function candleReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function candleInitGL() {
+    let gl = null;
+    try {
+        const opts = { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' };
+        gl = candleCanvas.getContext('webgl', opts) || candleCanvas.getContext('experimental-webgl', opts);
+    } catch (err) {
+        gl = null;
+    }
+    if (!gl) return null;
+    const compile = (type, src) => {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+            console.warn('candle shader:', gl.getShaderInfoLog(s));
+            return null;
+        }
+        return s;
+    };
+    const vs = compile(gl.VERTEX_SHADER, CANDLE_VERT);
+    const fs = compile(gl.FRAGMENT_SHADER, CANDLE_FRAG);
+    if (!vs || !fs) return null;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    return {
+        gl,
+        uRes: gl.getUniformLocation(prog, 'uRes'),
+        uTime: gl.getUniformLocation(prog, 'uTime'),
+        uMotion: gl.getUniformLocation(prog, 'uMotion')
+    };
+}
+
+function candleResize() {
+    if (!candleCanvas) return;
+    if (!candleMode) {
+        candleGL = candleInitGL();
+        if (candleGL) {
+            candleMode = 'gl';
+            candleCanvas.addEventListener('webglcontextlost', (e) => {
+                e.preventDefault();
+                cancelAnimationFrame(candleRaf);
+            });
+            candleCanvas.addEventListener('webglcontextrestored', () => {
+                candleGL = candleInitGL();
+                if (candleGL && candleActive) startCandle();
+            });
+        } else {
+            candleMode = '2d';
+            // روی بومی که WebGL گرفته نمی‌شود 2D ساخت؛ بوم تازه جایگزین می‌شود
+            const fresh = candleCanvas.cloneNode(false);
+            candleCanvas.replaceWith(fresh);
+            candleCanvas = fresh;
+        }
+    }
+    const cssW = window.innerWidth;
+    const cssH = window.innerHeight;
+    const scale = Math.min(Math.min(window.devicePixelRatio || 1, 1.5), Math.sqrt(CANDLE_GL_PIXELS / Math.max(1, cssW * cssH)));
+    candleW = Math.max(2, Math.round(cssW * scale));
+    candleH = Math.max(2, Math.round(cssH * scale));
+    candleCanvas.width = candleW;
+    candleCanvas.height = candleH;
+    if (candleMode === '2d') candleCtx = candleCanvas.getContext('2d');
+}
+
+function candleDraw() {
+    if (candleMode === '2d') {
+        candleDraw2D();
+        return;
+    }
+    if (!candleGL) return;
+    const o = candleGL;
+    const gl = o.gl;
+    gl.viewport(0, 0, candleW, candleH);
+    gl.uniform2f(o.uRes, candleW, candleH);
+    gl.uniform1f(o.uTime, candleElapsed % 5000);
+    gl.uniform1f(o.uMotion, candleReducedMotion() ? 0 : 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// ---------- نسخه‌ی Canvas 2D (پشتیبان، وقتی WebGL نیست) ----------
+
+function candleDraw2D() {
+    const c = candleCtx;
+    if (!c) return;
+    const W = candleW;
+    const H = candleH;
+    const moving = !candleReducedMotion();
+    const t = candleElapsed;
+    const flick = moving ? 1 + 0.07 * Math.sin(t * 9.1) * Math.sin(t * 3.7 + 1) + 0.04 * Math.sin(t * 17.3) : 1;
+    const lean = moving ? Math.sin(t * 1.7) * 0.012 * H : 0;
+    const u = Math.min(H, W * 1.6);          // واحد طول
+    const cx = W / 2;
+    const top = H * 0.56;                     // لبه‌ی بالای شمع
+    const rw = u * 0.062;
+    const fh = u * 0.2 * flick;
+    const fy = top - u * 0.02;                // پایه‌ی شعله
+    const fw = u * 0.03;
+
+    c.fillStyle = '#060302';
+    c.fillRect(0, 0, W, H);
+    // نور روی دیوار
+    const wall = c.createRadialGradient(cx, fy - fh * 0.3, 0, cx, fy - fh * 0.3, u * 0.9);
+    wall.addColorStop(0, 'rgba(255,140,60,0.55)');
+    wall.addColorStop(0.25, 'rgba(160,70,25,0.22)');
+    wall.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = wall;
+    c.fillRect(0, 0, W, H);
+    // بدنه
+    const bg = c.createLinearGradient(cx - rw, 0, cx + rw, 0);
+    bg.addColorStop(0, '#3a2412');
+    bg.addColorStop(0.35, '#e8c58d');
+    bg.addColorStop(0.65, '#d9b078');
+    bg.addColorStop(1, '#2e1c0e');
+    c.fillStyle = bg;
+    c.fillRect(cx - rw, top, rw * 2, H - top);
+    const fade = c.createLinearGradient(0, top, 0, H);
+    fade.addColorStop(0, 'rgba(255,150,50,0.35)');
+    fade.addColorStop(0.35, 'rgba(0,0,0,0)');
+    fade.addColorStop(1, 'rgba(0,0,0,0.85)');
+    c.fillStyle = fade;
+    c.fillRect(cx - rw, top, rw * 2, H - top);
+    // سطح بالا
+    c.fillStyle = '#ffd68a';
+    c.beginPath();
+    c.ellipse(cx, top, rw, u * 0.0155, 0, 0, Math.PI * 2);
+    c.fill();
+    // شعله
+    const flameGrad = c.createRadialGradient(cx + lean * 0.3, fy - fh * 0.28, 0, cx + lean * 0.3, fy - fh * 0.3, fh * 0.6);
+    flameGrad.addColorStop(0, '#fff6d0');
+    flameGrad.addColorStop(0.35, '#ffc24a');
+    flameGrad.addColorStop(0.75, '#ff7a14');
+    flameGrad.addColorStop(1, 'rgba(255,60,0,0)');
+    c.fillStyle = flameGrad;
+    c.beginPath();
+    c.moveTo(cx, fy);
+    c.bezierCurveTo(cx - fw * 1.6, fy - fh * 0.2, cx - fw * 0.8 + lean * 0.5, fy - fh * 0.7, cx + lean, fy - fh);
+    c.bezierCurveTo(cx + fw * 0.8 + lean * 0.5, fy - fh * 0.7, cx + fw * 1.6, fy - fh * 0.2, cx, fy);
+    c.fill();
+    // فتیله
+    c.strokeStyle = '#1a100a';
+    c.lineWidth = Math.max(1, u * 0.004);
+    c.beginPath();
+    c.moveTo(cx, top);
+    c.lineTo(cx + lean * 0.2, fy - fh * 0.38);
+    c.stroke();
+}
+
+function candleFrame(ts) {
+    if (!candleActive) return;
+    candleRaf = requestAnimationFrame(candleFrame);
+    if (!candleLastTs) candleLastTs = ts;
+    const dt = ts - candleLastTs;
+    if (dt < CANDLE_FRAME_MS) return;
+    candleLastTs = ts;
+    candleElapsed += Math.min(dt, 100) / 1000;
+    candleDraw();
+}
+
+function startCandle() {
+    if (!candleCanvas) return;
+    candleActive = true;
+    candleCanvas.hidden = false;
+    backgroundImage.style.visibility = 'hidden';
+    candleResize();
+    candleDraw();
+    cancelAnimationFrame(candleRaf);
+    candleLastTs = 0;
+    // با «کاهش حرکت» فقط یک فریم ثابت رسم می‌شود
+    if (!candleReducedMotion() && !document.hidden) {
+        candleRaf = requestAnimationFrame(candleFrame);
+    }
+}
+
+function stopCandle() {
+    candleActive = false;
+    cancelAnimationFrame(candleRaf);
+    if (candleCanvas) candleCanvas.hidden = true;
+}
+
+window.addEventListener('resize', () => {
+    if (!candleActive) return;
+    candleResize();
+    candleDraw();
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (!candleActive) return;
+    cancelAnimationFrame(candleRaf);
+    if (!document.hidden && !candleReducedMotion()) {
+        candleLastTs = 0;
+        candleRaf = requestAnimationFrame(candleFrame);
+    }
+});
+
+// ============================================
 // توابع مدیریت پخش صدا
 // ============================================
 
@@ -3478,6 +4002,7 @@ function applyBgMode(mode) {
     stopGalaxy();
     stopOcean();
     stopMerger();
+    stopCandle();
     if (KALEIDO_MODES.includes(bgMode)) {
         kaleidoShards = bgMode === 'kaleidoscope';
         startKaleidoscope();
@@ -3487,6 +4012,8 @@ function applyBgMode(mode) {
         startOcean();
     } else if (bgMode === 'merger') {
         startMerger();
+    } else if (bgMode === 'candle') {
+        startCandle();
     }
 }
 
