@@ -7,47 +7,57 @@
  * Docs: https://docs.bale.ai/miniapp
  */
 (function () {
-    const tg = window.Bale && window.Bale.WebApp;
-    if (!tg) return; // SDK not loaded (normal browser, or tapi.bale.ai unreachable)
-
-    const PANEL_IDS = ['settingsOverlay', 'intervalOverlay', 'bgSoundsOverlay', 'meditationOverlay', 'breathOverlay'];
-
-    function safe(fn) {
-        try { return fn(); } catch (e) { return undefined; }
+    // The SDK is loaded asynchronously and only inside Bale (see the inline loader in index.html's <head>).
+    if (!(window.Bale && window.Bale.WebApp)) {
+        const sdk = document.getElementById('baleSdk');
+        if (sdk) sdk.addEventListener('load', init, { once: true });
+        return; // normal browser / PWA, or tapi.bale.ai unreachable: do nothing
     }
+    init();
 
-    document.documentElement.classList.add('bale-miniapp');
+    function init() {
+        const tg = window.Bale && window.Bale.WebApp;
+        if (!tg) return;
 
-    safe(() => tg.ready());
-    safe(() => tg.expand());
+        const PANEL_IDS = ['settingsOverlay', 'intervalOverlay', 'bgSoundsOverlay', 'meditationOverlay', 'breathOverlay'];
 
-    // --- Back button: visible while a panel is open; closes it. Otherwise Bale's own back closes the app. ---
-    const panels = PANEL_IDS.map((id) => document.getElementById(id)).filter(Boolean);
+        function safe(fn) {
+            try { return fn(); } catch (e) { return undefined; }
+        }
 
-    function anyPanelOpen() {
-        return panels.some((p) => p.classList.contains('show'));
-    }
+        document.documentElement.classList.add('bale-miniapp');
 
-    function syncBackButton() {
-        if (!tg.BackButton) return;
-        safe(() => (anyPanelOpen() ? tg.BackButton.show() : tg.BackButton.hide()));
-    }
+        safe(() => tg.ready());
+        safe(() => tg.expand());
 
-    // Reuse the existing Escape handlers (they close every panel and stop a breathing session)
-    function onBack() {
-        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-        syncBackButton();
-    }
+        // --- Back button: visible while a panel is open; closes it. Otherwise Bale's own back closes the app. ---
+        const panels = PANEL_IDS.map((id) => document.getElementById(id)).filter(Boolean);
 
-    if (tg.BackButton) {
-        safe(() => tg.BackButton.onClick(onBack));
-        const observer = new MutationObserver(syncBackButton);
-        panels.forEach((p) => observer.observe(p, { attributes: true, attributeFilter: ['class'] }));
-        syncBackButton();
-    }
+        function anyPanelOpen() {
+            return panels.some((p) => p.classList.contains('show'));
+        }
 
-    // --- Theme: only the header color; the app keeps its own look ---
-    if (typeof tg.setHeaderColor === 'function') {
-        safe(() => tg.setHeaderColor('#667eea'));
+        function syncBackButton() {
+            if (!tg.BackButton) return;
+            safe(() => (anyPanelOpen() ? tg.BackButton.show() : tg.BackButton.hide()));
+        }
+
+        // Reuse the existing Escape handlers (they close every panel and stop a breathing session)
+        function onBack() {
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+            syncBackButton();
+        }
+
+        if (tg.BackButton) {
+            safe(() => tg.BackButton.onClick(onBack));
+            const observer = new MutationObserver(syncBackButton);
+            panels.forEach((p) => observer.observe(p, { attributes: true, attributeFilter: ['class'] }));
+            syncBackButton();
+        }
+
+        // --- Theme: only the header color; the app keeps its own look ---
+        if (typeof tg.setHeaderColor === 'function') {
+            safe(() => tg.setHeaderColor('#667eea'));
+        }
     }
 })();

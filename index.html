@@ -2,8 +2,6 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <!-- Bale Mini App SDK (must come before other scripts; harmless outside Bale) -->
-    <script src="https://tapi.bale.ai/miniapp.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     
     <!-- Primary Meta Tags -->
@@ -40,12 +38,36 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Calm">
     
-    <!-- Fonts -->
-    <link rel="preload" href="assets/fonts/Estedad-VF.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="assets/fonts/Inter-latin-VF.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- Startup (runs before anything else, nothing render-blocking from other hosts):
+         - Persian (default) UI is usable without waiting for JS; English waits behind the loading overlay
+         - preload only the font of the UI language (Persian = Estedad by default, English = Inter)
+         - Bale Mini App SDK: loaded (async) only when the page is opened inside Bale. Bale passes
+           tgWebApp* params in the URL hash (the SDK keeps them in sessionStorage across reloads) and
+           its native apps inject window.BaleWebApp. assets/js/bale.js waits for it. -->
+    <script>
+    (function () {
+        var d = document, h = d.head, en = /[?&]lang=en(&|$)/i.test(location.search);
+        try { en = en || (!/[?&]lang=fa(&|$)/i.test(location.search) && localStorage.getItem('calm-language') === 'en'); } catch (e) {}
+        var font = d.createElement('link');
+        font.rel = 'preload'; font.as = 'font'; font.type = 'font/woff2'; font.crossOrigin = 'anonymous';
+        font.href = en ? 'assets/fonts/Inter-latin-VF.woff2' : 'assets/fonts/Estedad-VF.woff2';
+        h.appendChild(font);
+        // The HTML is already in Persian. Only an English UI has to wait for script.js (loading overlay).
+        if (en) d.documentElement.classList.add('i18n-pending');
+
+        var bale = /tgWebApp/.test(location.hash) || !!window.BaleWebApp;
+        try { bale = bale || /tgWebApp/.test(sessionStorage.getItem('__bale__initParams') || ''); } catch (e) {}
+        if (bale) {
+            var sdk = d.createElement('script');
+            sdk.src = 'https://tapi.bale.ai/miniapp.js';
+            sdk.id = 'baleSdk';
+            h.appendChild(sdk);
+        }
+    })();
+    </script>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="assets/css/style.css?v=37">
+    <link rel="stylesheet" href="assets/css/style.css?v=38">
     
  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "54a5c1f34bde403fb376d604168b982e"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -68,8 +90,8 @@
     <!-- Overlay شروع -->
     <div class="start-overlay" id="startOverlay">
         <div class="start-content">
-            <h1 data-i18n="startTitle">آرامش</h1>
-            <p data-i18n="startSubtitle">برای شروع پخش خودکار صدا، دکمه زیر را فشار دهید</p>
+            <h1 data-i18n="startTitle">به Calm خوش آمدید</h1>
+            <p data-i18n="startSubtitle">فضای آرامش و تمرکز</p>
             <button id="startBtn" class="start-button" data-i18n="startButton">شروع</button>
         </div>
     </div>
@@ -831,12 +853,13 @@
         <button type="button" class="update-toast-close" id="updateDismissBtn" aria-label="بستن" data-i18n-aria-label="ariaClose">×</button>
     </div>
 
-    <audio id="audio" preload="auto">
+    <!-- preload="none": the bowl sound is fetched on first play (the service worker also caches it) -->
+    <audio id="audio" preload="none">
         <source src="assets/sounds/singing-bowl-gong.mp3" type="audio/mpeg">
     </audio>
 
-    <script src="assets/js/analytics.js?v=9"></script>
-    <script src="assets/js/script.js?v=44"></script>
-    <script src="assets/js/bale.js?v=9"></script>
+    <script defer src="assets/js/analytics.js?v=10"></script>
+    <script defer src="assets/js/script.js?v=45"></script>
+    <script defer src="assets/js/bale.js?v=10"></script>
 </body>
 </html>

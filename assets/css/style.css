@@ -61,8 +61,13 @@ html[lang="fa"] body {
     line-height: 1.7;
 }
 
-/* Loading Overlay */
+/* Loading Overlay: only for an English UI until script.js has translated the (Persian) HTML.
+   The class is set by the inline script in index.html's <head>. */
 .loading-overlay {
+    display: none;
+}
+
+html.i18n-pending .loading-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -116,7 +121,13 @@ html[lang="fa"] body {
     background-position: center;
     background-repeat: no-repeat;
     z-index: -1;
-    transition: background-image 1s ease-in-out;
+    opacity: 0;
+    transition: background-image 1s ease-in-out, opacity 0.6s ease;
+}
+
+/* the image arrives after the UI is already usable (progressive loading); fade it in */
+.background-image.loaded {
+    opacity: 1;
 }
 
 .kaleidoscope-canvas {
@@ -681,6 +692,13 @@ label {
 }
 .preview-candle { background-image: url('../images/candle-thumb.webp'); }
 .preview-merger { background-image: url('../images/merger-thumb.webp'); }
+/* the settings panel is hidden at startup: don't download its preview images until it is opened */
+.settings-overlay:not(.thumbs-ready) .preview-single,
+.settings-overlay:not(.thumbs-ready) .preview-rotation,
+.settings-overlay:not(.thumbs-ready) .preview-candle,
+.settings-overlay:not(.thumbs-ready) .preview-merger {
+    background-image: none;
+}
 .preview-ocean {
     background:
         radial-gradient(circle at 70% 22%, #fffdf4 0, #fffdf4 5%, rgba(190, 215, 255, 0.45) 12%, transparent 30%),

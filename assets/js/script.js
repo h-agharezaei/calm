@@ -573,6 +573,8 @@ let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope
 const KALEIDO_MODES = ['kaleidoscope', 'kaleidoscope-soft']; // زیبابین نرم = همان، بدون مثلث‌ها
 const CANVAS_MODES = KALEIDO_MODES.concat('galaxy', 'ocean', 'merger', 'candle'); // حالت‌هایی که تصویر ندارند
 let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
+let bgImageRequested = false; // تصویر پس‌زمینه‌ی فعلی درخواست شده؟ (در حالت‌های canvas لازم نیست)
+let bgImageDeferred = true;   // تا پایان راه‌اندازی صبر کن (لینک اشتراکی ممکن است حالت/تصویر را عوض کند)
 
 // ============================================
 // توابع مدیریت زبان
@@ -802,19 +804,22 @@ function setBackground(index) {
     currentImageIndex = index;
     const imageName = images[currentImageIndex];
     
-    // preload تصویر قبل از نمایش
+    bgImageRequested = true;
+
+    // به‌روزرسانی thumbnail فعال (بدون انتظار برای بارگذاری تصویر)
+    thumbnails.forEach(thumb => thumb.classList.remove('active'));
+    const activeThumbnail = document.querySelector(`.thumbnail[data-index="${index}"]`);
+    if (activeThumbnail) {
+        activeThumbnail.classList.add('active');
+    }
+
+    // preload تصویر قبل از نمایش (اگر نیامد، رابط کاربری بدون تصویر کار می‌کند)
     preloadImage(imageName).then(() => {
+        if (images[currentImageIndex] !== imageName) return; // در این فاصله تصویر دیگری انتخاب شده
         backgroundImage.style.backgroundImage = `url('${imageUrl(imageName)}')`;
-        
+        backgroundImage.classList.add('loaded');
         preloadNextImage();
-        
-        // به‌روزرسانی thumbnail فعال
-        thumbnails.forEach(thumb => thumb.classList.remove('active'));
-        const activeThumbnail = document.querySelector(`.thumbnail[data-index="${index}"]`);
-        if (activeThumbnail) {
-            activeThumbnail.classList.add('active');
-        }
-    });
+    }).catch(() => {});
 }
 
 // preload فقط تصویر بعدی (و فقط در حالت چرخشی)
@@ -3930,6 +3935,9 @@ function applyBgMode(mode) {
         startMerger();
     } else if (bgMode === 'candle') {
         startCandle();
+    } else {
+        // از حالت canvas به حالت تصویر برگشته‌ایم و تصویر هنوز بارگذاری نشده
+        ensureBackgroundImage();
     }
 }
 
@@ -4064,6 +4072,7 @@ startBtn.addEventListener('click', () => {
 
 // تابع lazy loading برای thumbnails
 function lazyLoadThumbnails() {
+    settingsOverlay.classList.add('thumbs-ready'); // تصاویر پیش‌نمایش حالت‌های پس‌زمینه (CSS)
     const lazyThumbnails = document.querySelectorAll('.lazy-thumbnail');
     
     lazyThumbnails.forEach((img, index) => {
@@ -4143,48 +4152,34 @@ function loadSavedSettings() {
     }
 }
 
-// بارگذاری اولیه: فقط تصویر فعلی
-async function initializeApp() {
+// تصویر پس‌زمینه فقط وقتی لازم است بارگذاری می‌شود (حالت‌های بوم/canvas تصویر ندارند)
+function ensureBackgroundImage() {
+    if (bgImageDeferred || bgImageRequested || CANVAS_MODES.includes(bgMode)) return;
+    bgImageRequested = true;
+    setBackground(currentImageIndex);
+}
+
+// بارگذاری اولیه: رابط کاربری منتظر تصویر نمی‌ماند.
+// اول زبان و تنظیمات اعمال می‌شود و loading overlay کنار می‌رود؛ تصویر بعداً و بی‌صدا می‌آید.
+function initializeApp() {
     try {
-        console.log('شروع بارگذاری...');
-        
-        // بارگذاری زبان ذخیره شده
         loadSavedLanguage();
-        console.log('زبان بارگذاری شد');
-        
-        // بارگذاری پیش‌فرض صدا ذخیره شده
         loadSavedPreset();
         loadSavedSettings();
-        
-        // بارگذاری تصویر اولیه
-        console.log('در حال بارگذاری تصویر:', images[currentImageIndex]);
-        await preloadImage(images[currentImageIndex]);
-        console.log('تصویر بارگذاری شد');
-        
-        // تنظیم پس‌زمینه
-        if (backgroundImage) {
-            backgroundImage.style.backgroundImage = `url('${imageUrl(images[currentImageIndex])}')`;
-            console.log('پس‌زمینه تنظیم شد');
-        } else {
-            console.error('backgroundImage element not found!');
-        }
-        
-        // به‌روزرسانی thumbnail فعال
-        const activeThumbnail = document.querySelector(`.thumbnail[data-index="${currentImageIndex}"]`);
-        if (activeThumbnail) {
-            activeThumbnail.classList.add('active');
-        }
-        
-        // مخفی کردن loading overlay
-        hideLoadingOverlay();
-        console.log('بارگذاری کامل شد');
-        
-        // در حالت چرخشی تصویر بعدی از قبل بارگذاری شود
-        preloadNextImage();
     } catch (error) {
-        console.error('خطا در بارگذاری تصویر:', error);
-        hideLoadingOverlay();
+        console.error('خطا در بارگذاری تنظیمات:', error);
     }
+
+    const activeThumbnail = document.querySelector(`.thumbnail[data-index="${currentImageIndex}"]`);
+    if (activeThumbnail) activeThumbnail.classList.add('active');
+
+    hideLoadingOverlay();
+
+    // بعد از اجرای کامل اسکریپت (لینک اشتراکی ممکن است حالت/تصویر را عوض کند) تصویر را بخواه
+    setTimeout(() => {
+        bgImageDeferred = false;
+        ensureBackgroundImage();
+    }, 0);
 }
 
 // اجرای تابع مقداردهی اولیه

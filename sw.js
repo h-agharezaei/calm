@@ -1,27 +1,36 @@
 /**
  * Calm service worker
  *
- * - Precaches the app shell (HTML, CSS, JS, font, icons, bowl sounds)
- * - HTML/CSS/JS: network first (new deploys show up immediately), cache as offline fallback
- * - Images, fonts, short sounds: cache first (filled as they are used)
+ * - Precaches only the app shell (HTML, CSS, JS, Persian font, icons, the two short bowl sounds).
+ *   Installation starts after the page's load event, so it never delays the first paint.
+ * - Pages (HTML): network first, falling back to the cached copy after NAV_TIMEOUT_MS on a slow
+ *   network (new deploys still show up on the next visit) and when offline.
+ * - Versioned CSS/JS (?v=N): cache first. The URL changes on every edit, so a cached copy is never stale.
+ * - Other same-origin files: network first, cache as offline fallback.
+ * - Images, fonts, icons: stale-while-revalidate in ASSET_CACHE, which survives VERSION bumps
+ *   (no re-download after each deploy; a changed file is picked up in the background).
+ * - Short sounds: cache first (media elements send Range requests; answered from the cached file).
  * - Large background sounds (assets/bg-sounds) are streamed from the network, unless the user saved
  *   them for offline use (stored by the page in OFFLINE_CACHE, which survives VERSION bumps)
  *
- * Bump VERSION whenever a cached, non-versioned file (images, sounds, font) changes.
+ * Bump VERSION whenever a precached file changes (the ?v= values below, index.html, bowl sounds).
  */
-const VERSION = 'calm-v53';
+const VERSION = 'calm-v54';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
+const ASSET_CACHE = 'calm-assets';            // images, fonts, icons: kept across versions
 const OFFLINE_CACHE = 'calm-offline-sounds'; // keep in sync with script.js
+const NAV_TIMEOUT_MS = 3500;
 
 const PRECACHE = [
     './',
     'index.html',
     'manifest.webmanifest',
-    'assets/css/style.css?v=37',
-    'assets/js/script.js?v=44',
-    'assets/js/analytics.js?v=9',
-    'assets/js/bale.js?v=9',
+    'assets/css/style.css?v=38',
+    'assets/js/script.js?v=45',
+    'assets/js/analytics.js?v=10',
+    'assets/js/bale.js?v=10',
+    'assets/fonts/Estedad-VF.woff2', // already in the HTTP cache from the page's preload
     'assets/icons/icon-192.png',
     'assets/icons/icon-512.png',
     'assets/icons/apple-touch-icon.png',
@@ -41,7 +50,7 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys()
             .then((keys) => Promise.all(
-                // only delete old versioned caches; keep the user's offline sounds
+                // only delete old versioned caches; keep ASSET_CACHE and the user's offline sounds
                 keys.filter((k) => /^calm-v\d+-/.test(k) && !k.startsWith(VERSION)).map((k) => caches.delete(k))
             ))
             .then(() => self.clients.claim())
@@ -68,12 +77,23 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    if (/\/assets\/(images|fonts|sounds|icons)\//.test(url.pathname)) {
+    if (/\/assets\/sounds\//.test(url.pathname)) {
         event.respondWith(cacheFirst(req));
         return;
     }
 
-    event.respondWith(networkFirst(req));
+    if (/\/assets\/(images|fonts|icons)\//.test(url.pathname)) {
+        event.respondWith(staleWhileRevalidate(req, ASSET_CACHE));
+        return;
+    }
+
+    // Versioned CSS/JS: the ?v= changes with every edit
+    if (/[?&]v=/.test(url.search) && /\.(css|js)$/.test(url.pathname)) {
+        event.respondWith(cacheFirst(req, SHELL_CACHE));
+        return;
+    }
+
+    event.respondWith(networkFirst(req, req.mode === 'navigate' ? NAV_TIMEOUT_MS : 0));
 });
 
 async function offlineSound(req) {
@@ -84,26 +104,43 @@ async function offlineSound(req) {
     return fetch(req);
 }
 
-async function networkFirst(req) {
+async function cachedFallback(req) {
+    const hit = await caches.match(req, { ignoreSearch: true });
+    if (hit) return hit;
+    if (req.mode === 'navigate') return caches.match('index.html');
+    return undefined;
+}
+
+// timeoutMs > 0: if the network is slower than that and a cached copy exists, answer from the cache
+// (the network response still refreshes the cache for the next visit)
+async function networkFirst(req, timeoutMs) {
+    const network = fetch(req, { cache: 'no-cache' }) // skip the HTTP cache so new deploys show up at once
+        .then(async (res) => {
+            if (res.ok) {
+                const cache = await caches.open(SHELL_CACHE);
+                await cache.put(req, res.clone());
+            }
+            return res;
+        });
+
+    if (timeoutMs > 0) {
+        const fallback = await cachedFallback(req);
+        if (fallback) {
+            const timer = new Promise((resolve) => setTimeout(() => resolve(fallback), timeoutMs));
+            return Promise.race([network.catch(() => fallback), timer]);
+        }
+    }
+
     try {
-        const res = await fetch(req, { cache: 'no-cache' }); // skip the HTTP cache so new deploys show up at once
-        if (res.ok) {
-            const cache = await caches.open(SHELL_CACHE);
-            cache.put(req, res.clone());
-        }
-        return res;
+        return await network;
     } catch (err) {
-        const hit = await caches.match(req, { ignoreSearch: true });
+        const hit = await cachedFallback(req);
         if (hit) return hit;
-        if (req.mode === 'navigate') {
-            const page = await caches.match('index.html');
-            if (page) return page;
-        }
         throw err;
     }
 }
 
-async function cacheFirst(req) {
+async function cacheFirst(req, cacheName = RUNTIME_CACHE) {
     const hit = await caches.match(req.url);
     if (hit) {
         return req.headers.has('range') ? rangeResponse(req, hit) : hit;
@@ -111,22 +148,25 @@ async function cacheFirst(req) {
     const res = await fetch(req, { cache: 'no-cache' }); // skip the HTTP cache so new deploys show up at once
     // Only full responses can be cached (media elements send Range requests)
     if (res.status === 200 && !req.headers.has('range')) {
-        const cache = await caches.open(RUNTIME_CACHE);
+        const cache = await caches.open(cacheName);
         cache.put(req.url, res.clone());
     }
     return res;
 }
 
-async function staleWhileRevalidate(req) {
-    const cache = await caches.open(RUNTIME_CACHE);
-    const hit = await cache.match(req);
+async function staleWhileRevalidate(req, cacheName = RUNTIME_CACHE) {
+    const cache = await caches.open(cacheName);
+    const hit = await cache.match(req.url) || await caches.match(req.url); // e.g. the precached font
     const network = fetch(req)
         .then((res) => {
-            if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
+            if (res.ok || res.type === 'opaque') cache.put(req.url, res.clone());
             return res;
-        })
-        .catch(() => hit);
-    return hit || network;
+        });
+    if (hit) {
+        network.catch(() => {}); // offline: the cached copy is enough
+        return hit;
+    }
+    return network;
 }
 
 // Safari/Chrome request audio with Range headers; answer from the cached full file
