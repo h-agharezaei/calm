@@ -861,7 +861,7 @@ function stopBackgroundRotation() {
 // ============================================
 // چند لکه‌ی نرم و رنگی به‌آرامی در یک گوه‌ی کوچک حرکت می‌کنند و آن گوه
 // با آینه‌کاری دور مرکز تکرار می‌شود. تعداد قطعه‌ها باید زوج باشد تا لبه‌ها پیوسته بمانند.
-const kaleidoCanvas = document.getElementById('kaleidoscopeCanvas');
+let kaleidoCanvas = document.getElementById('kaleidoscopeCanvas');
 const KALEIDO_SEGMENTS = 12;
 const KALEIDO_BASE = '#0b1226';
 const KALEIDO_PALETTE = [
@@ -900,7 +900,260 @@ let kaleidoElapsed = 0;
 let kaleidoActive = false;
 let kaleidoShards = true; // در «زیبابین نرم» خاموش است
 
+// ---------- نسخه‌ی WebGL (اصلی) ----------
+// هر پیکسل با «تا کردن زاویه» به همان گوه‌ی ۳۰ درجه برمی‌گردد (آینه‌کاری دقیق، بدون درز)
+// و لکه‌ها و مثلث‌ها با همان فرمول‌های نسخه‌ی 2D در شیدر رسم می‌شوند.
+// مختصات محتوا: واحد = شعاع (نصف قطر صفحه)، مبدأ = مرکز.
+const KALEIDO_GL_PIXELS = 1400000;
+const KALEIDO_VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
+const KALEIDO_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform vec2 uRes;
+uniform float uSpin;
+uniform float uPx;
+uniform float uLw;
+uniform float uShards;
+uniform float uT;
+uniform float uGloss;
+uniform vec3 uBlob[9];
+uniform vec3 uBlobC[9];
+uniform vec4 uShard[5];
+uniform vec3 uShardC[5];
+const float WEDGE = 6.28318531 / 12.0;
+const vec3 BASE = vec3(11.0, 18.0, 38.0) / 255.0;
+
+float sdTriangle(vec2 p, vec2 p0, vec2 p1, vec2 p2) {
+    vec2 e0 = p1 - p0, e1 = p2 - p1, e2 = p0 - p2;
+    vec2 v0 = p - p0, v1 = p - p1, v2 = p - p2;
+    vec2 pq0 = v0 - e0 * clamp(dot(v0, e0) / dot(e0, e0), 0.0, 1.0);
+    vec2 pq1 = v1 - e1 * clamp(dot(v1, e1) / dot(e1, e1), 0.0, 1.0);
+    vec2 pq2 = v2 - e2 * clamp(dot(v2, e2) / dot(e2, e2), 0.0, 1.0);
+    float s = e0.x * e2.y - e0.y * e2.x;
+    s = s < 0.0 ? -1.0 : 1.0;
+    vec2 d = min(min(vec2(dot(pq0, pq0), s * (v0.x * e0.y - v0.y * e0.x)),
+                     vec2(dot(pq1, pq1), s * (v1.x * e1.y - v1.y * e1.x))),
+                     vec2(dot(pq2, pq2), s * (v2.x * e2.y - v2.y * e2.x)));
+    return -sqrt(d.x) * (d.y < 0.0 ? -1.0 : 1.0);
+}
+
+void main() {
+    // مختصات پیکسل نسبت به مرکز، محور y رو به پایین (مثل canvas)
+    vec2 p = vec2(gl_FragCoord.x - uRes.x * 0.5, uRes.y * 0.5 - gl_FragCoord.y);
+    float ang = atan(p.y, p.x) - uSpin;
+    ang = mod(ang, 6.28318531);
+    float k = floor(ang / WEDGE);
+    float f = ang - k * WEDGE;
+    float phi = mod(k, 2.0) < 0.5 ? f : WEDGE - f;
+    float rho = length(p) * uPx;
+    vec2 q = rho * vec2(cos(phi), sin(phi));
+
+    vec3 col = BASE;
+    vec2 grad = vec2(0.0);   // شیب «سطح» لکه‌ها، برای برق «نرم»
+    float height = 0.0;
+    for (int i = 0; i < 9; i++) {
+        vec2 dv = q - uBlob[i].xy;
+        float dl = length(dv);
+        float tt = max(0.0, 1.0 - dl / uBlob[i].z);
+        col = min(col + uBlobC[i] * (0.42 * tt), 1.0);
+        if (uGloss > 0.5) {
+            // پروفایل هموار (smoothstep) تا لبه‌ی لکه‌ها حلقه‌ی روشن نسازد
+            height += 0.42 * tt * tt * (3.0 - 2.0 * tt);
+            grad -= (0.42 * 6.0 * tt * (1.0 - tt) / uBlob[i].z) * dv / max(dl, 0.0001);
+        }
+    }
+    if (uGloss > 0.5) {
+        // مثل ژله‌ی براق: نور ملایمی که آهسته می‌چرخد و برق ویژه‌ی نرم روی برآمدگی‌ها
+        vec3 n = normalize(vec3(-grad * 0.55, 1.0));
+        vec3 L = normalize(vec3(0.7 * cos(uT * 0.12), 0.7 * sin(uT * 0.12), 0.75));
+        vec3 hv = normalize(L + vec3(0.0, 0.0, 1.0));
+        float nh = max(dot(n, hv), 0.0);
+        float mask = smoothstep(0.02, 0.26, height);
+        col += vec3(1.0, 0.97, 0.93) * (pow(nh, 18.0) * 0.30 + pow(nh, 5.0) * 0.07) * mask;
+        // ذره‌های ریز چشمک‌زن؛ چون روی مختصات تاخورده‌اند، آینه‌ای تکرار می‌شوند
+        vec2 gp = q * 62.0;
+        vec2 gi = floor(gp);
+        vec2 gf = fract(gp) - 0.5;
+        float hs = fract(sin(dot(gi, vec2(127.1, 311.7))) * 43758.5453);
+        vec2 off = (vec2(fract(hs * 7.3), fract(hs * 13.7)) - 0.5) * 0.5;
+        float tw = pow(0.5 + 0.5 * sin(uT * (0.8 + hs * 1.4) + hs * 40.0), 14.0);
+        float glint = smoothstep(0.13, 0.0, length(gf - off)) * tw * step(0.93, hs);
+        col += vec3(1.0, 0.98, 0.95) * glint * 0.5 * mask;
+        col = min(col, 1.0);
+    }
+    if (uShards > 0.5) {
+        for (int i = 0; i < 5; i++) {
+            vec2 d = q - uShard[i].xy;
+            float r = uShard[i].z;
+            float cr = cos(uShard[i].w), sr = sin(uShard[i].w);
+            vec2 l = vec2(cr * d.x + sr * d.y, -sr * d.x + cr * d.y);
+            vec2 va = vec2(0.0, -r);
+            float sd = sdTriangle(l, va, vec2(0.87 * r, 0.5 * r), vec2(-0.87 * r, 0.5 * r));
+            float fi = float(i);
+            float inside = 1.0 - smoothstep(-0.5 * uPx, 0.5 * uPx, sd);
+            float depth = max(-sd, 0.0) / r;                    // فاصله از لبه، نسبت به اندازه‌ی مثلث
+            vec2 ln = l / r;
+            // بدنه‌ی شیشه: کمی روشن‌تر سمت بالا-چپ نسبت به چارچوب خود مثلث
+            float body = 0.16 + 0.10 * clamp(0.5 - dot(ln, vec2(0.55, 0.83)), 0.0, 1.0);
+            vec3 add = uShardC[i] * body * inside;
+            // لبه‌ی پخ‌خورده: حاشیه‌ی داخلی روشن، پررنگ‌تر سمت منبع نور
+            float lit = 0.5 + 0.5 * dot(normalize(ln + vec2(0.0001)), vec2(-0.6, -0.8));
+            add += vec3(1.0) * inside * exp(-depth / 0.07) * (0.10 + 0.34 * lit);
+            // برق مورب که آهسته روی شیشه می‌لغزد
+            float off = 0.55 * sin(uT * 0.35 + fi * 1.9);
+            float band = (dot(ln, vec2(0.80, 0.60)) - off) / 0.11;
+            add += vec3(1.0, 0.97, 0.92) * inside * 0.20 * exp(-band * band);
+            // خط لبه و یک خط ظریف دوم کمی داخل‌تر (شکست نور در ضخامت شیشه)
+            float stroke = 1.0 - smoothstep(0.5 * uLw - 0.5 * uPx, 0.5 * uLw + 0.5 * uPx, abs(sd));
+            float inner = 1.0 - smoothstep(0.35 * uLw, 0.35 * uLw + uPx, abs(depth * r - 0.03 * r));
+            add += vec3(0.30 * stroke) + vec3(0.8, 0.9, 1.0) * 0.10 * inner * inside;
+            // درخشش گوشه‌ی بالایی، که گاهی بالا می‌آید
+            float tw = pow(0.5 + 0.5 * sin(uT * 0.9 + fi * 2.3), 6.0);
+            add += vec3(1.0) * tw * 0.65 * exp(-length(l - va) / (0.045 * r));
+            col = min(col + add, 1.0);
+        }
+    }
+    // نویز بسیار ریز، تا گرادیان‌های نرم پله‌پله نشوند
+    float n = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    gl_FragColor = vec4(col + (n - 0.5) / 255.0, 1.0);
+}
+`;
+
+let kaleidoMode = '';   // '' | 'gl' | '2d'
+let kaleidoGL = null;
+let kaleidoGLW = 0;
+let kaleidoGLH = 0;
+let kaleidoCssR = 1;
+
+function kaleidoInitGL() {
+    let gl = null;
+    try {
+        const opts = { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' };
+        gl = kaleidoCanvas.getContext('webgl', opts) || kaleidoCanvas.getContext('experimental-webgl', opts);
+    } catch (err) {
+        gl = null;
+    }
+    if (!gl) return null;
+    // آرایه‌های uniform این شیدر حدود ۳۰ بردار جا می‌گیرند؛ روی GPUهای خیلی ضعیف همان 2D بهتر است
+    if (gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS) < 48) return null;
+    const compile = (type, src) => {
+        const sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+            console.warn('kaleidoscope shader:', gl.getShaderInfoLog(sh));
+            return null;
+        }
+        return sh;
+    };
+    const vs = compile(gl.VERTEX_SHADER, KALEIDO_VERT);
+    const fs = compile(gl.FRAGMENT_SHADER, KALEIDO_FRAG);
+    if (!vs || !fs) return null;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const u = (n) => gl.getUniformLocation(prog, n);
+    const o = {
+        gl, uRes: u('uRes'), uSpin: u('uSpin'), uPx: u('uPx'), uLw: u('uLw'), uShards: u('uShards'),
+        uT: u('uT'), uGloss: u('uGloss'), uBlob: u('uBlob'), uBlobC: u('uBlobC'), uShard: u('uShard'), uShardC: u('uShardC')
+    };
+    // رنگ‌ها ثابت‌اند؛ یک‌بار فرستاده می‌شوند
+    o.blobData = new Float32Array(KALEIDO_BLOBS.length * 3);
+    o.shardData = new Float32Array(KALEIDO_SHARDS.length * 4);
+    gl.uniform3fv(o.uBlobC, new Float32Array(KALEIDO_BLOBS.flatMap(b => b.color.map(v => v / 255))));
+    gl.uniform3fv(o.uShardC, new Float32Array(KALEIDO_SHARDS.flatMap(d => d.color.map(v => v / 255))));
+    return o;
+}
+
+function kaleidoFreshCanvas() {
+    const fresh = kaleidoCanvas.cloneNode(false);
+    kaleidoCanvas.replaceWith(fresh);
+    kaleidoCanvas = fresh;
+}
+
 function kaleidoResize() {
+    if (!kaleidoCanvas) return;
+    if (!kaleidoMode) {
+        kaleidoGL = kaleidoInitGL();
+        if (kaleidoGL) {
+            kaleidoMode = 'gl';
+            kaleidoCanvas.addEventListener('webglcontextlost', (e) => {
+                e.preventDefault();
+                cancelAnimationFrame(kaleidoRaf);
+            });
+            kaleidoCanvas.addEventListener('webglcontextrestored', () => {
+                kaleidoGL = kaleidoInitGL();
+                if (kaleidoGL && kaleidoActive) startKaleidoscope();
+            });
+        } else {
+            kaleidoMode = '2d';
+            kaleidoFreshCanvas();
+        }
+    }
+    if (kaleidoMode === '2d') {
+        kaleidoResize2D();
+        return;
+    }
+    const cssW = window.innerWidth;
+    const cssH = window.innerHeight;
+    const scale = Math.min(1, Math.sqrt(KALEIDO_GL_PIXELS / Math.max(1, cssW * cssH)));
+    kaleidoGLW = Math.max(2, Math.round(cssW * scale));
+    kaleidoGLH = Math.max(2, Math.round(cssH * scale));
+    kaleidoCanvas.width = kaleidoGLW;
+    kaleidoCanvas.height = kaleidoGLH;
+    kaleidoCssR = Math.hypot(cssW, cssH) / 2;
+}
+
+function kaleidoDraw() {
+    if (kaleidoMode === '2d') {
+        kaleidoDraw2D();
+        return;
+    }
+    if (!kaleidoGL) return;
+    const o = kaleidoGL;
+    const gl = o.gl;
+    const t = kaleidoElapsed;
+    const wedgeH = Math.sin((Math.PI * 2) / KALEIDO_SEGMENTS);
+    KALEIDO_BLOBS.forEach((b, i) => {
+        o.blobData[i * 3] = 0.5 + 0.5 * Math.sin(t * b.fx + b.px);
+        o.blobData[i * 3 + 1] = wedgeH * (0.5 + 0.5 * Math.sin(t * b.fy + b.py));
+        o.blobData[i * 3 + 2] = b.size;
+    });
+    KALEIDO_SHARDS.forEach((d, i) => {
+        o.shardData[i * 4] = 0.2 + 0.8 * (0.5 + 0.5 * Math.sin(t * d.fx + d.px));
+        o.shardData[i * 4 + 1] = wedgeH * (0.5 + 0.5 * Math.sin(t * d.fy + d.py));
+        o.shardData[i * 4 + 2] = d.size;
+        o.shardData[i * 4 + 3] = t * d.rot + d.px;
+    });
+    const rPx = Math.hypot(kaleidoGLW, kaleidoGLH) / 2;
+    gl.viewport(0, 0, kaleidoGLW, kaleidoGLH);
+    gl.uniform2f(o.uRes, kaleidoGLW, kaleidoGLH);
+    gl.uniform1f(o.uSpin, (t * 0.025) % (Math.PI * 2));
+    gl.uniform1f(o.uPx, 1 / rPx);
+    gl.uniform1f(o.uLw, 2.5 / kaleidoCssR);   // پهنای خط لبه‌ی مثلث، حدود ۲٫۵ پیکسل CSS
+    gl.uniform1f(o.uShards, kaleidoShards ? 1 : 0);
+    gl.uniform1f(o.uT, t);
+    gl.uniform1f(o.uGloss, kaleidoShards ? 0 : 1);   // برق ژله‌ای فقط در «زیبابین نرم»
+    gl.uniform3fv(o.uBlob, o.blobData);
+    gl.uniform4fv(o.uShard, o.shardData);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+
+// ---------- نسخه‌ی Canvas 2D (پشتیبان، وقتی WebGL نیست) ----------
+
+function kaleidoResize2D() {
     if (!kaleidoCanvas) return;
     const scale = 0.6; // وضوح کمتر = سبک‌تر؛ لکه‌ها نرم‌اند و تفاوتی دیده نمی‌شود
     kaleidoCanvas.width = Math.max(2, Math.round(window.innerWidth * scale));
@@ -916,7 +1169,7 @@ function kaleidoResize() {
     kaleidoCtx = kaleidoCanvas.getContext('2d');
 }
 
-function kaleidoDraw() {
+function kaleidoDraw2D() {
     if (!kaleidoCtx || !kaleidoSrcCtx) return;
     const t = kaleidoElapsed;
     const w = kaleidoSrc.width;
