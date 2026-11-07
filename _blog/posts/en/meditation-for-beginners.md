@@ -97,6 +97,7 @@ No. A simple timer is enough. You can also open Calm right in your browser; it's
 
 ## Further reading
 
+- [5-minute daily meditation](/en/blog/meditation-5-minutes-daily/): how to turn your first practice into a daily habit.
 - [Box breathing, step by step](/en/blog/box-breathing/): a two-minute exercise for when you feel too restless to sit.
 - [Where do you feel emotions in your body?](/en/blog/emotions-in-the-body/): bodily maps of emotions and a 10-minute body scan.
 - [10-minute ocean sounds meditation](/en/blog/meditation-10-sea-ocean/): a next step once five minutes feels easy.
