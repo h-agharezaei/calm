@@ -106,6 +106,7 @@ const translations = {
         bgModeOcean: 'Ocean',
         bgModeMerger: 'Colliding galaxies',
         bgModeCandle: 'Oil lamp',
+        bgModeYinyang: 'Yin & Yang',
         selectImage: 'Select Image:',
         imageChangeInterval: 'Image Change Interval (seconds):',
         updateBgInterval: 'Update',
@@ -260,6 +261,7 @@ const translations = {
         bgModeOcean: 'اقیانوس',
         bgModeMerger: 'برخورد کهکشان‌ها',
         bgModeCandle: 'چراغ روغنی',
+        bgModeYinyang: 'یین و یانگ',
         selectImage: 'انتخاب تصویر:',
         imageChangeInterval: 'زمان تغییر تصویر (ثانیه):',
         updateBgInterval: 'تغییر زمان',
@@ -569,9 +571,9 @@ function imageUrl(name) {
 let currentImageIndex = Math.floor(Math.random() * images.length); // شروع با عکس تصادفی
 let bgIntervalTime = 60000; // پیش‌فرض 60 ثانیه
 let bgIntervalId = null;
-let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope-soft' | 'galaxy' | 'ocean' | 'merger' | 'candle'
+let bgMode = 'single'; // 'single' | 'rotation' | 'kaleidoscope' | 'kaleidoscope-soft' | 'galaxy' | 'ocean' | 'merger' | 'candle' | 'yinyang'
 const KALEIDO_MODES = ['kaleidoscope', 'kaleidoscope-soft']; // زیبابین نرم = همان، بدون مثلث‌ها
-const CANVAS_MODES = KALEIDO_MODES.concat('galaxy', 'ocean', 'merger', 'candle'); // حالت‌هایی که تصویر ندارند
+const CANVAS_MODES = KALEIDO_MODES.concat('galaxy', 'ocean', 'merger', 'candle', 'yinyang'); // حالت‌هایی که تصویر ندارند
 let imagesLoaded = new Set(); // ذخیره تصاویری که لود شده‌اند
 let bgImageRequested = false; // تصویر پس‌زمینه‌ی فعلی درخواست شده؟ (در حالت‌های canvas لازم نیست)
 let bgImageDeferred = true;   // تا پایان راه‌اندازی صبر کن (لینک اشتراکی ممکن است حالت/تصویر را عوض کند)
@@ -686,6 +688,7 @@ function updateAllTexts() {
         bgModeSelect.options[5].text = t.bgModeOcean;
         bgModeSelect.options[6].text = t.bgModeMerger;
         bgModeSelect.options[7].text = t.bgModeCandle;
+        bgModeSelect.options[8].text = t.bgModeYinyang;
     }
 }
 
@@ -3949,6 +3952,404 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ============================================
+// پس‌زمینه‌ی «یین و یانگ» (WebGL، ذره‌ای)
+// دو دایره (سفید و سیاه) با فاصله از هم؛ از خطی بینشان فوتون‌هایی گسیل می‌شوند.
+// کل مجموعه می‌چرخد، پس ذره‌ها که در خط مستقیم می‌روند عقب می‌مانند، پخش می‌شوند و
+// بازوی مارپیچیِ سفید می‌سازند که رو به انتها باریک و محو می‌شود.
+// هر ذره فقط از زمان و شناسه‌ی خودش محاسبه می‌شود (بدون شبیه‌سازی).
+// ============================================
+
+let yinyangCanvas = document.getElementById('yinyangCanvas');
+const YY_GL_PIXELS = 1300000;
+const YY_FRAME_MS = 1000 / 60 - 2;
+const YY_TURN = 1.31;          // رادیان بر ثانیه، ساعت‌گرد (~۴٫۸ ثانیه برای یک دور)
+const YY_SIZE = 0.14;          // واحد طول (فاصله‌ی دو دایره) نسبت به ضلع کوتاه صفحه
+const YY_LIFE = 5.0;           // عمر هر فوتون (ثانیه)
+// چارچوب مجموعه (مثل مرجع): محور چرخش و مرکز تولید ذره‌ها وسط دو دایره است؛ سفید در (-0.5,0) و سیاه در (+0.5,0)
+const YY_W = -0.50;            // دایره‌ی سفید روی محور
+const YY_K = 0.50;             // دایره‌ی سیاه روی محور
+const YY_LR = 0.62;            // شعاع نیم‌دیسک گسیل دور دایره‌ی سیاه (قوسش رو به دایره‌ی سفید)
+let yyW = 0;
+let yyH = 0;
+let yyRaf = 0;
+let yyLastTs = 0;
+let yyElapsed = 6;
+let yyActive = false;
+let yyMode = '';               // '' | 'gl' | '2d'
+let yyGL = null;
+let yyCtx = null;
+let yyData = null;             // Float32Array: phase, r, r, r, r, bright
+let yyCount = 0;
+
+function yyBuild() {
+    const small = Math.min(window.innerWidth, window.innerHeight) < 600;
+    const n = small ? 20000 : 40000;
+    const arr = new Float32Array(n * 6);
+    for (let i = 0; i < n; i++) {
+        const o = i * 6;
+        arr[o] = (i + Math.random()) / n;          // فاز یکنواخت: سن‌ها همیشه یکدست پخش‌اند
+        arr[o + 1] = Math.random();
+        arr[o + 2] = Math.random();
+        arr[o + 3] = Math.random();
+        arr[o + 4] = Math.random();
+        arr[o + 5] = 0.55 + 0.45 * Math.random();
+    }
+    yyData = arr;
+    yyCount = n;
+}
+
+const YY_BG_VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}';
+const YY_BG_FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+uniform vec2 uRes;
+uniform vec2 uEye;     // مرکز دایره‌ی سفید (پیکسل، نسبت به مرکز، y رو به بالا)
+uniform float uScale;  // واحد طول به پیکسل
+uniform float uTime;
+
+float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+void main() {
+    vec2 q = gl_FragCoord.xy - 0.5 * uRes;
+    float r = length((q - uEye) / uScale);
+    float pulse = 1.0 + 0.06 * sin(uTime * 1.3);
+    float core = 0.85 * (1.0 - smoothstep(0.125, 0.17, r));   // هم‌اندازه با حفره‌ی سیاه، با لبه‌ی نرم و نور ملایم
+    float glow = 0.08 * exp(-r * r / 0.03);
+    vec3 col = vec3(0.94, 0.97, 1.0) * (core + glow) * pulse;
+    col += vec3(0.006, 0.007, 0.012);
+    col += (hash(gl_FragCoord.xy + fract(uTime) * 91.0) - 0.5) / 255.0;
+    gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+const YY_PT_VERT = `
+attribute vec2 aPos;    // x: فاز، y: عدد تصادفی ثابت
+attribute vec4 aR;      // سه عدد تصادفی ثابت، روشنایی
+uniform vec2 uRes;
+uniform float uTime;
+uniform float uTheta;   // زاویه‌ی فعلی مجموعه (رادیان، منفی = ساعت‌گرد)
+uniform float uScale;
+uniform float uPx;
+uniform float uLife;
+uniform float uOm;
+uniform vec2 uK;        // دایره‌ی سیاه (واحد طول)
+uniform vec2 uW;        // دایره‌ی سفید
+uniform vec3 uLine;     // دایره‌ی سیاه در چارچوب مجموعه (x, y) و جهت قوس گسیل (z)
+varying float vA;
+varying float vAng;
+float h(float x) { return fract(sin(x * 127.1) * 43758.5453); }
+void main() {
+    float cyc = uTime / uLife + aPos.x;
+    float k = floor(cyc);
+    float a01 = cyc - k;
+    float age = a01 * uLife;
+    float seed = aPos.y * 53.0 + mod(k, 997.0) * 7.31 + aR.x * 19.0;
+    float r1 = h(seed);
+    float r2 = h(seed + 1.7);
+    float r3 = h(seed + 3.1);
+    float r4 = h(seed + 5.9);
+    float r5 = h(seed + 8.3);
+    // گسیل از نیم‌دیسک دور دایره‌ی سیاه (قوس رو به دایره‌ی سفید)
+    // ۳۰٪ ذره‌ها از قوس پرنوری گسیل می‌شوند که از نقطه‌ی میانی دو دایره رد می‌شود (پشته‌ی روشن)،
+    // بقیه از دیسک کامل دور دایره‌ی سیاه (سر گرد)
+    float crest = step(0.80, h(seed + 11.3));
+    float ba = uLine.z + (r2 - 0.5) * mix(6.2832, 1.3, crest);
+    float rs = mix(${YY_LR.toFixed(3)} * sqrt(r1), 0.42 + (r1 - 0.5) * 0.10, crest);
+    vec2 P = uLine.xy + rs * vec2(cos(ba), sin(ba));
+    // سر از سمت دایره‌ی سفید کمی قبل از محور چرخش بریده می‌شود (لبه‌ی تیزِ پشته)؛ نقطه‌های آن طرف قرینه می‌شوند
+    P.x = abs(P.x - 0.10) + 0.10;
+    float rho0 = length(P);
+    float psi0 = atan(P.y, P.x) + (r4 - 0.5) * 0.30;
+    // حرکت دایره‌ای: ذره چرخش را با سرعت زاویه‌ای m*Ω ادامه می‌دهد و همزمان به بیرون می‌رود.
+    // m از ۰ تا ~۰٫۹ پخش است: بعضی ذره‌ها کنار خط می‌مانند (سر و پشته‌ی روشن)، بعضی عقب می‌مانند و
+    // بدنه‌ی پهن را می‌سازند. ذره‌های دورتر کم‌نورتر و ریزترند، پس انتها نازک و محو می‌شود.
+    float m = 0.95 * pow(r5, 0.6);   // بیشتر ذره‌ها نزدیک سر می‌مانند → سر و پشته پرتر
+    float vr = 0.15 + 0.50 * pow(r3, 1.2);    // فقط رو به بیرون؛ مارپیچ باز می‌شود و دور مرکز انباشته نمی‌شود
+    float rho = rho0 + vr * age;
+    float th = uTheta + (1.0 - m) * uOm * age + psi0;
+    float c = cos(th);
+    float s = sin(th);
+    vec2 p = rho * vec2(c, s);
+    p += 0.006 * vec2(sin(uTime * 0.9 + aR.y * 40.0), cos(uTime * 0.7 + aR.z * 40.0));
+    vec2 v = vr * vec2(c, s) + rho * m * uOm * vec2(s, -c);
+    vec2 q = p * uScale;
+    gl_Position = vec4(q.x * 2.0 / uRes.x, q.y * 2.0 / uRes.y, 0.0, 1.0);
+    gl_PointSize = uPx * 3.4 * (0.7 + 0.7 * aR.y) * (1.0 - 0.45 * a01);
+    vAng = atan(v.y, v.x);
+    float f = 1.0 - a01;
+    float tw = 0.78 + 0.22 * sin(uTime * (1.5 + 2.0 * aR.z) + aR.x * 50.0);
+    vA = aR.w * 0.85 * (1.0 + 0.8 * crest) * pow(f, 1.1) * smoothstep(0.0, 0.025, a01) * tw
+        * smoothstep(0.135, 0.175, length(p - uK)) * smoothstep(0.14, 0.19, length(p - uW));
+}
+`;
+const YY_PT_FRAG = `
+precision mediump float;
+varying float vA;
+varying float vAng;
+void main() {
+    vec2 c = gl_PointCoord * 2.0 - 1.0;
+    if (dot(c, c) > 1.0) discard;
+    float ca = cos(vAng);
+    float sa = sin(vAng);
+    float u = c.x * ca - c.y * sa;
+    float v = c.x * sa + c.y * ca;
+    float a = exp(-(u * u * 10.0 + v * v * 30.0)) * vA * 1.1;
+    gl_FragColor = vec4(vec3(0.92, 0.95, 1.0) * a, 1.0);
+}
+`;
+
+function yyReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+function yyInitGL() {
+    let gl = null;
+    try {
+        const opts = { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' };
+        gl = yinyangCanvas.getContext('webgl', opts) || yinyangCanvas.getContext('experimental-webgl', opts);
+    } catch (err) {
+        gl = null;
+    }
+    if (!gl) return null;
+    const compile = (type, src) => {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+            console.warn('yinyang shader:', gl.getShaderInfoLog(s));
+            return null;
+        }
+        return s;
+    };
+    const link = (vsSrc, fsSrc, attribs) => {
+        const vs = compile(gl.VERTEX_SHADER, vsSrc);
+        const fs = compile(gl.FRAGMENT_SHADER, fsSrc);
+        if (!vs || !fs) return null;
+        const prog = gl.createProgram();
+        gl.attachShader(prog, vs);
+        gl.attachShader(prog, fs);
+        attribs.forEach((n, i) => gl.bindAttribLocation(prog, i, n));
+        gl.linkProgram(prog);
+        return gl.getProgramParameter(prog, gl.LINK_STATUS) ? prog : null;
+    };
+    const bg = link(YY_BG_VERT, YY_BG_FRAG, ['p']);
+    const pt = link(YY_PT_VERT, YY_PT_FRAG, ['aPos', 'aR']);
+    if (!bg || !pt) return null;
+    if (!yyData) yyBuild();
+    const tri = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, tri);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const pts = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, pts);
+    gl.bufferData(gl.ARRAY_BUFFER, yyData, gl.STATIC_DRAW);
+    const u = (p, n) => gl.getUniformLocation(p, n);
+    return {
+        gl, bg, pt, tri, pts,
+        bgRes: u(bg, 'uRes'), bgEye: u(bg, 'uEye'), bgScale: u(bg, 'uScale'), bgTime: u(bg, 'uTime'),
+        ptRes: u(pt, 'uRes'), ptTime: u(pt, 'uTime'), ptTheta: u(pt, 'uTheta'), ptScale: u(pt, 'uScale'),
+        ptPx: u(pt, 'uPx'), ptLife: u(pt, 'uLife'), ptOm: u(pt, 'uOm'), ptK: u(pt, 'uK'), ptW: u(pt, 'uW'), ptLine: u(pt, 'uLine')
+    };
+}
+
+function yyResize() {
+    if (!yinyangCanvas) return;
+    if (!yyMode) {
+        yyGL = yyInitGL();
+        if (yyGL) {
+            yyMode = 'gl';
+            yinyangCanvas.addEventListener('webglcontextlost', (e) => {
+                e.preventDefault();
+                cancelAnimationFrame(yyRaf);
+            });
+            yinyangCanvas.addEventListener('webglcontextrestored', () => {
+                yyGL = yyInitGL();
+                if (yyGL && yyActive) startYinyang();
+            });
+        } else {
+            yyMode = '2d';
+            if (!yyData) yyBuild();
+            // روی بومی که WebGL گرفته نمی‌شود 2D ساخت؛ بوم تازه جایگزین می‌شود
+            const fresh = yinyangCanvas.cloneNode(false);
+            yinyangCanvas.replaceWith(fresh);
+            yinyangCanvas = fresh;
+        }
+    }
+    const cssW = window.innerWidth;
+    const cssH = window.innerHeight;
+    const scale = Math.min(Math.min(window.devicePixelRatio || 1, 1.5), Math.sqrt(YY_GL_PIXELS / Math.max(1, cssW * cssH)));
+    yyW = Math.max(2, Math.round(cssW * scale));
+    yyH = Math.max(2, Math.round(cssH * scale));
+    yinyangCanvas.width = yyW;
+    yinyangCanvas.height = yyH;
+    if (yyMode === '2d') yyCtx = yinyangCanvas.getContext('2d');
+}
+
+function yyPose() {
+    const t = yyElapsed;
+    const theta = -t * YY_TURN;
+    const c = Math.cos(theta);
+    const s = Math.sin(theta);
+    const scale = YY_SIZE * Math.min(yyW, yyH);
+    const px = Math.max(1.6, Math.min(yyW, yyH) / 520);
+    return { t, theta, scale, px, c, s,
+        kx: YY_K * c, ky: YY_K * s,                    // دایره‌ی سیاه (واحد طول)
+        wx: YY_W * c, wy: YY_W * s };                  // دایره‌ی سفید
+}
+
+function yyDraw() {
+    if (yyMode === '2d') {
+        yyDraw2D();
+        return;
+    }
+    if (!yyGL) return;
+    const o = yyGL;
+    const gl = o.gl;
+    const k = yyPose();
+    gl.viewport(0, 0, yyW, yyH);
+    // پس‌زمینه + دایره‌ی سفید
+    gl.disable(gl.BLEND);
+    gl.useProgram(o.bg);
+    gl.bindBuffer(gl.ARRAY_BUFFER, o.tri);
+    gl.enableVertexAttribArray(0);
+    gl.disableVertexAttribArray(1);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform2f(o.bgRes, yyW, yyH);
+    gl.uniform2f(o.bgEye, k.wx * k.scale, k.wy * k.scale);
+    gl.uniform1f(o.bgScale, k.scale);
+    gl.uniform1f(o.bgTime, k.t % 5000);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    // فوتون‌ها (جمع‌شونده)
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);
+    gl.useProgram(o.pt);
+    gl.bindBuffer(gl.ARRAY_BUFFER, o.pts);
+    gl.enableVertexAttribArray(0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 24, 0);
+    gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 24, 8);
+    gl.uniform2f(o.ptRes, yyW, yyH);
+    gl.uniform1f(o.ptTime, k.t);
+    gl.uniform1f(o.ptTheta, k.theta);
+    gl.uniform1f(o.ptScale, k.scale);
+    gl.uniform1f(o.ptPx, k.px);
+    gl.uniform1f(o.ptLife, YY_LIFE);
+    gl.uniform1f(o.ptOm, YY_TURN);
+    gl.uniform2f(o.ptK, k.kx, k.ky);
+    gl.uniform2f(o.ptW, k.wx, k.wy);
+    gl.uniform3f(o.ptLine, YY_K, 0, Math.PI);
+    gl.drawArrays(gl.POINTS, 0, yyCount);
+}
+
+// ---------- نسخه‌ی Canvas 2D (پشتیبان، وقتی WebGL نیست) ----------
+
+function yyHash(x) {
+    const v = Math.sin(x * 127.1) * 43758.5453;
+    return v - Math.floor(v);
+}
+
+function yyDraw2D() {
+    const c = yyCtx;
+    if (!c || !yyData) return;
+    const k = yyPose();
+    const W = yyW;
+    const H = yyH;
+    c.fillStyle = '#020204';
+    c.fillRect(0, 0, W, H);
+    const cx = W / 2;
+    const cy = H / 2;
+    const step = Math.max(1, Math.round(yyCount / 7000));   // کمتر ذره، چون 2D کندتر است
+    const d = yyData;
+    for (let i = 0; i < yyCount; i += step) {
+        const o = i * 6;
+        const cyc = k.t / YY_LIFE + d[o];
+        const kk = Math.floor(cyc);
+        const a01 = cyc - kk;
+        const age = a01 * YY_LIFE;
+        const seed = d[o + 1] * 53 + (kk % 997) * 7.31 + d[o + 2] * 19;
+        const crest = yyHash(seed + 11.3) >= 0.8;
+        const ba = Math.PI + (yyHash(seed + 1.7) - 0.5) * (crest ? 1.3 : 2 * Math.PI);
+        const rs = crest ? 0.42 + (yyHash(seed) - 0.5) * 0.1 : YY_LR * Math.sqrt(yyHash(seed));
+        const px0 = Math.abs(YY_K + rs * Math.cos(ba) - 0.1) + 0.1;
+        const py0 = rs * Math.sin(ba);
+        const psi0 = Math.atan2(py0, px0) + (yyHash(seed + 5.9) - 0.5) * 0.3;
+        const m = 0.95 * Math.pow(yyHash(seed + 8.3), 0.6);
+        const vr = 0.15 + 0.5 * Math.pow(yyHash(seed + 3.1), 1.2);
+        const rho = Math.hypot(px0, py0) + vr * age;
+        const th = k.theta + (1 - m) * YY_TURN * age + psi0;
+        const x = rho * Math.cos(th);
+        const y = rho * Math.sin(th);
+        if (Math.hypot(x - k.kx, y - k.ky) < 0.155 || Math.hypot(x - k.wx, y - k.wy) < 0.16) continue;
+        const al = d[o + 5] * Math.pow(1 - a01, 1.1) * 0.8;
+        const s = k.px * 1.6 * (1 - 0.45 * a01);
+        c.fillStyle = 'rgba(235,242,255,' + al.toFixed(3) + ')';
+        c.fillRect(cx + x * k.scale - s / 2, cy - y * k.scale - s / 2, s, s);
+    }
+    const ex = cx + k.wx * k.scale;
+    const ey = cy - k.wy * k.scale;
+    const glow = c.createRadialGradient(ex, ey, 0, ex, ey, k.scale * 0.3);
+    glow.addColorStop(0, 'rgba(240,247,255,0.85)');
+    glow.addColorStop(0.42, 'rgba(240,247,255,0.83)');
+    glow.addColorStop(0.6, 'rgba(225,235,255,0.04)');
+    glow.addColorStop(1, 'rgba(200,215,255,0)');
+    c.fillStyle = glow;
+    c.fillRect(ex - k.scale * 0.3, ey - k.scale * 0.3, k.scale * 0.6, k.scale * 0.6);
+}
+
+function yyFrame(ts) {
+    if (!yyActive) return;
+    yyRaf = requestAnimationFrame(yyFrame);
+    if (!yyLastTs) yyLastTs = ts;
+    const dt = ts - yyLastTs;
+    if (dt < YY_FRAME_MS) return;
+    yyLastTs = ts;
+    yyElapsed += Math.min(dt, 100) / 1000;
+    yyDraw();
+}
+
+function startYinyang() {
+    if (!yinyangCanvas) return;
+    yyActive = true;
+    yinyangCanvas.hidden = false;
+    backgroundImage.style.visibility = 'hidden';
+    yyResize();
+    yyDraw();
+    cancelAnimationFrame(yyRaf);
+    yyLastTs = 0;
+    // با «کاهش حرکت» فقط یک فریم ثابت رسم می‌شود
+    if (!yyReducedMotion() && !document.hidden) {
+        yyRaf = requestAnimationFrame(yyFrame);
+    }
+}
+
+function stopYinyang() {
+    yyActive = false;
+    cancelAnimationFrame(yyRaf);
+    if (yinyangCanvas) yinyangCanvas.hidden = true;
+}
+
+window.addEventListener('resize', () => {
+    if (!yyActive) return;
+    yyResize();
+    yyDraw();
+});
+
+document.addEventListener('visibilitychange', () => {
+    if (!yyActive) return;
+    cancelAnimationFrame(yyRaf);
+    if (!document.hidden && !yyReducedMotion()) {
+        yyLastTs = 0;
+        yyRaf = requestAnimationFrame(yyFrame);
+    }
+});
+
+// ============================================
 // توابع مدیریت پخش صدا
 // ============================================
 
@@ -4177,6 +4578,7 @@ function applyBgMode(mode) {
     stopOcean();
     stopMerger();
     stopCandle();
+    stopYinyang();
     if (KALEIDO_MODES.includes(bgMode)) {
         kaleidoShards = bgMode === 'kaleidoscope';
         startKaleidoscope();
@@ -4188,6 +4590,8 @@ function applyBgMode(mode) {
         startMerger();
     } else if (bgMode === 'candle') {
         startCandle();
+    } else if (bgMode === 'yinyang') {
+        startYinyang();
     } else {
         // از حالت canvas به حالت تصویر برگشته‌ایم و تصویر هنوز بارگذاری نشده
         ensureBackgroundImage();

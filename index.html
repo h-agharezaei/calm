@@ -67,7 +67,7 @@
     </script>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="assets/css/style.css?v=40">
+    <link rel="stylesheet" href="assets/css/style.css?v=41">
     
  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "54a5c1f34bde403fb376d604168b982e"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -86,6 +86,7 @@
     <canvas class="kaleidoscope-canvas ocean-canvas" id="oceanCanvas" aria-hidden="true" hidden></canvas>
     <canvas class="kaleidoscope-canvas merger-canvas" id="mergerCanvas" aria-hidden="true" hidden></canvas>
     <canvas class="kaleidoscope-canvas candle-canvas" id="candleCanvas" aria-hidden="true" hidden></canvas>
+    <canvas class="kaleidoscope-canvas yinyang-canvas" id="yinyangCanvas" aria-hidden="true" hidden></canvas>
     
     <!-- Overlay شروع -->
     <div class="start-overlay" id="startOverlay">
@@ -467,6 +468,10 @@
                         <span class="bg-mode-preview preview-candle" aria-hidden="true"></span>
                         <span class="bg-mode-name" data-i18n="bgModeCandle">چراغ روغنی</span>
                     </button>
+                    <button type="button" class="bg-mode-tile" data-mode="yinyang" aria-pressed="false">
+                        <span class="bg-mode-preview preview-yinyang" aria-hidden="true"></span>
+                        <span class="bg-mode-name" data-i18n="bgModeYinyang">یین و یانگ</span>
+                    </button>
                 </div>
                 <select id="bgMode" hidden>
                     <option value="single" data-i18n="bgModeSingle">تصویر ثابت</option>
@@ -477,6 +482,7 @@
                     <option value="ocean" data-i18n="bgModeOcean">اقیانوس</option>
                     <option value="merger" data-i18n="bgModeMerger">برخورد کهکشان‌ها</option>
                     <option value="candle" data-i18n="bgModeCandle">چراغ روغنی</option>
+                    <option value="yinyang" data-i18n="bgModeYinyang">یین و یانگ</option>
                 </select>
             </div>
             
@@ -859,7 +865,7 @@
     </audio>
 
     <script defer src="assets/js/analytics.js?v=10"></script>
-    <script defer src="assets/js/script.js?v=50"></script>
+    <script defer src="assets/js/script.js?v=74"></script>
     <script defer src="assets/js/bale.js?v=10"></script>
 </body>
 </html>
