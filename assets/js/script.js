@@ -6549,7 +6549,11 @@ renderBreathPanel();
     if (launch) {
         // بعد از شنونده‌ی اصلی دکمه‌ی شروع اجرا می‌شود (overlay بسته و تایمر راه افتاده)
         startBtn.addEventListener('click', launch, { once: true });
-        track('shared_link_open', { kind: breathParam ? 'breath' : 'session' });
+        const src = params.get('src');
+        track('shared_link_open', {
+            kind: breathParam ? 'breath' : 'session',
+            ...(src && /^[a-z0-9-]{1,60}$/.test(src) ? { src } : {})
+        });
     }
 })();
 
