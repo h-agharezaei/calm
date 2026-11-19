@@ -38,7 +38,7 @@ Counting in your head can be distracting in itself. Calm has a guide circle that
 
 ## Box breathing compared with other techniques
 
-Calm includes other patterns too. In **4-7-8 breathing**, for example, the exhale is longer than the inhale, and in **coherent breathing** you breathe in and out for about 5.5 seconds each, with no holds. Box breathing is easier to start with because its rhythm is even and easy to remember.
+Calm includes other patterns too. In [**4-7-8 breathing**](/en/blog/breathing-478/), for example, the exhale is longer than the inhale, and in **coherent breathing** you breathe in and out for about 5.5 seconds each, with no holds. Box breathing is easier to start with because its rhythm is even and easy to remember.
 
 If you'd like to sit quietly for a few minutes after the exercise, the [10-minute ocean sounds meditation](/en/blog/meditation-10-sea-ocean/) is a good follow-up.
 
