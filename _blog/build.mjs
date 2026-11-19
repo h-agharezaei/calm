@@ -325,7 +325,7 @@ function sessionBoxHtml(post, L) {
         <p class="session-box-kicker">${esc(L.t.tryKicker)}</p>
         ${post.sessionMeta ? `<p class="session-box-meta">${metaLine(post.sessionMeta)}</p>` : ''}
     </div>
-    <a class="session-btn" href="${esc(appUrl(post.session, post.lang))}">
+    <a class="session-btn" href="${esc(appUrl(`${post.session}&src=blog-${post.slug}`, post.lang))}">
         <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
         <span>${esc(post.sessionLabel || L.t.tryLabel)}</span>
     </a>
