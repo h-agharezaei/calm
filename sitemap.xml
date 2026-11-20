@@ -6,7 +6,7 @@
   </url>
   <url>
     <loc>https://tpis.ir/blog/</loc>
-    <lastmod>2026-11-19</lastmod>
+    <lastmod>2026-11-20</lastmod>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/"/>
@@ -14,7 +14,7 @@
   </url>
   <url>
     <loc>https://tpis.ir/en/blog/</loc>
-    <lastmod>2026-11-19</lastmod>
+    <lastmod>2026-11-20</lastmod>
     <priority>0.8</priority>
     <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/"/>
@@ -69,6 +69,14 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/breathing-478/"/>
   </url>
   <url>
+    <loc>https://tpis.ir/blog/mindful-check-in-every-two-hours/</loc>
+    <lastmod>2026-11-20</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/mindful-check-in-every-two-hours/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/mindful-check-in-every-two-hours/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/mindful-check-in-every-two-hours/"/>
+  </url>
+  <url>
     <loc>https://tpis.ir/en/blog/meditation-10-sea-ocean/</loc>
     <lastmod>2026-10-29</lastmod>
     <priority>0.7</priority>
@@ -115,5 +123,13 @@
     <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/breathing-478/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/breathing-478/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/breathing-478/"/>
+  </url>
+  <url>
+    <loc>https://tpis.ir/en/blog/mindful-check-in-every-two-hours/</loc>
+    <lastmod>2026-11-20</lastmod>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://tpis.ir/blog/mindful-check-in-every-two-hours/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://tpis.ir/en/blog/mindful-check-in-every-two-hours/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://tpis.ir/blog/mindful-check-in-every-two-hours/"/>
   </url>
 </urlset>
