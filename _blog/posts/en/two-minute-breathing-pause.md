@@ -5,7 +5,7 @@ date: 2026-11-22
 category: learn
 order: 9
 cover: /assets/images/blog/two-minute-breathing-pause.jpg
-coverAlt: A soft kaleidoscope pattern with a glowing pink hexagonal ring and points of light on a teal and blue background
+coverAlt: A white calla lily with green leaves in a clear glass vase against a light textured wall
 session: breath=coherent&rounds=11
 sessionLabel: Start 2-minute coherent breathing
 sessionMeta: 11 rounds | about 2 minutes | guided circle
