@@ -5,7 +5,7 @@ date: 2026-11-22
 category: learn
 order: 9
 cover: /assets/images/blog/two-minute-breathing-pause.jpg
-coverAlt: نقش کالیدوسکوپی ملایم با حلقه‌ای شش‌ضلعی به رنگ صورتی و نقطه‌های نور، روی زمینه‌ی فیروزه‌ای و آبی
+coverAlt: گل شیپوری سفید با برگ‌های سبز در گلدانی شیشه‌ای، مقابل دیواری روشن و بافت‌دار
 session: breath=coherent&rounds=11
 sessionLabel: شروع تنفس منسجم ۲ دقیقه‌ای
 sessionMeta: ۱۱ دور | حدود ۲ دقیقه | با دایره‌ی راهنما
