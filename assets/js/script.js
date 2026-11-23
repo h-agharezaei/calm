@@ -536,6 +536,64 @@ Object.assign(translations.fa, {
     breathDoneStopped: 'تمرین پس از {0} دور پایان یافت.'
 });
 
+// ترجمه‌های تمرین‌های تمرکز
+Object.assign(translations.en, {
+    ariaFocus: 'Focus exercises',
+    ariaFocusStage: 'Focus exercise',
+    focusTitle: 'Focus exercises',
+    focusExLabel: 'Exercise',
+    focusExRings: 'Rotating rings',
+    focusExGrid: 'Schulte table',
+    focusDescRings: 'Numbers sit on rings that slowly turn. Find them in order, starting from 1.',
+    focusDescGrid: 'Numbers are scattered on a still grid. Find them in order, starting from 1.',
+    focusCountLabel: 'How many numbers',
+    focusSpeedLabel: 'Rotation speed',
+    focusSpeedStill: 'Still',
+    focusSpeedSlow: 'Slow',
+    focusSpeedMedium: 'Medium',
+    focusSpeedFast: 'Fast',
+    focusShowTimer: 'Show timer',
+    focusBest: 'Best time for this setup: {0}',
+    focusBlockedNote: 'A meditation or breathing exercise is running. You can start a focus exercise after it ends.',
+    focusStart: 'Start exercise',
+    focusNext: 'Next number',
+    focusAgain: 'Again',
+    focusClose: 'Close',
+    focusDone: 'Done! Your time: {0}',
+    focusNewBest: 'A new best time for this setup.',
+    focusPrevBest: 'Best time: {0}',
+    wnFocusTitle: 'Focus exercises',
+    wnFocusBody: 'A new button opens a set of focus exercises: find the numbers in order on turning rings or on a classic Schulte table. Choose how many numbers you want, from 20 to 100.'
+});
+Object.assign(translations.fa, {
+    ariaFocus: 'تمرین‌های تمرکز',
+    ariaFocusStage: 'تمرین تمرکز',
+    focusTitle: 'تمرین‌های تمرکز',
+    focusExLabel: 'تمرین',
+    focusExRings: 'حلقه‌های چرخان',
+    focusExGrid: 'جدول شولته',
+    focusDescRings: 'عددها روی حلقه‌هایی که آرام می‌چرخند قرار دارند. از ۱ شروع کنید و به ترتیب پیدایشان کنید.',
+    focusDescGrid: 'عددها روی یک جدول ثابت پخش شده‌اند. از ۱ شروع کنید و به ترتیب پیدایشان کنید.',
+    focusCountLabel: 'تعداد عددها',
+    focusSpeedLabel: 'سرعت چرخش',
+    focusSpeedStill: 'ثابت',
+    focusSpeedSlow: 'آرام',
+    focusSpeedMedium: 'متوسط',
+    focusSpeedFast: 'تند',
+    focusShowTimer: 'نمایش زمان',
+    focusBest: 'بهترین زمان این تنظیمات: {0}',
+    focusBlockedNote: 'یک مدیتیشن یا تمرین تنفس در جریان است. پس از پایان آن می‌توانید تمرین تمرکز را شروع کنید.',
+    focusStart: 'شروع تمرین',
+    focusNext: 'عدد بعدی',
+    focusAgain: 'دوباره',
+    focusClose: 'بستن',
+    focusDone: 'تمام شد! زمان شما: {0}',
+    focusNewBest: 'بهترین زمان تازه برای این تنظیمات.',
+    focusPrevBest: 'بهترین زمان: {0}',
+    wnFocusTitle: 'تمرین‌های تمرکز',
+    wnFocusBody: 'دکمه‌ی تازه‌ای مجموعه‌ای از تمرین‌های تمرکز را باز می‌کند: پیدا کردن عددها به ترتیب روی حلقه‌های چرخان یا روی جدول کلاسیک شولته. تعداد عددها را از ۲۰ تا ۱۰۰ خودتان انتخاب کنید.'
+});
+
 // متغیرهای مربوط به پخش صدا
 const sounds = {
     'singing-bowl-gong.mp3': 'assets/sounds/singing-bowl-gong.mp3',
@@ -6469,6 +6527,338 @@ loadBreathSettings();
 renderBreathPanel();
 
 // ============================================
+// تمرین‌های تمرکز (حلقه‌های چرخان، جدول شولته)
+// ============================================
+// عددهای ۱ تا N پخش می‌شوند و کاربر باید به ترتیب لمسشان کند.
+// لینک: ?focus=rings|grid&count=20..100&speed=still|slow|medium|fast&timer=1
+const FOCUS_MIN = 20;
+const FOCUS_MAX = 100;
+const FOCUS_SPEEDS = { still: 0, slow: 90, medium: 50, fast: 28 }; // ثانیه برای یک دور کامل حلقه‌ی اول
+const FOCUS_EXERCISES = ['rings', 'grid'];
+const FOCUS_KEY = 'calm-focus';
+const FOCUS_BEST_KEY = 'calm-focus-best';
+
+const focusIcon = document.getElementById('focusIcon');
+const focusOverlay = document.getElementById('focusOverlay');
+const closeFocusPanel = document.getElementById('closeFocusPanel');
+const focusExerciseBtns = document.querySelectorAll('#focusExercises .session-chip');
+const focusSpeedBtns = document.querySelectorAll('#focusSpeeds .session-chip');
+const focusSpeedRow = document.getElementById('focusSpeedRow');
+const focusCountInput = document.getElementById('focusCount');
+const focusCountVal = document.getElementById('focusCountVal');
+const focusTimerChip = document.getElementById('focusTimerChip');
+const focusDescEl = document.getElementById('focusDesc');
+const focusBestEl = document.getElementById('focusBest');
+const focusBlockedNote = document.getElementById('focusBlockedNote');
+const focusStartBtn = document.getElementById('focusStartBtn');
+const focusStage = document.getElementById('focusStage');
+const focusTop = focusStage.querySelector('.focus-top');
+const focusBoard = document.getElementById('focusBoard');
+const focusNextNum = document.getElementById('focusNextNum');
+const focusTimeEl = document.getElementById('focusTime');
+const focusStopBtn = document.getElementById('focusStopBtn');
+const focusResult = document.getElementById('focusResult');
+const focusResultTitle = document.getElementById('focusResultTitle');
+const focusResultBest = document.getElementById('focusResultBest');
+const focusAgainBtn = document.getElementById('focusAgainBtn');
+const focusCloseBtn = document.getElementById('focusCloseBtn');
+
+const focusReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let focusSettings = { exercise: 'rings', count: 40, speed: focusReducedMotion ? 'still' : 'slow', showTimer: false };
+const focusRun = { state: 'idle', next: 1, total: 0, startAt: 0, tickId: null };
+
+const clampFocusCount = (v) => Math.min(FOCUS_MAX, Math.max(FOCUS_MIN, Math.round(Number(v)) || 40));
+
+function loadFocusSettings() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(FOCUS_KEY) || 'null');
+        if (!saved) return;
+        if (FOCUS_EXERCISES.includes(saved.exercise)) focusSettings.exercise = saved.exercise;
+        if (saved.count) focusSettings.count = clampFocusCount(saved.count);
+        if (saved.speed in FOCUS_SPEEDS) focusSettings.speed = saved.speed;
+        focusSettings.showTimer = saved.showTimer === true;
+    } catch (e) { /* ذخیره‌سازی بسته یا داده‌ی خراب */ }
+}
+
+function saveFocusSettings() {
+    try { localStorage.setItem(FOCUS_KEY, JSON.stringify(focusSettings)); } catch (e) { /* ignore */ }
+}
+
+const focusBestId = () => `${focusSettings.exercise}-${focusSettings.count}-${focusSettings.exercise === 'rings' ? focusSettings.speed : 'still'}`;
+
+function readFocusBest() {
+    try {
+        const all = JSON.parse(localStorage.getItem(FOCUS_BEST_KEY) || '{}');
+        const v = all && all[focusBestId()];
+        return typeof v === 'number' ? v : null;
+    } catch (e) { return null; }
+}
+
+function writeFocusBest(seconds) {
+    try {
+        const all = JSON.parse(localStorage.getItem(FOCUS_BEST_KEY) || '{}') || {};
+        all[focusBestId()] = seconds;
+        localStorage.setItem(FOCUS_BEST_KEY, JSON.stringify(all));
+    } catch (e) { /* ignore */ }
+}
+
+function renderFocusPanel() {
+    focusExerciseBtns.forEach(b => {
+        const on = b.dataset.ex === focusSettings.exercise;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', String(on));
+    });
+    focusSpeedBtns.forEach(b => {
+        const on = b.dataset.speed === focusSettings.speed;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', String(on));
+    });
+    focusSpeedRow.hidden = focusSettings.exercise !== 'rings';
+    focusCountInput.value = focusSettings.count;
+    focusCountVal.textContent = fmtNum(focusSettings.count);
+    focusTimerChip.classList.toggle('active', focusSettings.showTimer);
+    focusTimerChip.setAttribute('aria-pressed', String(focusSettings.showTimer));
+    focusDescEl.textContent = bt(focusSettings.exercise === 'rings' ? 'focusDescRings' : 'focusDescGrid');
+
+    const best = readFocusBest();
+    focusBestEl.hidden = best === null;
+    if (best !== null) focusBestEl.textContent = bt('focusBest').replace('{0}', formatBreathTotal(best));
+
+    const blocked = session.state !== 'idle' || breath.state !== 'idle';
+    focusBlockedNote.hidden = !blocked;
+    focusStartBtn.disabled = blocked;
+}
+
+// ---------- ساخت صفحه ----------
+
+function shuffledNumbers(n) {
+    const arr = Array.from({ length: n }, (_, i) => i + 1);
+    for (let i = n - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function makeFocusNum(value) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'focus-num';
+    b.dataset.n = String(value);
+    b.textContent = localizeDigits(String(value));
+    return b;
+}
+
+// اندازه‌ها همه کسری از ضلع صفحه (S) هستند
+function layoutRings(n) {
+    const R0 = 0.1, RMAX = 0.43;
+    let best = null;
+    for (let k = 2; k <= 8; k++) {
+        const radii = Array.from({ length: k }, (_, i) => R0 + (RMAX - R0) * i / (k - 1));
+        const sum = radii.reduce((a, b) => a + b, 0);
+        const arc = 2 * Math.PI * sum / n; // فاصله‌ی عددها روی حلقه
+        const gap = (RMAX - R0) / (k - 1); // فاصله‌ی حلقه‌ها
+        const score = Math.abs(Math.log(gap / arc));
+        if (!best || score < best.score) best = { score, radii, sum, size: Math.min(gap, arc) };
+    }
+    const counts = best.radii.map(r => Math.floor(n * r / best.sum));
+    let rest = n - counts.reduce((a, b) => a + b, 0);
+    for (let i = counts.length - 1; rest > 0; i = (i - 1 + counts.length) % counts.length, rest--) counts[i]++;
+    return { radii: best.radii, counts, size: best.size };
+}
+
+function buildFocusBoard() {
+    const n = focusSettings.count;
+    const order = shuffledNumbers(n);
+    focusBoard.textContent = '';
+    focusBoard.classList.toggle('focus-grid', focusSettings.exercise === 'grid');
+    focusBoard.classList.toggle('focus-rings', focusSettings.exercise === 'rings');
+
+    if (focusSettings.exercise === 'grid') {
+        const cols = Math.ceil(Math.sqrt(n));
+        focusBoard.style.setProperty('--cols', cols);
+        focusBoard.style.setProperty('--fs', (0.42 / cols).toFixed(4));
+        order.forEach(v => focusBoard.appendChild(makeFocusNum(v)));
+        return;
+    }
+
+    const { radii, counts, size } = layoutRings(n);
+    const base = FOCUS_SPEEDS[focusSettings.speed];
+    const d = size * 0.86;
+    focusBoard.style.setProperty('--d', d.toFixed(4));
+    focusBoard.style.setProperty('--fs', (d * 0.52).toFixed(4));
+    let idx = 0;
+    radii.forEach((r, i) => {
+        const ring = document.createElement('div');
+        ring.className = 'focus-ring';
+        ring.style.setProperty('--size', (r * 2).toFixed(4));
+        if (base > 0) {
+            ring.style.setProperty('--dur', (base * (1 + i * 0.3)).toFixed(1) + 's');
+            ring.style.setProperty('--dir', i % 2 ? 'reverse' : 'normal');
+            ring.classList.add('spin');
+        }
+        const offset = Math.random() * 360;
+        for (let j = 0; j < counts[i]; j++) {
+            const slot = document.createElement('div');
+            slot.className = 'focus-slot';
+            slot.style.setProperty('--a', ((offset + 360 * j / counts[i]) % 360).toFixed(2) + 'deg');
+            slot.appendChild(makeFocusNum(order[idx++]));
+            ring.appendChild(slot);
+        }
+        focusBoard.appendChild(ring);
+    });
+}
+
+// ---------- اجرا ----------
+
+function updateFocusTime() {
+    focusTimeEl.textContent = formatBreathTotal((performance.now() - focusRun.startAt) / 1000);
+}
+
+function beginFocus() {
+    if (focusRun.state === 'running' || session.state !== 'idle' || breath.state !== 'idle') return;
+    focusOverlay.classList.remove('show');
+    focusRun.state = 'running';
+    focusRun.next = 1;
+    focusRun.total = focusSettings.count;
+    focusNextNum.textContent = localizeDigits('1');
+    focusResult.hidden = true;
+    focusBoard.hidden = false;
+    focusStage.hidden = false;
+    focusTop.hidden = false;
+    focusTimeEl.hidden = !focusSettings.showTimer;
+    buildFocusBoard();
+    focusRun.startAt = performance.now();
+    updateFocusTime();
+    clearInterval(focusRun.tickId);
+    focusRun.tickId = setInterval(updateFocusTime, 500);
+    requestSessionWakeLock();
+    track('focus_start', { exercise: focusSettings.exercise, count: focusSettings.count, speed: focusSettings.speed });
+}
+
+function endFocus(completed) {
+    if (focusRun.state !== 'running') return;
+    clearInterval(focusRun.tickId);
+    focusRun.tickId = null;
+    focusRun.state = 'idle';
+    const seconds = (performance.now() - focusRun.startAt) / 1000;
+    if (session.state === 'idle' && breath.state === 'idle') releaseSessionWakeLock();
+
+    if (!completed) {
+        closeFocusStage();
+        track('focus_stopped', { exercise: focusSettings.exercise, count: focusSettings.count, reached: focusRun.next - 1 });
+        return;
+    }
+
+    const prev = readFocusBest();
+    const isBest = prev === null || seconds < prev;
+    if (isBest) writeFocusBest(seconds);
+    focusResultTitle.textContent = bt('focusDone').replace('{0}', formatBreathTotal(seconds));
+    focusResultBest.textContent = isBest
+        ? (prev === null ? '' : bt('focusNewBest'))
+        : bt('focusPrevBest').replace('{0}', formatBreathTotal(prev));
+    focusBoard.hidden = true;
+    focusTop.hidden = true;
+    focusResult.hidden = false;
+    focusAgainBtn.focus();
+    track('focus_complete', { exercise: focusSettings.exercise, count: focusSettings.count, speed: focusSettings.speed, seconds: Math.round(seconds) });
+}
+
+function closeFocusStage() {
+    focusStage.hidden = true;
+    focusBoard.textContent = '';
+    if (document.contains(focusIcon)) focusIcon.focus();
+}
+
+function handleFocusTap(btn) {
+    if (focusRun.state !== 'running' || btn.classList.contains('done')) return;
+    if (Number(btn.dataset.n) === focusRun.next) {
+        btn.classList.add('done');
+        focusRun.next++;
+        if (focusRun.next > focusRun.total) {
+            endFocus(true);
+        } else {
+            focusNextNum.textContent = localizeDigits(String(focusRun.next));
+        }
+    } else {
+        btn.classList.add('wrong');
+        setTimeout(() => btn.classList.remove('wrong'), 350);
+    }
+}
+
+// pointerdown: روی عدد در حال حرکت، click ممکن است گم شود؛ click فقط برای کیبورد (detail === 0)
+focusBoard.addEventListener('pointerdown', (e) => {
+    const btn = e.target.closest('.focus-num');
+    if (btn) handleFocusTap(btn);
+});
+focusBoard.addEventListener('click', (e) => {
+    const btn = e.target.closest('.focus-num');
+    if (btn && e.detail === 0) handleFocusTap(btn);
+});
+
+// ---------- پنل ----------
+
+focusIcon.addEventListener('click', () => {
+    renderFocusPanel();
+    focusOverlay.classList.add('show');
+    track('panel_open', { panel: 'focus' });
+});
+closeFocusPanel.addEventListener('click', () => focusOverlay.classList.remove('show'));
+focusOverlay.addEventListener('click', (e) => {
+    if (e.target === focusOverlay) focusOverlay.classList.remove('show');
+});
+setupDialogFocusTrap(focusOverlay);
+
+focusExerciseBtns.forEach(b => b.addEventListener('click', () => {
+    focusSettings.exercise = b.dataset.ex;
+    saveFocusSettings();
+    renderFocusPanel();
+}));
+focusSpeedBtns.forEach(b => b.addEventListener('click', () => {
+    focusSettings.speed = b.dataset.speed;
+    saveFocusSettings();
+    renderFocusPanel();
+}));
+focusCountInput.addEventListener('input', () => {
+    focusSettings.count = clampFocusCount(focusCountInput.value);
+    focusCountVal.textContent = fmtNum(focusSettings.count);
+});
+focusCountInput.addEventListener('change', () => {
+    saveFocusSettings();
+    renderFocusPanel();
+});
+focusTimerChip.addEventListener('click', () => {
+    focusSettings.showTimer = !focusSettings.showTimer;
+    saveFocusSettings();
+    renderFocusPanel();
+});
+focusStartBtn.addEventListener('click', beginFocus);
+focusStopBtn.addEventListener('click', () => endFocus(false));
+focusAgainBtn.addEventListener('click', () => {
+    focusRun.state = 'idle';
+    beginFocus();
+});
+focusCloseBtn.addEventListener('click', closeFocusStage);
+
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    focusOverlay.classList.remove('show');
+    if (focusRun.state === 'running') endFocus(false);
+    else if (!focusStage.hidden) closeFocusStage();
+});
+
+document.addEventListener('calm:languagechange', () => {
+    renderFocusPanel();
+    if (focusRun.state === 'running') {
+        focusBoard.querySelectorAll('.focus-num').forEach(b => { b.textContent = localizeDigits(b.dataset.n); });
+        focusNextNum.textContent = localizeDigits(String(focusRun.next));
+    }
+});
+
+loadFocusSettings();
+renderFocusPanel();
+
+// ============================================
 // لینک جلسه‌ی آماده (پارامترهای آدرس)
 // ============================================
 // نمونه‌ها:
@@ -6476,6 +6866,7 @@ renderBreathPanel();
 //   ?min=10&sound=river              مدیتیشن ۱۰ دقیقه‌ای با صدای رودخانه
 //   ?lang=en                         فقط زبان
 //   ?min=15&bg=kaleidoscope          مدیتیشن ۱۵ دقیقه‌ای با پس‌زمینه‌ی زیبابین
+// focus=rings|grid | count=20..100 | speed=still|slow|medium|fast | timer=1  تمرین تمرکز (مثلاً ?focus=rings&count=40&speed=slow)
 // breath=الگو | min=دقیقه | sound=Fire|Jungle|River|Sea|432Hz|528Hz|Whale52Hz|none | img=0..4 یا kaleidoscope یا kaleidoscope-soft (برای مدیتیشن و تنفس) | rounds=1..99 | lang=fa|en
 // تنظیمات فقط برای همین بازدید اعمال می‌شود (در localStorage ذخیره نمی‌شود)
 // و جلسه بعد از فشردن «شروع» شروع می‌شود، چون مرورگر بدون کلیک اجازه‌ی پخش صدا نمی‌دهد.
@@ -6518,9 +6909,21 @@ renderBreathPanel();
     // تنفس (اولویت بیشتر نسبت به مدیتیشن)
     const breathParam = params.get('breath');
     const minutes = parseInt(params.get('min'));
+    const focusParam = (params.get('focus') || '').toLowerCase();
     let launch = null;
 
-    if (breathParam && BREATH_PATTERNS[breathParam] && breathParam !== 'custom') {
+    if (FOCUS_EXERCISES.includes(focusParam)) {
+        focusSettings.exercise = focusParam;
+        if (params.get('count') !== null) focusSettings.count = clampFocusCount(params.get('count'));
+        const speedParam = (params.get('speed') || '').toLowerCase();
+        if (speedParam in FOCUS_SPEEDS) focusSettings.speed = speedParam;
+        if (params.get('timer') === '1') focusSettings.showTimer = true;
+        renderFocusPanel();
+        launch = () => {
+            if (breath.state !== 'idle' || session.state !== 'idle') return;
+            beginFocus();
+        };
+    } else if (breathParam && BREATH_PATTERNS[breathParam] && breathParam !== 'custom') {
         breathSettings.pattern = breathParam;
         const rounds = parseInt(params.get('rounds'));
         if (rounds >= BREATH_MIN_ROUNDS && rounds <= BREATH_MAX_ROUNDS) {
@@ -6551,7 +6954,7 @@ renderBreathPanel();
         startBtn.addEventListener('click', launch, { once: true });
         const src = params.get('src');
         track('shared_link_open', {
-            kind: breathParam ? 'breath' : 'session',
+            kind: FOCUS_EXERCISES.includes(focusParam) ? 'focus' : breathParam ? 'breath' : 'session',
             ...(src && /^[a-z0-9-]{1,60}$/.test(src) ? { src } : {})
         });
     }
@@ -6570,6 +6973,7 @@ renderBreathPanel();
 const blogUrl = () => (currentLang === 'en' ? '/en/blog/' : '/blog/');
 
 const WHATS_NEW = [
+    { id: 5, titleKey: 'wnFocusTitle', bodyKey: 'wnFocusBody', badge: 'focusIcon', until: '2027-02-28' },
     { id: 4, titleKey: 'wnBlogTitle', bodyKey: 'wnBlogBody', linkKey: 'wnBlogLink', until: '2027-01-31' },
     { id: 3, titleKey: 'wnKaleidoTitle', bodyKey: 'wnKaleidoBody', badge: 'settingsIcon', until: '2027-01-31' },
     { id: 2, titleKey: 'wn432Title', bodyKey: 'wn432Body', badge: 'bgSoundsIcon', until: '2026-12-31' },

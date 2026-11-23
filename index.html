@@ -67,7 +67,7 @@
     </script>
     
     <!-- Stylesheet -->
-    <link rel="stylesheet" href="assets/css/style.css?v=41">
+    <link rel="stylesheet" href="assets/css/style.css?v=42">
     
  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "54a5c1f34bde403fb376d604168b982e"}'></script><!-- End Cloudflare Web Analytics -->
 </head>
@@ -333,7 +333,84 @@
         </div>
     </div>
 
+    <!-- Overlay و پنل تمرین‌های تمرکز -->
+    <div class="interval-overlay" id="focusOverlay">
+        <div class="interval-panel" id="focusPanel" role="dialog" aria-modal="true" aria-labelledby="focusPanelTitle">
+            <button class="close-panel" id="closeFocusPanel" aria-label="بستن" data-i18n-aria-label="ariaClose">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <h3 class="panel-title" id="focusPanelTitle" data-i18n="focusTitle">تمرین‌های تمرکز</h3>
+
+            <div class="session-label" id="focusExLabel" data-i18n="focusExLabel">تمرین</div>
+            <div class="session-chips" id="focusExercises" role="group" aria-labelledby="focusExLabel">
+                <button type="button" class="session-chip" data-ex="rings" data-i18n="focusExRings">حلقه‌های چرخان</button>
+                <button type="button" class="session-chip" data-ex="grid" data-i18n="focusExGrid">جدول شولته</button>
+            </div>
+            <p class="session-hint focus-desc" id="focusDesc"></p>
+
+            <div class="session-label" id="focusCountLabel" data-i18n="focusCountLabel">تعداد عددها</div>
+            <div class="focus-count-row" dir="ltr">
+                <span class="focus-count-edge">20</span>
+                <input type="range" class="volume-slider" id="focusCount" min="20" max="100" step="1" value="40" aria-labelledby="focusCountLabel">
+                <span class="focus-count-edge">100</span>
+            </div>
+            <output class="focus-count-val" id="focusCountVal" for="focusCount">40</output>
+
+            <div id="focusSpeedRow">
+                <div class="session-label" id="focusSpeedLabel" data-i18n="focusSpeedLabel">سرعت چرخش</div>
+                <div class="session-chips" id="focusSpeeds" role="group" aria-labelledby="focusSpeedLabel">
+                    <button type="button" class="session-chip" data-speed="still" data-i18n="focusSpeedStill">ثابت</button>
+                    <button type="button" class="session-chip" data-speed="slow" data-i18n="focusSpeedSlow">آرام</button>
+                    <button type="button" class="session-chip" data-speed="medium" data-i18n="focusSpeedMedium">متوسط</button>
+                    <button type="button" class="session-chip" data-speed="fast" data-i18n="focusSpeedFast">تند</button>
+                </div>
+            </div>
+
+            <div class="session-chips focus-timer-row">
+                <button type="button" class="session-chip" id="focusTimerChip" aria-pressed="false" data-i18n="focusShowTimer">نمایش زمان</button>
+            </div>
+
+            <p class="session-hint" id="focusBest" hidden></p>
+            <p class="session-hint session-active-note" id="focusBlockedNote" hidden data-i18n="focusBlockedNote">یک مدیتیشن یا تمرین تنفس در جریان است. پس از پایان آن می‌توانید تمرین تمرکز را شروع کنید.</p>
+
+            <div class="session-start-row">
+                <button type="button" class="session-start-btn" id="focusStartBtn" data-i18n="focusStart">شروع تمرین</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- صفحه‌ی تمرین تمرکز -->
+    <div class="focus-stage" id="focusStage" role="dialog" aria-modal="true" aria-label="تمرین تمرکز" data-i18n-aria-label="ariaFocusStage" hidden>
+        <div class="focus-top">
+            <div class="focus-next"><span data-i18n="focusNext">عدد بعدی</span> <b id="focusNextNum">1</b></div>
+            <div class="focus-time" id="focusTime" role="timer" aria-live="off" hidden></div>
+            <button type="button" class="session-end-btn" id="focusStopBtn" data-i18n="sessionEnd">پایان</button>
+        </div>
+        <div class="focus-board" id="focusBoard"></div>
+        <div class="focus-result" id="focusResult" role="status" hidden>
+            <p class="focus-result-title" id="focusResultTitle"></p>
+            <p class="focus-result-best" id="focusResultBest"></p>
+            <div class="focus-result-btns">
+                <button type="button" class="session-start-btn" id="focusAgainBtn" data-i18n="focusAgain">دوباره</button>
+                <button type="button" class="session-end-btn" id="focusCloseBtn" data-i18n="focusClose">بستن</button>
+            </div>
+        </div>
+    </div>
+
     <div class="controls" id="controlsMenu">
+        <!-- دکمه آیکون تمرین‌های تمرکز (هدف) -->
+        <button class="breath-icon focus-icon" id="focusIcon" aria-label="Focus exercises" data-i18n-aria-label="ariaFocus">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9.5"></circle>
+                <circle cx="12" cy="12" r="5.5"></circle>
+                <circle cx="12" cy="12" r="1.2" fill="currentColor"></circle>
+            </svg>
+        </button>
+
         <!-- دکمه آیکون تمرین تنفس (باد) -->
         <button class="breath-icon" id="breathIcon" aria-label="Breathing exercise" data-i18n-aria-label="ariaBreath">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -865,7 +942,7 @@
     </audio>
 
     <script defer src="assets/js/analytics.js?v=10"></script>
-    <script defer src="assets/js/script.js?v=75"></script>
+    <script defer src="assets/js/script.js?v=76"></script>
     <script defer src="assets/js/bale.js?v=10"></script>
 </body>
 </html>

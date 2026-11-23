@@ -3004,3 +3004,235 @@ body:has(#breathStage:not([hidden])) .donate-fab {
     font-size: 0.85em;
     opacity: 0.8;
 }
+
+/* ============================================
+   تمرین‌های تمرکز (پنل انتخاب + صفحه‌ی تمرین)
+   ============================================ */
+.focus-desc {
+    margin-top: 14px;
+    min-height: 3.4em;
+}
+
+.focus-count-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 4px;
+}
+
+.focus-count-edge {
+    font-size: 12px;
+    color: #888;
+    font-variant-numeric: tabular-nums;
+}
+
+.focus-count-val {
+    display: block;
+    margin-top: 6px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #667eea;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.focus-timer-row {
+    margin-top: 18px;
+}
+
+#focusSpeedRow[hidden],
+.focus-stage[hidden],
+.focus-top[hidden],
+.focus-board[hidden],
+.focus-board.focus-grid[hidden],
+.focus-result[hidden],
+.focus-time[hidden] {
+    display: none;
+}
+
+.focus-stage {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 16px;
+    color: white;
+    background: rgba(8, 10, 30, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: breathFade 0.4s ease;
+}
+
+.focus-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    min-height: 42px;
+}
+
+.focus-next {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.focus-next b {
+    display: inline-block;
+    min-width: 2ch;
+    font-size: 30px;
+    font-weight: 700;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: #ffd166;
+}
+
+.focus-time {
+    font-size: 16px;
+    letter-spacing: 1px;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.8;
+}
+
+.focus-board {
+    --S: min(94vw, 70vh, 640px);
+    position: relative;
+    width: var(--S);
+    height: var(--S);
+    flex-shrink: 0;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.focus-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--S) * var(--size));
+    height: calc(var(--S) * var(--size));
+    margin: calc(var(--S) * var(--size) * -0.5) 0 0 calc(var(--S) * var(--size) * -0.5);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 50%;
+}
+
+.focus-ring.spin {
+    animation: focusSpin var(--dur) linear infinite var(--dir);
+}
+
+.focus-slot {
+    position: absolute;
+    inset: 0;
+    transform: rotate(var(--a));
+    pointer-events: none;
+}
+
+.focus-num {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: calc(var(--S) * var(--d));
+    height: calc(var(--S) * var(--d));
+    margin: calc(var(--S) * var(--d) * -0.5) 0 0 calc(var(--S) * var(--d) * -0.5);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    font-size: calc(var(--S) * var(--fs));
+    font-weight: 600;
+    line-height: 1;
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: auto;
+    transform: rotate(calc(var(--a) * -1));
+    transition: background 0.2s, opacity 0.3s;
+}
+
+.focus-ring.spin .focus-num {
+    animation: focusUnspin var(--dur) linear infinite var(--dir);
+}
+
+@keyframes focusSpin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes focusUnspin {
+    from { transform: rotate(calc(var(--a) * -1)); }
+    to { transform: rotate(calc(var(--a) * -1 - 360deg)); }
+}
+
+.focus-num.done {
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+.focus-num.wrong {
+    background: rgba(255, 99, 99, 0.55);
+}
+
+.focus-num:focus-visible {
+    outline: 2px solid #fff;
+}
+
+.focus-board.focus-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    grid-auto-rows: calc(var(--S) / var(--cols));
+    gap: 0;
+    align-content: center;
+}
+
+.focus-grid .focus-num {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 2px;
+    border-radius: 12px;
+    font-size: calc(var(--S) * var(--fs));
+    transform: none;
+}
+
+.focus-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 24px;
+    text-align: center;
+}
+
+.focus-result-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.focus-result-best {
+    margin: 0;
+    min-height: 1.4em;
+    font-size: 15px;
+    opacity: 0.85;
+}
+
+.focus-result-btns {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .focus-ring.spin,
+    .focus-ring.spin .focus-num {
+        animation: none;
+    }
+}
