@@ -15,7 +15,7 @@
  *
  * Bump VERSION whenever a precached file changes (the ?v= values below, index.html, bowl sounds).
  */
-const VERSION = 'calm-v63';
+const VERSION = 'calm-v64';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 const ASSET_CACHE = 'calm-assets';            // images, fonts, icons: kept across versions
@@ -26,8 +26,8 @@ const PRECACHE = [
     './',
     'index.html',
     'manifest.webmanifest',
-    'assets/css/style.css?v=43',
-    'assets/js/script.js?v=76',
+    'assets/css/style.css?v=44',
+    'assets/js/script.js?v=77',
     'assets/js/analytics.js?v=10',
     'assets/js/bale.js?v=10',
     'assets/fonts/Estedad-VF.woff2', // already in the HTTP cache from the page's preload
