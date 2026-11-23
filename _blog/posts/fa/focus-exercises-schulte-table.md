@@ -4,6 +4,8 @@ description: جدول شولته چیست و چطور با پیدا کردن ع�
 date: 2026-11-23
 category: learn
 order: 10
+cover: /assets/images/blog/focus-exercises-schulte-table.jpg
+coverAlt: اعداد ۱ تا ۴۰ روی چهار حلقه‌ی هم‌مرکز سفید و کم‌رنگ، روی پس‌زمینه‌ی تیره‌ی آبی
 session: focus=rings&count=40&speed=slow
 sessionLabel: شروع تمرین حلقه‌های چرخان
 sessionMeta: ۴۰ عدد | سرعت آرام | حدود ۱ تا ۲ دقیقه

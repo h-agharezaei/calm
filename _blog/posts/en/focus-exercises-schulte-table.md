@@ -4,6 +4,8 @@ description: What a Schulte table is and how to use it as a short focus exercise
 date: 2026-11-23
 category: learn
 order: 10
+cover: /assets/images/blog/focus-exercises-schulte-table.jpg
+coverAlt: Numbers 1 to 40 placed on four concentric faint rings against a dark blue background
 session: focus=rings&count=40&speed=slow
 sessionLabel: Start the rotating rings exercise
 sessionMeta: 40 numbers | slow speed | about 1 to 2 minutes
