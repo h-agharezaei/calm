@@ -3119,6 +3119,8 @@ body:has(#breathStage:not([hidden])) .donate-fab {
     margin: calc(var(--S) * var(--size) * -0.5) 0 0 calc(var(--S) * var(--size) * -0.5);
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 50%;
+    /* the ring box covers everything inside it: without this, outer rings swallow taps meant for inner numbers */
+    pointer-events: none;
 }
 
 .focus-ring.spin {
