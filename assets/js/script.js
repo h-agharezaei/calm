@@ -540,6 +540,8 @@ Object.assign(translations.fa, {
 Object.assign(translations.en, {
     ariaFocus: 'Focus exercises',
     ariaFocusStage: 'Focus exercise',
+    aboutFeatureFocus: '<strong>Focus exercises:</strong> find numbers in order on turning rings or a Schulte table, with any amount of numbers from 20 to 100',
+    aboutUsageFocus: 'For an attention exercise, open "Focus exercises", choose the exercise and how many numbers, then find them in order',
     focusTitle: 'Focus exercises',
     focusExLabel: 'Exercise',
     focusExRings: 'Rotating rings',
@@ -568,6 +570,8 @@ Object.assign(translations.en, {
 Object.assign(translations.fa, {
     ariaFocus: 'تمرین‌های تمرکز',
     ariaFocusStage: 'تمرین تمرکز',
+    aboutFeatureFocus: '<strong>تمرین‌های تمرکز:</strong> پیدا کردن عددها به ترتیب روی حلقه‌های چرخان یا جدول شولته، با تعداد عددِ دلخواه از ۲۰ تا ۱۰۰',
+    aboutUsageFocus: 'برای تمرین توجه، دکمه‌ی «تمرین‌های تمرکز» را باز کنید، تمرین و تعداد عددها را انتخاب کنید و عددها را به ترتیب پیدا کنید',
     focusTitle: 'تمرین‌های تمرکز',
     focusExLabel: 'تمرین',
     focusExRings: 'حلقه‌های چرخان',
