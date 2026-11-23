@@ -541,6 +541,9 @@ Object.assign(translations.en, {
     ariaFocus: 'Focus exercises',
     ariaFocusStage: 'Focus exercise',
     focusTitle: 'Focus exercises',
+    focusCardRings: 'Numbers on turning rings',
+    focusCardGrid: 'Numbers on a still grid',
+    focusBack: 'All exercises',
     focusExLabel: 'Exercise',
     focusExRings: 'Rotating rings',
     focusExGrid: 'Schulte table',
@@ -569,6 +572,9 @@ Object.assign(translations.fa, {
     ariaFocus: 'تمرین‌های تمرکز',
     ariaFocusStage: 'تمرین تمرکز',
     focusTitle: 'تمرین‌های تمرکز',
+    focusCardRings: 'عددها روی حلقه‌های در حال چرخش',
+    focusCardGrid: 'عددها روی یک جدول ثابت',
+    focusBack: 'همه‌ی تمرین‌ها',
     focusExLabel: 'تمرین',
     focusExRings: 'حلقه‌های چرخان',
     focusExGrid: 'جدول شولته',
@@ -6541,7 +6547,12 @@ const FOCUS_BEST_KEY = 'calm-focus-best';
 const focusIcon = document.getElementById('focusIcon');
 const focusOverlay = document.getElementById('focusOverlay');
 const closeFocusPanel = document.getElementById('closeFocusPanel');
-const focusExerciseBtns = document.querySelectorAll('#focusExercises .session-chip');
+const focusCards = document.querySelectorAll('#focusHub .focus-card');
+const focusHub = document.getElementById('focusHub');
+const focusSettingsView = document.getElementById('focusSettings');
+const focusBackBtn = document.getElementById('focusBackBtn');
+const focusPanelTitle = document.getElementById('focusPanelTitle');
+let focusView = 'hub'; // 'hub' = فهرست تمرین‌ها، 'settings' = تنظیمات تمرین انتخاب‌شده
 const focusSpeedBtns = document.querySelectorAll('#focusSpeeds .session-chip');
 const focusSpeedRow = document.getElementById('focusSpeedRow');
 const focusCountInput = document.getElementById('focusCount');
@@ -6603,11 +6614,10 @@ function writeFocusBest(seconds) {
 }
 
 function renderFocusPanel() {
-    focusExerciseBtns.forEach(b => {
-        const on = b.dataset.ex === focusSettings.exercise;
-        b.classList.toggle('active', on);
-        b.setAttribute('aria-pressed', String(on));
-    });
+    const inSettings = focusView === 'settings';
+    focusHub.hidden = inSettings;
+    focusSettingsView.hidden = !inSettings;
+    focusPanelTitle.textContent = bt(inSettings ? (focusSettings.exercise === 'rings' ? 'focusExRings' : 'focusExGrid') : 'focusTitle');
     focusSpeedBtns.forEach(b => {
         const on = b.dataset.speed === focusSettings.speed;
         b.classList.toggle('active', on);
@@ -6799,6 +6809,7 @@ focusBoard.addEventListener('click', (e) => {
 // ---------- پنل ----------
 
 focusIcon.addEventListener('click', () => {
+    focusView = 'hub';
     renderFocusPanel();
     focusOverlay.classList.add('show');
     track('panel_open', { panel: 'focus' });
@@ -6809,11 +6820,19 @@ focusOverlay.addEventListener('click', (e) => {
 });
 setupDialogFocusTrap(focusOverlay);
 
-focusExerciseBtns.forEach(b => b.addEventListener('click', () => {
-    focusSettings.exercise = b.dataset.ex;
+focusCards.forEach(c => c.addEventListener('click', () => {
+    focusSettings.exercise = c.dataset.ex;
     saveFocusSettings();
+    focusView = 'settings';
     renderFocusPanel();
+    focusBackBtn.focus();
 }));
+focusBackBtn.addEventListener('click', () => {
+    focusView = 'hub';
+    renderFocusPanel();
+    const current = Array.from(focusCards).find(c => c.dataset.ex === focusSettings.exercise);
+    if (current) current.focus();
+});
 focusSpeedBtns.forEach(b => b.addEventListener('click', () => {
     focusSettings.speed = b.dataset.speed;
     saveFocusSettings();
